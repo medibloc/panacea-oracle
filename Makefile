@@ -7,7 +7,7 @@ BUILD_FLAGS := -tags "$(build_tags)"
 
 OUT_DIR = ./build
 
-.PHONY: all build test clean
+.PHONY: all build test sign-prod clean
 
 all: build test
 
@@ -16,6 +16,11 @@ build: go.sum
 
 test:
 	$(GO) test -v ./...
+
+# Prepare ./scripts/private.pem that you want to use. If not, this command will generate a new one.
+sign-prod:
+	ego sign ./scripts/enclave-prod.json
+
 
 clean:
 	$(GO) clean

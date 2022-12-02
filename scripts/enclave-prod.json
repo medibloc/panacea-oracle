@@ -1,0 +1,33 @@
+{
+  "exe": "../build/oracled",
+  "key": "private.pem",
+  "debug": false,
+  "heapSize": 512,
+  "executableHeap": false,
+  "productID": 1,
+  "securityVersion": 1,
+  "mounts": [
+    {
+      "source": "/oracle",
+      "target": "/home_mnt",
+      "type": "hostfs",
+      "readOnly": false
+    },
+    {
+      "target": "/tmp",
+      "type": "memfs"
+    }
+  ],
+  "env": [
+    {
+      "name": "HOME",
+      "value": "/home_mnt"
+    }
+  ],
+  "files": [
+    {
+      "source": "/etc/ssl/certs/ca-certificates.crt",
+      "target": "/etc/ssl/certs/ca-certificates.crt"
+    }
+  ]
+}
