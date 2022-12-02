@@ -7,12 +7,15 @@ BUILD_FLAGS := -tags "$(build_tags)"
 
 OUT_DIR = ./build
 
-.PHONY: all build clean
+.PHONY: all build test clean
 
-all: build
+all: build test
 
 build: go.sum
 	$(GO) build -mod=readonly $(BUILD_FLAGS) -o $(OUT_DIR)/oracled ./cmd/oracled
+
+test:
+	$(GO) test -v ./...
 
 clean:
 	$(GO) clean
