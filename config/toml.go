@@ -54,12 +54,12 @@ light-client-witness-addrs= "{{ StringsJoin .Panacea.LightClientWitnessAddrs ","
 light-client-log-level = "{{ .Panacea.LightClientLogLevel }}"
 
 ###############################################################################
-###                         Ipfs Configuration                           ###
+###                         IPFS Configuration                           ###
 ###############################################################################
 
 [ipfs]
 
-ipfs-node-addr = "{{ .Ipfs.IpfsNodeAddr }}"
+ipfs-node-addr = "{{ .IPFS.IPFSNodeAddr }}"
 `
 
 var configTemplate *template.Template
