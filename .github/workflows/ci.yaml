@@ -1,0 +1,56 @@
+name: CI
+
+on:
+  push:
+    branches: # only for pushes on main
+      - main
+  pull_request: # for all PRs regardless of its base branch
+
+jobs:
+  build:
+    # TODO: need to change self-hosted machine and GO env
+    name: Build & Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Set up Go 1.x
+        uses: actions/setup-go@v3
+        with:
+          go-version: 1.18
+        id: go
+
+      - name: Checkout code into the Go module directory
+        uses: actions/checkout@v3
+
+      - name: Build
+        env:
+          GO: go
+        run: make build
+
+      - name: Run unit tests
+        env:
+          GO: go
+        run: make test
+
+#      - name: Sign the binary with EGo for production
+#        run: make sign-prod
+
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Set up Go 1.x
+        uses: actions/setup-go@v3
+        with:
+          go-version: 1.18
+        id: go
+
+      - name: Checkout code into the Go module directory
+        uses: actions/checkout@v3
+
+      - name: Lint
+        uses: golangci/golangci-lint-action@v3
+        with:
+          version: latest
+          args: --timeout=5m

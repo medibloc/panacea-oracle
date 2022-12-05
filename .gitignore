@@ -13,3 +13,13 @@
 
 # Dependency directories (remove the comment below to include it)
 # vendor/
+
+.idea/
+build/
+
+# Dotenv file that is usually used for docker-compose
+.env
+
+# Enclave-related files
+./enclave.json
+*.pem
