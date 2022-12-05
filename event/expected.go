@@ -16,6 +16,6 @@ type Reactor interface {
 	OraclePrivKey() *btcec.PrivateKey
 	Config() *config.Config
 	QueryClient() *panacea.QueryClient
-	Ipfs() *ipfs.Ipfs
+	IPFS() *ipfs.IPFS
 	BroadcastTx(txBytes []byte) (int64, string, error)
 }

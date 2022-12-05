@@ -7,23 +7,23 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-type Ipfs struct {
+type IPFS struct {
 	sh *shell.Shell
 }
 
-// NewIpfs generates an ipfs node with ipfs url.
-func NewIpfs(url string) *Ipfs {
+// NewIPFS generates an IPFS node with IPFS url.
+func NewIPFS(url string) *IPFS {
 	newShell := shell.NewShell(url)
 
 	log.Info("successfully connect to IPFS node")
 
-	return &Ipfs{
+	return &IPFS{
 		sh: newShell,
 	}
 }
 
 // Add method adds a data and returns a CID.
-func (i *Ipfs) Add(data []byte) (string, error) {
+func (i *IPFS) Add(data []byte) (string, error) {
 	reader := bytes.NewReader(data)
 
 	cid, err := i.sh.Add(reader)
@@ -35,7 +35,7 @@ func (i *Ipfs) Add(data []byte) (string, error) {
 }
 
 // Get method gets a data and returns a bytes of Deal.
-func (i *Ipfs) Get(cid string) ([]byte, error) {
+func (i *IPFS) Get(cid string) ([]byte, error) {
 	data, err := i.sh.Cat(cid)
 	if err != nil {
 		return nil, err

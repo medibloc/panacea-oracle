@@ -24,7 +24,7 @@ type Service struct {
 	queryClient *panacea.QueryClient
 	grpcClient  *panacea.GRPCClient
 	subscriber  *event.PanaceaSubscriber
-	ipfs        *ipfs.Ipfs
+	ipfs        *ipfs.IPFS
 }
 
 func New(conf *config.Config) (*Service, error) {
@@ -68,7 +68,7 @@ func New(conf *config.Config) (*Service, error) {
 		return nil, fmt.Errorf("failed to init subscriber: %w", err)
 	}
 
-	newIpfs := ipfs.NewIpfs(conf.Ipfs.IpfsNodeAddr)
+	newIpfs := ipfs.NewIPFS(conf.IPFS.IPFSNodeAddr)
 
 	return &Service{
 		conf:          conf,
@@ -124,7 +124,7 @@ func (s *Service) QueryClient() *panacea.QueryClient {
 	return s.queryClient
 }
 
-func (s *Service) Ipfs() *ipfs.Ipfs {
+func (s *Service) Ipfs() *ipfs.IPFS {
 	return s.ipfs
 }
 
