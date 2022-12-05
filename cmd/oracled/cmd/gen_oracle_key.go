@@ -47,6 +47,12 @@ func genOracleKeyCmd() *cobra.Command {
 				}
 			}
 
+			// get trusted block information
+			trustedBlockInfo, err := getTrustedBlockInfo(cmd)
+			if err != nil {
+				return fmt.Errorf("failed to get trusted block info: %w", err)
+			}
+
 			// generate a new oracle key
 			oraclePrivKey, err := crypto.NewPrivKey()
 			if err != nil {
@@ -72,12 +78,6 @@ func genOracleKeyCmd() *cobra.Command {
 			if err := storeOraclePubKey(oraclePubKey, oracleKeyRemoteReport, conf.AbsOraclePubKeyPath()); err != nil {
 				log.Errorf("failed to save oracle pub key and its remote report: %v", err)
 				return err
-			}
-
-			// get trusted block information
-			trustedBlockInfo, err := getTrustedBlockInfo(cmd)
-			if err != nil {
-				return fmt.Errorf("failed to get trusted block info: %w", err)
 			}
 
 			// initialize query client using trustedBlockInfo

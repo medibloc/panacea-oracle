@@ -2,8 +2,9 @@ package config
 
 import (
 	"errors"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"path/filepath"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 type Config struct {
@@ -58,9 +59,10 @@ func DefaultConfig() *Config {
 			OraclePubKeyFile:  "oracle_pub_key.json",
 		},
 		Panacea: PanaceaConfig{
-			GRPCAddr:                "http://127.0.0.1:9090",
-			RPCAddr:                 "tcp://127.0.0.1:26657",
-			ChainID:                 "",
+			GRPCAddr: "http://127.0.0.1:9090",
+			RPCAddr:  "tcp://127.0.0.1:26657",
+			ChainID:  "",
+			// TODO: calculate fee instead of using default fee
 			DefaultGasLimit:         400000,
 			DefaultFeeAmount:        "2000000umed",
 			LightClientPrimaryAddr:  "tcp://127.0.0.1:26657",
