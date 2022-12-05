@@ -12,7 +12,7 @@ type Config struct {
 
 	Panacea PanaceaConfig `mapstructure:"panacea"`
 
-	Ipfs IpfsConfig `mapstructure:"ipfs"`
+	IPFS IPFSConfig `mapstructure:"ipfs"`
 }
 
 type BaseConfig struct {
@@ -41,8 +41,8 @@ type PanaceaConfig struct {
 	LightClientLogLevel     string   `mapstructure:"light-client-log-level"`
 }
 
-type IpfsConfig struct {
-	IpfsNodeAddr string `mapstructure:"ipfs-node-addr"`
+type IPFSConfig struct {
+	IPFSNodeAddr string `mapstructure:"ipfs-node-addr"`
 }
 
 func DefaultConfig() *Config {
@@ -69,8 +69,8 @@ func DefaultConfig() *Config {
 			LightClientWitnessAddrs: []string{"tcp://127.0.0.1:26657"},
 			LightClientLogLevel:     "error",
 		},
-		Ipfs: IpfsConfig{
-			IpfsNodeAddr: "127.0.0.1:5001",
+		IPFS: IPFSConfig{
+			IPFSNodeAddr: "127.0.0.1:5001",
 		},
 	}
 }

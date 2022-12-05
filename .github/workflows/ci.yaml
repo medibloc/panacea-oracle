@@ -32,6 +32,9 @@ jobs:
           GO: go
         run: make test
 
+#      - name: Sign the binary with EGo for production
+#        run: make sign-prod
+
   lint:
     name: Lint
     runs-on: ubuntu-latest
