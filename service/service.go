@@ -8,6 +8,7 @@ import (
 	"github.com/medibloc/panacea-oracle/config"
 	"github.com/medibloc/panacea-oracle/crypto"
 	"github.com/medibloc/panacea-oracle/event"
+	"github.com/medibloc/panacea-oracle/ipfs"
 	"github.com/medibloc/panacea-oracle/panacea"
 	"github.com/medibloc/panacea-oracle/sgx"
 	log "github.com/sirupsen/logrus"
@@ -21,8 +22,9 @@ type Service struct {
 	oraclePrivKey *btcec.PrivateKey
 
 	queryClient *panacea.QueryClient
-	grpcClient  *panacea.GrpcClient
+	grpcClient  *panacea.GRPCClient
 	subscriber  *event.PanaceaSubscriber
+	ipfs        *ipfs.Ipfs
 }
 
 func New(conf *config.Config) (*Service, error) {
@@ -47,7 +49,7 @@ func New(conf *config.Config) (*Service, error) {
 		return nil, fmt.Errorf("failed to load query client: %w", err)
 	}
 
-	grpcClient, err := panacea.NewGrpcClient(conf.Panacea.GRPCAddr)
+	grpcClient, err := panacea.NewGRPCClient(conf.Panacea.GRPCAddr)
 	if err != nil {
 		if err := queryClient.Close(); err != nil {
 			log.Warn(err)
@@ -66,6 +68,8 @@ func New(conf *config.Config) (*Service, error) {
 		return nil, fmt.Errorf("failed to init subscriber: %w", err)
 	}
 
+	newIpfs := ipfs.NewIpfs(conf.Ipfs.IpfsNodeAddr)
+
 	return &Service{
 		conf:          conf,
 		oracleAccount: oracleAccount,
@@ -74,6 +78,7 @@ func New(conf *config.Config) (*Service, error) {
 		queryClient:   queryClient,
 		grpcClient:    grpcClient,
 		subscriber:    subscriber,
+		ipfs:          newIpfs,
 	}, nil
 }
 
@@ -111,12 +116,16 @@ func (s *Service) EnclaveInfo() *sgx.EnclaveInfo {
 	return s.enclaveInfo
 }
 
-func (s *Service) GRPCClient() *panacea.GrpcClient {
+func (s *Service) GRPCClient() *panacea.GRPCClient {
 	return s.grpcClient
 }
 
 func (s *Service) QueryClient() *panacea.QueryClient {
 	return s.queryClient
+}
+
+func (s *Service) Ipfs() *ipfs.Ipfs {
+	return s.ipfs
 }
 
 func (s *Service) BroadcastTx(txBytes []byte) (int64, string, error) {

@@ -12,11 +12,11 @@ import (
 	"google.golang.org/grpc/credentials"
 )
 
-type GrpcClient struct {
+type GRPCClient struct {
 	conn *grpc.ClientConn
 }
 
-func NewGrpcClient(grpcAddr string) (*GrpcClient, error) {
+func NewGRPCClient(grpcAddr string) (*GRPCClient, error) {
 	log.Infof("dialing to Panacea gRPC endpoint: %s", grpcAddr)
 
 	parsedUrl, err := url.Parse(grpcAddr)
@@ -37,17 +37,17 @@ func NewGrpcClient(grpcAddr string) (*GrpcClient, error) {
 		return nil, fmt.Errorf("failed to connect to Panacea: %w", err)
 	}
 
-	return &GrpcClient{
+	return &GRPCClient{
 		conn: conn,
 	}, nil
 }
 
-func (c *GrpcClient) Close() error {
+func (c *GRPCClient) Close() error {
 	log.Info("closing Panacea gRPC connection")
 	return c.conn.Close()
 }
 
-func (c *GrpcClient) BroadcastTx(txBytes []byte) (*tx.BroadcastTxResponse, error) {
+func (c *GRPCClient) BroadcastTx(txBytes []byte) (*tx.BroadcastTxResponse, error) {
 	txClient := tx.NewServiceClient(c.conn)
 
 	return txClient.BroadcastTx(
