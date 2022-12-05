@@ -10,14 +10,12 @@ const dummyData = "dummy-data"
 
 type EnclaveInfo struct {
 	ProductID []byte
-	SignerID  []byte
 	UniqueID  []byte
 }
 
-func NewEnclaveInfo(productID, signerID, uniqueID []byte) *EnclaveInfo {
+func NewEnclaveInfo(productID, uniqueID []byte) *EnclaveInfo {
 	return &EnclaveInfo{
 		ProductID: productID,
-		SignerID:  signerID,
 		UniqueID:  uniqueID,
 	}
 }
@@ -35,7 +33,7 @@ func GetSelfEnclaveInfo() (*EnclaveInfo, error) {
 		return nil, fmt.Errorf("failed to retrieve self-report: %w", err)
 	}
 
-	return NewEnclaveInfo(report.ProductID, report.SignerID, report.UniqueID), nil
+	return NewEnclaveInfo(report.ProductID, report.UniqueID), nil
 }
 
 func (e EnclaveInfo) UniqueIDHex() string {

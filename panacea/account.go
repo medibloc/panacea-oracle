@@ -19,12 +19,12 @@ type OracleAccount struct {
 // NewOracleAccount returns an oracle account from mnemonic, account number, and index
 func NewOracleAccount(mnemonic string, accNum, index uint32) (*OracleAccount, error) {
 	if len(mnemonic) == 0 {
-		return &OracleAccount{}, fmt.Errorf("mnemonic is empty")
+		return nil, fmt.Errorf("mnemonic is empty")
 	}
 
 	key, err := crypto.GeneratePrivateKeyFromMnemonic(mnemonic, CoinType, accNum, index)
 	if err != nil {
-		return &OracleAccount{}, err
+		return nil, err
 	}
 
 	pk := &secp256k1.PrivKey{
