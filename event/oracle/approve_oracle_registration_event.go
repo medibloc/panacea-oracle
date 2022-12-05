@@ -8,11 +8,11 @@ import (
 var _ event.Event = (*ApproveOracleRegistrationEvent)(nil)
 
 type ApproveOracleRegistrationEvent struct {
-	//reactor event.Reactor
+	reactor event.Reactor
 }
 
-func NewApproveOracleRegistrationEvent(s event.Reactor) RegisterOracleEvent {
-	return RegisterOracleEvent{s}
+func NewApproveOracleRegistrationEvent(s event.Reactor) ApproveOracleRegistrationEvent {
+	return ApproveOracleRegistrationEvent{s}
 }
 
 func (e ApproveOracleRegistrationEvent) GetEventQuery() string {
