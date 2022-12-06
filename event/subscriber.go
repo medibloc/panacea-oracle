@@ -33,8 +33,7 @@ func (s *PanaceaSubscriber) Run(events ...Event) error {
 	log.Infof("start panacea event subscriber")
 
 	for _, e := range events {
-		err := s.subscribe(e)
-		if err != nil {
+		if err := s.subscribe(e); err != nil {
 			return err
 		}
 	}
