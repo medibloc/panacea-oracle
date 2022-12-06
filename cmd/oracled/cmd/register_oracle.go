@@ -78,6 +78,9 @@ func registerOracleCmd() *cobra.Command {
 			_ = hex.EncodeToString(report.UniqueID)
 
 			// request register oracle Tx to Panacea
+			// TODO: add register-oracle Tx
+
+			// subscribe approval of oracle registration and handle it
 			client, err := rpchttp.New(conf.Panacea.RPCAddr, "/websocket")
 			if err != nil {
 				return err
