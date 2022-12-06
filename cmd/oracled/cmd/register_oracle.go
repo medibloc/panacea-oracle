@@ -12,12 +12,13 @@ import (
 	"github.com/medibloc/panacea-oracle/crypto"
 	oracleevent "github.com/medibloc/panacea-oracle/event/oracle"
 	"github.com/medibloc/panacea-oracle/panacea"
-	"github.com/medibloc/panacea-oracle/service"
 	"github.com/medibloc/panacea-oracle/sgx"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	tos "github.com/tendermint/tendermint/libs/os"
+	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
 	"os"
+	"time"
 )
 
 const (
@@ -77,23 +78,42 @@ func registerOracleCmd() *cobra.Command {
 			_ = hex.EncodeToString(report.UniqueID)
 
 			// request register oracle Tx to Panacea
-			// TODO: add MsgRegisterOracle Tx
-
-			// subscribe approve oracle registration event
-			svc, err := service.New(conf)
+			client, err := rpchttp.New(conf.Panacea.RPCAddr, "/websocket")
 			if err != nil {
-				return fmt.Errorf("failed to create service: %w", err)
-			}
-			defer svc.Close()
-
-			err = svc.StartSubscriptions(
-				oracleevent.NewApproveOracleRegistrationEvent(svc),
-			)
-			if err != nil {
-				return fmt.Errorf("failed to start event subscription: %w", err)
+				return err
 			}
 
-			return nil
+			if err := client.Start(); err != nil {
+				return err
+			}
+			defer client.Stop()
+
+			event := oracleevent.NewApproveOracleRegistrationEvent()
+
+			ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+			defer cancel()
+
+			txs, err := client.Subscribe(ctx, "", event.GetEventQuery())
+			if err != nil {
+				return err
+			}
+
+			errChan := make(chan error, 1)
+
+			for tx := range txs {
+				errChan <- event.EventHandler(tx)
+			}
+
+			select {
+			case err := <-errChan:
+				if err != nil {
+					log.Infof("Error occurs while getting shared oracle private key. Please retrieve it via get-oracle-key cmd: %v", err)
+					return err
+				} else {
+					log.Infof("oracle private key is successfully shared. You can start oracle now!")
+					return nil
+				}
+			}
 		},
 	}
 
