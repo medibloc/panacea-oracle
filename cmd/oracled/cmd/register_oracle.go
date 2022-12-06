@@ -86,7 +86,9 @@ func registerOracleCmd() *cobra.Command {
 			if err := client.Start(); err != nil {
 				return err
 			}
-			defer client.Stop()
+			defer func() {
+				_ = client.Stop()
+			}()
 
 			event := oracleevent.NewApproveOracleRegistrationEvent()
 
@@ -104,15 +106,13 @@ func registerOracleCmd() *cobra.Command {
 				errChan <- event.EventHandler(tx)
 			}
 
-			select {
-			case err := <-errChan:
-				if err != nil {
-					log.Infof("Error occurs while getting shared oracle private key. Please retrieve it via get-oracle-key cmd: %v", err)
-					return err
-				} else {
-					log.Infof("oracle private key is successfully shared. You can start oracle now!")
-					return nil
-				}
+			err = <-errChan
+			if err != nil {
+				log.Infof("Error occurs while getting shared oracle private key. Please retrieve it via get-oracle-key cmd: %v", err)
+				return err
+			} else {
+				log.Infof("oracle private key is successfully shared. You can start oracle now!")
+				return nil
 			}
 		},
 	}
