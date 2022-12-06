@@ -19,7 +19,7 @@ func (e RegisterOracleEvent) GetEventQuery() string {
 	return "message.action = 'RegisterOracle'"
 }
 
-// TODO: EventHandler for RegisterOracle will be implemented when RegisterOracle Tx implemented in panacea-core.
 func (e RegisterOracleEvent) EventHandler(event ctypes.ResultEvent) error {
-	panic("implement me")
+	// TODO: https://github.com/medibloc/panacea-oracle/issues/3
+	panic("will be implemented in issue #3")
 }

@@ -30,7 +30,7 @@ func NewSubscriber(wsAddr string) (*PanaceaSubscriber, error) {
 }
 
 func (s *PanaceaSubscriber) Run(events ...Event) error {
-	log.Infof("start panacea event subscriber")
+	log.Infof("Panacea event subscriber is started")
 
 	for _, e := range events {
 		err := s.subscribe(e)
