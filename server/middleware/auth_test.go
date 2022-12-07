@@ -1,4 +1,4 @@
-package middleware
+package middleware_test
 
 import (
 	"fmt"
@@ -16,6 +16,7 @@ import (
 	"github.com/lestrrat-go/jwx/v2/jwa"
 	"github.com/lestrrat-go/jwx/v2/jwt"
 	"github.com/medibloc/panacea-oracle/panacea"
+	"github.com/medibloc/panacea-oracle/server/middleware"
 	"github.com/stretchr/testify/require"
 )
 
@@ -23,7 +24,7 @@ var (
 	testPrivKey = secp256k1.GenPrivKey()
 	testAccAddr = "test-addr"
 
-	testHandler = NewJWTAuthMiddleware(&mockPanaceaClient{}).Middleware(
+	testHandler = middleware.NewJWTAuthMiddleware(&mockPanaceaClient{}).Middleware(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusOK)
 		}),
@@ -75,17 +76,6 @@ func TestAccountNotFound(t *testing.T) {
 		fmt.Sprintf("Bearer %s", string(jwt)),
 		http.StatusUnauthorized,
 		"cannot query account pubkey",
-	)
-}
-
-func TestOldJWT(t *testing.T) {
-	jwt := testGenerateJWT(t, testAccAddr, testPrivKey, acceptableJWTAge+10*time.Second)
-	time.Sleep(acceptableJWTAge + 1*time.Second)
-	testHTTPRequest(
-		t,
-		fmt.Sprintf("Bearer %s", string(jwt)),
-		http.StatusUnauthorized,
-		"jwt is too old",
 	)
 }
 

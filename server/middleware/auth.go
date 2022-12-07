@@ -5,17 +5,12 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
-	"time"
 
 	"github.com/btcsuite/btcd/btcec"
 	"github.com/lestrrat-go/jwx/v2/jwa"
 	"github.com/lestrrat-go/jwx/v2/jwt"
 	"github.com/medibloc/panacea-oracle/panacea"
 	log "github.com/sirupsen/logrus"
-)
-
-const (
-	acceptableJWTAge = 10 * time.Second
 )
 
 type jwtAuthMiddleware struct {
@@ -53,14 +48,6 @@ func (mw *jwtAuthMiddleware) Middleware(next http.Handler) http.Handler {
 		parsedJWT, err := jwt.ParseInsecure(jwtBz)
 		if err != nil {
 			http.Error(w, "invalid jwt", http.StatusUnauthorized)
-			return
-		}
-
-		// don't accept old JWT even though it isn't expired yet.
-		// The 'exp' and 'nbf' fields are meaningless in this case because JWT is issued by HTTP client.
-		jwtAge := time.Since(parsedJWT.IssuedAt())
-		if jwtAge > acceptableJWTAge {
-			http.Error(w, "jwt is too old", http.StatusUnauthorized)
 			return
 		}
 
