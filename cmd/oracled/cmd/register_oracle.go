@@ -90,7 +90,9 @@ func registerOracleCmd() *cobra.Command {
 				return err
 			}
 			defer func() {
-				_ = client.Stop()
+				if err = client.Stop(); err != nil {
+					log.Errorf("error occurs when rpc client stops: %s", err.Error())
+				}
 			}()
 
 			event := oracleevent.NewApproveOracleRegistrationEvent()
