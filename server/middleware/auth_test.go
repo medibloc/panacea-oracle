@@ -26,7 +26,13 @@ var (
 
 	testHandler = middleware.NewJWTAuthMiddleware(&mockPanaceaClient{}).Middleware(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			w.WriteHeader(http.StatusOK)
+			// For tests, return OK only if the request is requested by the 'testAccAddr'
+			accAddr := r.Context().Value(middleware.ContextKeyAuthenticatedAccountAddress).(string)
+			if accAddr == testAccAddr {
+				w.WriteHeader(http.StatusOK)
+			} else {
+				w.WriteHeader(http.StatusNotAcceptable)
+			}
 		}),
 	)
 )

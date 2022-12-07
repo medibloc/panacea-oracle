@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"context"
 	"crypto/ecdsa"
 	"fmt"
 	"net/http"
@@ -64,7 +65,16 @@ func (mw *jwtAuthMiddleware) Middleware(next http.Handler) http.Handler {
 			return
 		}
 
-		next.ServeHTTP(w, r)
+		// pass the authenticated account address to next handlers
+		newReq := r.WithContext(
+			context.WithValue(
+				r.Context(),
+				ContextKeyAuthenticatedAccountAddress,
+				parsedJWT.Issuer(),
+			),
+		)
+
+		next.ServeHTTP(w, newReq)
 	})
 }
 
