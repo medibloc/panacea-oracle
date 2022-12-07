@@ -32,32 +32,62 @@ var (
 
 func TestAuthSuccess(t *testing.T) {
 	jwt := testGenerateJWT(t, testAccAddr, testPrivKey, 10*time.Second)
-	testHTTPRequest(t, fmt.Sprintf("Bearer %s", string(jwt)), http.StatusOK, "")
+	testHTTPRequest(
+		t,
+		fmt.Sprintf("Bearer %s", string(jwt)),
+		http.StatusOK,
+		"",
+	)
 }
 
 func TestMissingAuthorizationHeader(t *testing.T) {
-	testHTTPRequest(t, "", http.StatusUnauthorized, "missing authorization header")
+	testHTTPRequest(
+		t,
+		"",
+		http.StatusUnauthorized,
+		"missing authorization header",
+	)
 }
 
 func TestInvalidBearerToken(t *testing.T) {
 	jwt := testGenerateJWT(t, testAccAddr, testPrivKey, 10*time.Second)
-	testHTTPRequest(t, fmt.Sprintf("Bea123er %s", string(jwt)), http.StatusUnauthorized, "invalid bearer token")
+	testHTTPRequest(
+		t,
+		fmt.Sprintf("Bea123er %s", string(jwt)),
+		http.StatusUnauthorized,
+		"invalid bearer token",
+	)
 }
 
 func TestAccountNotFound(t *testing.T) {
 	jwt := testGenerateJWT(t, "dummy-account", testPrivKey, 10*time.Second)
-	testHTTPRequest(t, fmt.Sprintf("Bearer %s", string(jwt)), http.StatusUnauthorized, "cannot query account pubkey")
+	testHTTPRequest(
+		t,
+		fmt.Sprintf("Bearer %s", string(jwt)),
+		http.StatusUnauthorized,
+		"cannot query account pubkey",
+	)
 }
 
 func TestOldJWT(t *testing.T) {
 	jwt := testGenerateJWT(t, testAccAddr, testPrivKey, acceptableJWTAge+10*time.Second)
 	time.Sleep(acceptableJWTAge + 1*time.Second)
-	testHTTPRequest(t, fmt.Sprintf("Bearer %s", string(jwt)), http.StatusUnauthorized, "jwt is too old")
+	testHTTPRequest(
+		t,
+		fmt.Sprintf("Bearer %s", string(jwt)),
+		http.StatusUnauthorized,
+		"jwt is too old",
+	)
 }
 
 func TestSignatureVerificationFailure(t *testing.T) {
 	jwt := testGenerateJWT(t, testAccAddr, secp256k1.GenPrivKey(), 10*time.Second)
-	testHTTPRequest(t, fmt.Sprintf("Bearer %s", string(jwt)), http.StatusUnauthorized, "jwt signature verification failed")
+	testHTTPRequest(
+		t,
+		fmt.Sprintf("Bearer %s", string(jwt)),
+		http.StatusUnauthorized,
+		"jwt signature verification failed",
+	)
 }
 
 func testGenerateJWT(t *testing.T, issuer string, privKey *secp256k1.PrivKey, expiration time.Duration) []byte {
