@@ -33,6 +33,5 @@ func New(svc *service.Service) *Server {
 
 func (srv *Server) Run() error {
 	log.Infof("HTTP server is started: %s", srv.Addr)
-	// TODO: add TLS
 	return srv.ListenAndServe()
 }
