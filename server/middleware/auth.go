@@ -58,7 +58,7 @@ func (mw *jwtAuthMiddleware) Middleware(next http.Handler) http.Handler {
 
 		// don't accept old JWT even though it isn't expired yet.
 		// The 'exp' and 'nbf' fields are meaningless in this case because JWT is issued by HTTP client.
-		jwtAge := time.Now().Sub(parsedJWT.IssuedAt())
+		jwtAge := time.Since(parsedJWT.IssuedAt())
 		if jwtAge > acceptableJWTAge {
 			http.Error(w, "jwt is too old", http.StatusUnauthorized)
 			return
