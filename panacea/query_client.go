@@ -15,6 +15,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/std"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/ibc-go/v2/modules/core/23-commitment/types"
+	datadealtypes "github.com/medibloc/panacea-core/v2/x/datadeal/types"
 	"github.com/medibloc/panacea-oracle/config"
 	sgxdb "github.com/medibloc/panacea-oracle/store/sgxleveldb"
 	log "github.com/sirupsen/logrus"
@@ -343,6 +344,22 @@ func (q QueryClient) GetAccount(address string) (authtypes.AccountI, error) {
 	return account, nil
 }
 
+func (q QueryClient) GetDeal(dealID uint64) (*datadealtypes.Deal, error) {
+	key := datadealtypes.GetDealKey(dealID)
+
+	bz, err := q.GetStoreData(context.Background(), datadealtypes.StoreKey, key)
+	if err != nil {
+		return nil, err
+	}
+
+	var deal datadealtypes.Deal
+	if err = q.cdc.UnmarshalLengthPrefixed(bz, &deal); err != nil {
+		return nil, err
+	}
+
+	return &deal, nil
+}
+
 //func (q QueryClient) GetOracleRegistration(oracleAddr, uniqueID, pubKey string) (*oracletypes.OracleRegistration, error) {
 //
 //	acc, err := GetAccAddressFromBech32(oracleAddr)
@@ -403,22 +420,7 @@ func (q QueryClient) GetAccount(address string) (authtypes.AccountI, error) {
 //	}
 //	return &oracleUpgradeInfo, nil
 //}
-//func (q QueryClient) GetDeal(dealID uint64) (*datadealtypes.Deal, error) {
-//	key := datadealtypes.GetDealKey(dealID)
-//
-//	bz, err := q.GetStoreData(context.Background(), datadealtypes.StoreKey, key)
-//	if err != nil {
-//		return nil, err
-//	}
-//
-//	var deal datadealtypes.Deal
-//	err = q.cdc.UnmarshalLengthPrefixed(bz, &deal)
-//	if err != nil {
-//		return nil, err
-//	}
-//
-//	return &deal, nil
-//}
+
 //
 //func (q QueryClient) GetDataSale(dataHash string, dealID uint64) (*datadealtypes.DataSale, error) {
 //	key := datadealtypes.GetDataSaleKey(dataHash, dealID)
