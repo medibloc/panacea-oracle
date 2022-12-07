@@ -35,7 +35,6 @@ func startCmd() *cobra.Command {
 			err = svc.StartSubscriptions(
 				oracleevent.NewRegisterOracleEvent(svc),
 			)
-
 			if err != nil {
 				return fmt.Errorf("failed to start event subscription: %w", err)
 			}
