@@ -59,6 +59,15 @@ func TestInvalidBearerToken(t *testing.T) {
 	)
 }
 
+func TestInvalidJWT(t *testing.T) {
+	testHTTPRequest(
+		t,
+		"Bearer abcdef",
+		http.StatusUnauthorized,
+		"invalid jwt",
+	)
+}
+
 func TestAccountNotFound(t *testing.T) {
 	jwt := testGenerateJWT(t, "dummy-account", testPrivKey, 10*time.Second)
 	testHTTPRequest(
