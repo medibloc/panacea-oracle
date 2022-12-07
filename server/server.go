@@ -1,11 +1,13 @@
 package server
 
 import (
-	"github.com/gorilla/mux"
-	"github.com/medibloc/panacea-oracle/service"
-	log "github.com/sirupsen/logrus"
 	"net/http"
 	"time"
+
+	"github.com/gorilla/mux"
+	"github.com/medibloc/panacea-oracle/server/middleware"
+	"github.com/medibloc/panacea-oracle/service"
+	log "github.com/sirupsen/logrus"
 )
 
 type Server struct {
@@ -15,6 +17,9 @@ type Server struct {
 func New(svc *service.Service) *Server {
 	router := mux.NewRouter()
 	router.HandleFunc("/v0/data-deal/deals/{dealId}/data", svc.ValidateData).Methods("POST")
+
+	mw := middleware.NewJWTAuthMiddleware(svc)
+	router.Use(mw.Middleware)
 
 	return &Server{
 		&http.Server{
