@@ -18,17 +18,17 @@ const (
 	acceptableJWTAge = 10 * time.Second
 )
 
-type PanaceaClient interface {
-	QueryClient() panacea.QueryClient
-}
-
 type jwtAuthMiddleware struct {
-	panaceaClient PanaceaClient
+	panaceaClient panaceaClient
 
 	// TODO: manage a nonce per account
 }
 
-func NewJWTAuthMiddleware(client PanaceaClient) *jwtAuthMiddleware {
+type panaceaClient interface {
+	QueryClient() panacea.QueryClient
+}
+
+func NewJWTAuthMiddleware(client panaceaClient) *jwtAuthMiddleware {
 	return &jwtAuthMiddleware{
 		panaceaClient: client,
 	}
