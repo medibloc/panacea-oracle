@@ -15,18 +15,14 @@ import (
 )
 
 type jwtAuthMiddleware struct {
-	panaceaClient panaceaClient
+	panaceaQueryClient panacea.QueryClient
 
 	// TODO: manage a nonce per account
 }
 
-type panaceaClient interface {
-	QueryClient() panacea.QueryClient
-}
-
-func NewJWTAuthMiddleware(client panaceaClient) *jwtAuthMiddleware {
+func NewJWTAuthMiddleware(queryClient panacea.QueryClient) *jwtAuthMiddleware {
 	return &jwtAuthMiddleware{
-		panaceaClient: client,
+		panaceaQueryClient: queryClient,
 	}
 }
 
@@ -79,7 +75,7 @@ func (mw *jwtAuthMiddleware) Middleware(next http.Handler) http.Handler {
 }
 
 func (mw *jwtAuthMiddleware) queryAccountPubKey(addr string) (*ecdsa.PublicKey, error) {
-	account, err := mw.panaceaClient.QueryClient().GetAccount(addr)
+	account, err := mw.panaceaQueryClient.GetAccount(addr)
 	if err != nil {
 		return nil, fmt.Errorf("failed to query account: %w", err)
 	}

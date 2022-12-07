@@ -18,7 +18,7 @@ func New(svc *service.Service) *Server {
 	router := mux.NewRouter()
 	router.HandleFunc("/v0/data-deal/deals/{dealId}/data", svc.ValidateData).Methods("POST")
 
-	mw := middleware.NewJWTAuthMiddleware(svc)
+	mw := middleware.NewJWTAuthMiddleware(svc.QueryClient())
 	router.Use(mw.Middleware)
 
 	return &Server{

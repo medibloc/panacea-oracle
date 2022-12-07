@@ -15,7 +15,6 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/lestrrat-go/jwx/v2/jwa"
 	"github.com/lestrrat-go/jwx/v2/jwt"
-	"github.com/medibloc/panacea-oracle/panacea"
 	"github.com/medibloc/panacea-oracle/server/middleware"
 	"github.com/stretchr/testify/require"
 )
@@ -24,7 +23,7 @@ var (
 	testPrivKey = secp256k1.GenPrivKey()
 	testAccAddr = "test-addr"
 
-	testHandler = middleware.NewJWTAuthMiddleware(&mockPanaceaClient{}).Middleware(
+	testHandler = middleware.NewJWTAuthMiddleware(&mockQueryClient{}).Middleware(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			// For tests, return OK only if the request is requested by the 'testAccAddr'
 			accAddr := r.Context().Value(middleware.ContextKeyAuthenticatedAccountAddress).(string)
@@ -131,12 +130,6 @@ func testHTTPRequest(t *testing.T, authorizationHeader string, statusCode int, e
 }
 
 //// Mocks //////////////////////////////////////////////////////////////
-
-type mockPanaceaClient struct{}
-
-func (c *mockPanaceaClient) QueryClient() panacea.QueryClient {
-	return &mockQueryClient{}
-}
 
 type mockQueryClient struct{}
 
