@@ -1,5 +1,3 @@
 package middleware
 
-type ContextKey int
-
-const ContextKeyAuthenticatedAccountAddress ContextKey = 0
+type ContextKeyAuthenticatedAccountAddress struct{}

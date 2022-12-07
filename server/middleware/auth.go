@@ -63,11 +63,7 @@ func (mw *jwtAuthMiddleware) Middleware(next http.Handler) http.Handler {
 
 		// pass the authenticated account address to next handlers
 		newReq := r.WithContext(
-			context.WithValue(
-				r.Context(),
-				ContextKeyAuthenticatedAccountAddress,
-				parsedJWT.Issuer(),
-			),
+			context.WithValue(r.Context(), ContextKeyAuthenticatedAccountAddress{}, parsedJWT.Issuer()),
 		)
 
 		next.ServeHTTP(w, newReq)

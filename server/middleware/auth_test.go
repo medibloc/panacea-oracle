@@ -26,7 +26,7 @@ var (
 	testHandler = middleware.NewJWTAuthMiddleware(&mockQueryClient{}).Middleware(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			// For tests, return OK only if the request is requested by the 'testAccAddr'
-			accAddr := r.Context().Value(middleware.ContextKeyAuthenticatedAccountAddress).(string)
+			accAddr := r.Context().Value(middleware.ContextKeyAuthenticatedAccountAddress{}).(string)
 			if accAddr == testAccAddr {
 				w.WriteHeader(http.StatusOK)
 			} else {
