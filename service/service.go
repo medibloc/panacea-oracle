@@ -3,10 +3,10 @@ package service
 import (
 	"context"
 	"fmt"
+	"github.com/medibloc/panacea-oracle/crypto"
 
 	"github.com/btcsuite/btcd/btcec"
 	"github.com/medibloc/panacea-oracle/config"
-	"github.com/medibloc/panacea-oracle/crypto"
 	"github.com/medibloc/panacea-oracle/event"
 	"github.com/medibloc/panacea-oracle/ipfs"
 	"github.com/medibloc/panacea-oracle/panacea"
