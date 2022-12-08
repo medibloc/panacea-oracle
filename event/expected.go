@@ -15,6 +15,7 @@ type Reactor interface {
 	OracleAcc() *panacea.OracleAccount
 	OraclePrivKey() *btcec.PrivateKey
 	Config() *config.Config
+	//TODO: The type of QueryClient will be changed after https://github.com/medibloc/panacea-oracle/pull/19/files merged
 	QueryClient() *panacea.QueryClient
 	IPFS() *ipfs.IPFS
 	BroadcastTx(txBytes []byte) (int64, string, error)
