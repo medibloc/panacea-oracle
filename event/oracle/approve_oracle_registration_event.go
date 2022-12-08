@@ -8,18 +8,17 @@ import (
 var _ event.Event = (*ApproveOracleRegistrationEvent)(nil)
 
 type ApproveOracleRegistrationEvent struct {
-	reactor event.Reactor
 }
 
-func NewApproveOracleRegistrationEvent(s event.Reactor) ApproveOracleRegistrationEvent {
-	return ApproveOracleRegistrationEvent{s}
+func NewApproveOracleRegistrationEvent() ApproveOracleRegistrationEvent {
+	return ApproveOracleRegistrationEvent{}
 }
 
 func (e ApproveOracleRegistrationEvent) GetEventQuery() string {
 	return "message.action = 'ApproveOracleRegistration'"
 }
 
-// TODO: EventHandler for ApproveOracleRegistration will be implemented when ApproveOracleRegistration Tx implemented in panacea-core.
 func (e ApproveOracleRegistrationEvent) EventHandler(event ctypes.ResultEvent) error {
+	// TODO: implement to retrieve and store oracle_priv_key
 	panic("implement me")
 }

@@ -28,6 +28,7 @@ data_dir = "{{ .BaseConfig.DataDir }}"
 
 oracle_priv_key_file = "{{ .BaseConfig.OraclePrivKeyFile }}"
 oracle_pub_key_file = "{{ .BaseConfig.OraclePubKeyFile }}"
+node_priv_key_file = "{{ .BaseConfig.NodePrivKeyFile }}"
 
 ###############################################################################
 ###                         Panacea Configuration                           ###
