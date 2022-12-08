@@ -1,7 +1,14 @@
 package oracle
 
 import (
+	"crypto/sha256"
+	"fmt"
+
+	oracletypes "github.com/medibloc/panacea-core/v2/x/oracle/types"
 	"github.com/medibloc/panacea-oracle/event"
+	"github.com/medibloc/panacea-oracle/panacea"
+	"github.com/medibloc/panacea-oracle/sgx"
+	log "github.com/sirupsen/logrus"
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 )
 
@@ -19,7 +26,63 @@ func (e RegisterOracleEvent) GetEventQuery() string {
 	return "message.action = 'RegisterOracle'"
 }
 
-// TODO: EventHandler for RegisterOracle will be implemented when RegisterOracle Tx implemented in panacea-core.
 func (e RegisterOracleEvent) EventHandler(event ctypes.ResultEvent) error {
-	panic("implement me")
+	uniqueID := event.Events[oracletypes.EventTypeRegistration+"."+oracletypes.AttributeKeyUniqueID][0]
+	targetAddress := event.Events[oracletypes.EventTypeRegistration+"."+oracletypes.AttributeKeyOracleAddress][0]
+
+	msgApproveOracleRegistration, err := e.verifyAndGetMsgApproveOracleRegistration(uniqueID, targetAddress)
+	if err != nil {
+		return err
+	}
+
+	log.Infof("new oracle registeration voting info. uniqueID(%s), voterAddress(%s), votingTargetAddress(%s)",
+		msgApproveOracleRegistration.ApproveOracleRegistration.UniqueId,
+		msgApproveOracleRegistration.ApproveOracleRegistration.ApproverOracleAddress,
+		msgApproveOracleRegistration.ApproveOracleRegistration.TargetOracleAddress,
+	)
+
+	txBuilder := panacea.NewTxBuilder(*e.reactor.QueryClient())
+	txBytes, err := txBuilder.GenerateTxBytes(e.reactor.OracleAcc().GetPrivKey(), e.reactor.Config(), msgApproveOracleRegistration)
+	if err != nil {
+		return err
+	}
+
+	txHeight, txHash, err := e.reactor.BroadcastTx(txBytes)
+	if err != nil {
+		return fmt.Errorf("failed to oracleRegistrationVote transaction for new oracle registration: %v", err)
+	} else {
+		log.Infof("succeeded to oracleRegistrationVote transaction for new oracle registration. height(%v), hash(%s)", txHeight, txHash)
+	}
+
+	return nil
+}
+
+func (e RegisterOracleEvent) verifyAndGetMsgApproveOracleRegistration(uniqueID, targetAddress string) (*oracletypes.MsgApproveOracleRegistration, error) {
+	queryClient := e.reactor.QueryClient()
+	approverAddress := e.reactor.OracleAcc().GetAddress()
+	oraclePrivKeyBz := e.reactor.OraclePrivKey().Serialize()
+	approverUniqueID := e.reactor.EnclaveInfo().UniqueIDHex()
+
+	if uniqueID != approverUniqueID {
+		log.Infof("oracle's uniqueID does not match the requested uniqueID. expected(%s) got(%s)", approverUniqueID, uniqueID)
+	} else {
+		oracleRegistration, err := queryClient.GetOracleRegistration(uniqueID, targetAddress)
+		log.Infof("err while get oracleRegistration: %v", err)
+
+		if err := verifyTrustedBlockInfo(e.reactor.QueryClient(), oracleRegistration.TrustedBlockHeight, oracleRegistration.TrustedBlockHash); err != nil {
+			log.Infof("failed to verify trusted block. height(%d), hash(%s), err(%v)", oracleRegistration.TrustedBlockHeight, oracleRegistration.TrustedBlockHash, err)
+			return nil, err
+		}
+
+		nodePubKeyHash := sha256.Sum256(oracleRegistration.NodePubKey)
+
+		if err := sgx.VerifyRemoteReport(oracleRegistration.NodePubKeyRemoteReport, nodePubKeyHash[:], *e.reactor.EnclaveInfo()); err != nil {
+			log.Infof("failed to verification report. uniqueID(%s), address(%s), err(%v)", oracleRegistration.UniqueId, oracleRegistration.OracleAddress, err)
+			return nil, err
+		}
+
+		return makeMsgApproveOracleRegistration(approverUniqueID, approverAddress, targetAddress, oraclePrivKeyBz, oracleRegistration.NodePubKey)
+	}
+
+	return nil, nil
 }
