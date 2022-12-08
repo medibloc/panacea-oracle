@@ -35,7 +35,7 @@ func (e RegisterOracleEvent) EventHandler(event ctypes.ResultEvent) error {
 		return err
 	}
 
-	log.Infof("new oracle registeration voting info. uniqueID(%s), approverAddress(%s), targetAddress(%s)",
+	log.Infof("new oracle registration approval info. uniqueID(%s), approverAddress(%s), targetAddress(%s)",
 		msgApproveOracleRegistration.ApproveOracleRegistration.UniqueId,
 		msgApproveOracleRegistration.ApproveOracleRegistration.ApproverOracleAddress,
 		msgApproveOracleRegistration.ApproveOracleRegistration.TargetOracleAddress,
