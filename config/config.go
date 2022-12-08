@@ -28,6 +28,7 @@ type BaseConfig struct {
 
 	OraclePrivKeyFile string `mapstructure:"oracle_priv_key_file"`
 	OraclePubKeyFile  string `mapstructure:"oracle_pub_key_file"`
+	NodePrivKeyFile   string `mapstructure:"node_priv_key_file"`
 }
 
 type PanaceaConfig struct {
@@ -57,6 +58,7 @@ func DefaultConfig() *Config {
 
 			OraclePrivKeyFile: "oracle_priv_key.sealed",
 			OraclePubKeyFile:  "oracle_pub_key.json",
+			NodePrivKeyFile:   "node_priv_key.sealed",
 		},
 		Panacea: PanaceaConfig{
 			GRPCAddr: "http://127.0.0.1:9090",
@@ -101,6 +103,10 @@ func (c *Config) AbsOraclePrivKeyPath() string {
 
 func (c *Config) AbsOraclePubKeyPath() string {
 	return rootify(c.OraclePubKeyFile, c.homeDir)
+}
+
+func (c *Config) AbsNodePrivKeyPath() string {
+	return rootify(c.NodePrivKeyFile, c.homeDir)
 }
 
 func rootify(path, root string) string {
