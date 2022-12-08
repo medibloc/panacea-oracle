@@ -35,7 +35,7 @@ func (e RegisterOracleEvent) EventHandler(event ctypes.ResultEvent) error {
 		return err
 	}
 
-	log.Infof("new oracle registeration voting info. uniqueID(%s), voterAddress(%s), votingTargetAddress(%s)",
+	log.Infof("new oracle registeration voting info. uniqueID(%s), approverAddress(%s), targetAddress(%s)",
 		msgApproveOracleRegistration.ApproveOracleRegistration.UniqueId,
 		msgApproveOracleRegistration.ApproveOracleRegistration.ApproverOracleAddress,
 		msgApproveOracleRegistration.ApproveOracleRegistration.TargetOracleAddress,
@@ -49,9 +49,9 @@ func (e RegisterOracleEvent) EventHandler(event ctypes.ResultEvent) error {
 
 	txHeight, txHash, err := e.reactor.BroadcastTx(txBytes)
 	if err != nil {
-		return fmt.Errorf("failed to oracleRegistrationVote transaction for new oracle registration: %v", err)
+		return fmt.Errorf("failed to ApproveOracleRegistration transaction for new oracle registration: %v", err)
 	} else {
-		log.Infof("succeeded to oracleRegistrationVote transaction for new oracle registration. height(%v), hash(%s)", txHeight, txHash)
+		log.Infof("succeeded to ApproveOracleRegistration transaction for new oracle registration. height(%v), hash(%s)", txHeight, txHash)
 	}
 
 	return nil
