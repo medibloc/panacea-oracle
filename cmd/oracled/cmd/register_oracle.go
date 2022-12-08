@@ -6,8 +6,13 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
+	"os"
+	"time"
+
 	"github.com/cosmos/cosmos-sdk/client/input"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/edgelesssys/ego/enclave"
+	oracletypes "github.com/medibloc/panacea-core/v2/x/oracle/types"
 	"github.com/medibloc/panacea-oracle/client/flags"
 	"github.com/medibloc/panacea-oracle/crypto"
 	oracleevent "github.com/medibloc/panacea-oracle/event/oracle"
@@ -17,8 +22,6 @@ import (
 	"github.com/spf13/cobra"
 	tos "github.com/tendermint/tendermint/libs/os"
 	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
-	"os"
-	"time"
 )
 
 const (
@@ -63,22 +66,50 @@ func registerOracleCmd() *cobra.Command {
 			defer queryClient.Close()
 
 			// get oracle account from mnemonic.
-			_, err = panacea.NewOracleAccount(conf.OracleMnemonic, conf.OracleAccNum, conf.OracleAccIndex)
+			oracleAccount, err := panacea.NewOracleAccount(conf.OracleMnemonic, conf.OracleAccNum, conf.OracleAccIndex)
 			if err != nil {
 				return fmt.Errorf("failed to get oracle account from mnemonic: %w", err)
 			}
 
 			// generate node key and its remote report
-			_, nodePubKeyRemoteReport, err := generateSealedNodeKey(nodePrivKeyPath)
+			nodePubKey, nodePubKeyRemoteReport, err := generateSealedNodeKey(nodePrivKeyPath)
 			if err != nil {
 				return fmt.Errorf("failed to generate node key pair: %w", err)
 			}
 
 			report, _ := enclave.VerifyRemoteReport(nodePubKeyRemoteReport)
-			_ = hex.EncodeToString(report.UniqueID)
+			uniqueID := hex.EncodeToString(report.UniqueID)
 
 			// request register oracle Tx to Panacea
-			// TODO: add register-oracle Tx
+			oracleCommissionRate, err := sdk.NewDecFromStr(flagOracleCommissionRate)
+			if err != nil {
+				return err
+			}
+
+			msgRegisterOracle := oracletypes.NewMsgRegisterOracle(uniqueID, oracleAccount.GetAddress(), nodePubKey, nodePubKeyRemoteReport, trustedBlockInfo.TrustedBlockHeight, trustedBlockInfo.TrustedBlockHash, flagOracleEndpoint, oracleCommissionRate)
+			txBuilder := panacea.NewTxBuilder(*queryClient)
+			cli, err := panacea.NewGRPCClient(conf.Panacea.GRPCAddr)
+			if err != nil {
+				return fmt.Errorf("failed to generate gRPC client: %w", err)
+			}
+			defer cli.Close()
+
+			defaultFeeAmount, _ := sdk.ParseCoinsNormalized(conf.Panacea.DefaultFeeAmount)
+			txBytes, err := txBuilder.GenerateSignedTxBytes(oracleAccount.GetPrivKey(), conf.Panacea.DefaultGasLimit, defaultFeeAmount, msgRegisterOracle)
+			if err != nil {
+				return fmt.Errorf("failed to generate signed Tx bytes: %w", err)
+			}
+
+			resp, err := cli.BroadcastTx(txBytes)
+			if err != nil {
+				return fmt.Errorf("failed to broadcast transaction: %w", err)
+			}
+
+			if resp.TxResponse.Code != 0 {
+				return fmt.Errorf("register oracle transaction failed: %v", resp.TxResponse.RawLog)
+			}
+
+			log.Infof("register-oracle transaction succeed. height(%v), hash(%s)", resp.TxResponse.Height, resp.TxResponse.TxHash)
 
 			// subscribe approval of oracle registration and handle it
 			client, err := rpchttp.New(conf.Panacea.RPCAddr, "/websocket")
