@@ -6,7 +6,6 @@ import (
 	"fmt"
 
 	"github.com/btcsuite/btcd/btcec"
-	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	oracletypes "github.com/medibloc/panacea-core/v2/x/oracle/types"
 	"github.com/medibloc/panacea-oracle/crypto"
 	"github.com/medibloc/panacea-oracle/panacea"
@@ -37,9 +36,7 @@ func makeMsgApproveOracleRegistration(uniqueID, approverAddr, targetAddr string,
 }
 
 func makeMsgApproveOracleRegistrationWithSignature(approveOracleRegistration *oracletypes.ApproveOracleRegistration, oraclePrivKey []byte) (*oracletypes.MsgApproveOracleRegistration, error) {
-	key := secp256k1.PrivKey{
-		Key: oraclePrivKey,
-	}
+	key, _ := crypto.PrivKeyFromBytes(oraclePrivKey)
 
 	marshaledApproveOracleRegistration, err := approveOracleRegistration.Marshal()
 	if err != nil {
@@ -53,7 +50,7 @@ func makeMsgApproveOracleRegistrationWithSignature(approveOracleRegistration *or
 
 	msgApproveOracleRegistration := &oracletypes.MsgApproveOracleRegistration{
 		ApproveOracleRegistration: approveOracleRegistration,
-		Signature:                 sig,
+		Signature:                 sig.Serialize(),
 	}
 
 	return msgApproveOracleRegistration, nil
