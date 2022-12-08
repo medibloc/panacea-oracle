@@ -2,13 +2,14 @@ package cmd
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
+	"time"
+
 	"github.com/medibloc/panacea-oracle/client/flags"
 	"github.com/medibloc/panacea-oracle/config"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-	"os"
-	"path/filepath"
-	"time"
 )
 
 var (

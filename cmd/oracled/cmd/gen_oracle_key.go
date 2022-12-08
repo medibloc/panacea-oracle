@@ -81,9 +81,9 @@ func genOracleKeyCmd() *cobra.Command {
 			}
 
 			// initialize query client using trustedBlockInfo
-			queryClient, err := panacea.NewQueryClient(context.Background(), conf, *trustedBlockInfo)
+			queryClient, err := panacea.NewVerifiedQueryClient(context.Background(), conf, *trustedBlockInfo)
 			if err != nil {
-				return fmt.Errorf("failed to initialize QueryClient: %w", err)
+				return fmt.Errorf("failed to initialize verifiedQueryClient: %w", err)
 			}
 			defer queryClient.Close()
 
