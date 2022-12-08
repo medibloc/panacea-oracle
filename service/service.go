@@ -124,7 +124,7 @@ func (s *Service) QueryClient() *panacea.QueryClient {
 	return s.queryClient
 }
 
-func (s *Service) Ipfs() *ipfs.IPFS {
+func (s *Service) IPFS() *ipfs.IPFS {
 	return s.ipfs
 }
 

@@ -35,6 +35,7 @@ func init() {
 	rootCmd.AddCommand(
 		initCmd(),
 		genOracleKeyCmd(),
+		registerOracleCmd(),
 	)
 }
 
