@@ -15,6 +15,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/std"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/ibc-go/v2/modules/core/23-commitment/types"
+	oracletypes "github.com/medibloc/panacea-core/v2/x/oracle/types"
 	"github.com/medibloc/panacea-oracle/config"
 	sgxdb "github.com/medibloc/panacea-oracle/store/sgxleveldb"
 	log "github.com/sirupsen/logrus"
@@ -34,6 +35,7 @@ import (
 type QueryClient interface {
 	Close() error
 	GetAccount(address string) (authtypes.AccountI, error)
+	GetApproveOracleRegistrationFromEvent(targetAddress string)
 }
 
 const (
@@ -348,28 +350,32 @@ func (q verifiedQueryClient) GetAccount(address string) (authtypes.AccountI, err
 	return account, nil
 }
 
-//func (q verifiedQueryClient) GetOracleRegistration(oracleAddr, uniqueID, pubKey string) (*oracletypes.OracleRegistration, error) {
-//
-//	acc, err := GetAccAddressFromBech32(oracleAddr)
-//	if err != nil {
-//		return nil, err
-//	}
-//
-//	key := oracletypes.GetOracleRegistrationKey(uniqueID, acc, pubKey)
-//
-//	bz, err := q.GetStoreData(context.Background(), oracletypes.StoreKey, key)
-//	if err != nil {
-//		return nil, err
-//	}
-//
-//	var oracleRegistration oracletypes.OracleRegistration
-//	err = q.cdc.UnmarshalLengthPrefixed(bz, &oracleRegistration)
-//	if err != nil {
-//		return nil, err
-//	}
-//
-//	return &oracleRegistration, nil
-//}
+func (q verifiedQueryClient) GetOracleRegistration(oracleAddr, uniqueID, pubKey string) (*oracletypes.OracleRegistration, error) {
+
+	acc, err := GetAccAddressFromBech32(oracleAddr)
+	if err != nil {
+		return nil, err
+	}
+
+	key := oracletypes.GetOracleRegistrationKey(uniqueID, acc, pubKey)
+
+	bz, err := q.GetStoreData(context.Background(), oracletypes.StoreKey, key)
+	if err != nil {
+		return nil, err
+	}
+
+	var oracleRegistration oracletypes.OracleRegistration
+	err = q.cdc.UnmarshalLengthPrefixed(bz, &oracleRegistration)
+	if err != nil {
+		return nil, err
+	}
+
+	return &oracleRegistration, nil
+}
+
+func (q verifiedQueryClient) GetApproveOracleRegistrationFromEvent(targetAddress string) {
+
+}
 
 //func (q verifiedQueryClient) GetOracleParamsPublicKey() (*btcec.PublicKey, error) {
 //	pubKeyBase64Bz, err := q.GetStoreData(context.Background(), paramstypes.StoreKey, append(append([]byte(oracletypes.StoreKey), '/'), oracletypes.KeyOraclePublicKey...))
