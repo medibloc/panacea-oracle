@@ -56,7 +56,7 @@ func makeMsgApproveOracleRegistrationWithSignature(approveOracleRegistration *or
 	return msgApproveOracleRegistration, nil
 }
 
-func verifyTrustedBlockInfo(queryClient *panacea.QueryClient, height int64, blockHash []byte) error {
+func verifyTrustedBlockInfo(queryClient panacea.QueryClient, height int64, blockHash []byte) error {
 	block, err := queryClient.GetLightBlock(height)
 	if err != nil {
 		switch err {

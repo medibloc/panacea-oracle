@@ -35,6 +35,10 @@ import (
 type QueryClient interface {
 	Close() error
 	GetAccount(address string) (authtypes.AccountI, error)
+	GetOracleRegistration(uniqueID, oracleAddr string) (*oracletypes.OracleRegistration, error)
+	GetLightBlock(height int64) (*tmtypes.LightBlock, error)
+	GetCdc() *codec.ProtoCodec
+	GetChainID() string
 }
 
 const (
@@ -218,6 +222,14 @@ func refresh(ctx context.Context, lc *light.Client, trustPeriod time.Duration, m
 	}
 
 	return nil
+}
+
+func (q verifiedQueryClient) GetCdc() *codec.ProtoCodec {
+	return q.cdc
+}
+
+func (q verifiedQueryClient) GetChainID() string {
+	return q.chainID
 }
 
 // GetStoreData get data from panacea with storeKey and key, then verify queried data with light client and merkle proof.
