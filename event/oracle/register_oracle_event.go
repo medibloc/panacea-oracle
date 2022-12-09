@@ -22,6 +22,10 @@ func NewRegisterOracleEvent(s event.Reactor) RegisterOracleEvent {
 	return RegisterOracleEvent{s}
 }
 
+func (e RegisterOracleEvent) Name() string {
+	return "RegisterOracleEvent"
+}
+
 func (e RegisterOracleEvent) GetEventQuery() string {
 	return "message.action = 'RegisterOracle'"
 }
@@ -67,7 +71,10 @@ func (e RegisterOracleEvent) verifyAndGetMsgApproveOracleRegistration(uniqueID, 
 		log.Infof("oracle's uniqueID does not match the requested uniqueID. expected(%s) got(%s)", approverUniqueID, uniqueID)
 	} else {
 		oracleRegistration, err := queryClient.GetOracleRegistration(uniqueID, targetAddress)
-		log.Infof("err while get oracleRegistration: %v", err)
+		if err != nil {
+			log.Infof("err while get oracleRegistration: %v", err)
+			return nil, err
+		}
 
 		if err := verifyTrustedBlockInfo(e.reactor.QueryClient(), oracleRegistration.TrustedBlockHeight, oracleRegistration.TrustedBlockHash); err != nil {
 			log.Infof("failed to verify trusted block. height(%d), hash(%s), err(%v)", oracleRegistration.TrustedBlockHeight, oracleRegistration.TrustedBlockHash, err)

@@ -47,6 +47,7 @@ func (s *PanaceaSubscriber) subscribe(event Event) error {
 
 	query := event.GetEventQuery()
 
+	log.Infof("subscribe %s. query: %s", event.Name(), query)
 	txs, err := s.client.Subscribe(ctx, "", query)
 	if err != nil {
 		return err
@@ -54,6 +55,7 @@ func (s *PanaceaSubscriber) subscribe(event Event) error {
 
 	go func(e Event) {
 		for tx := range txs {
+			log.Infof("received event a %s", e.Name())
 			if err := e.EventHandler(tx); err != nil {
 				log.Errorf("failed to handle event '%s': %v", query, err)
 			}

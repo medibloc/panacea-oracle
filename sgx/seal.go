@@ -10,7 +10,7 @@ import (
 
 // SealToFile seals the data with unique ID and stores it to file.
 func SealToFile(data []byte, filePath string) error {
-	sealedData, err := ecrypto.SealWithUniqueKey(data, nil)
+	sealedData, err := Seal(data)
 	if err != nil {
 		return fmt.Errorf("failed to seal oracle private key: %w", err)
 	}
@@ -29,7 +29,7 @@ func UnsealFromFile(filePath string) ([]byte, error) {
 		return nil, fmt.Errorf("failed to read %s: %w", filePath, err)
 	}
 
-	key, err := ecrypto.Unseal(sealed, nil)
+	key, err := Unseal(sealed)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unseal oracle key: %w", err)
 	}

@@ -3,6 +3,7 @@ package sgx
 import (
 	"bytes"
 	"fmt"
+
 	"github.com/edgelesssys/ego/enclave"
 )
 

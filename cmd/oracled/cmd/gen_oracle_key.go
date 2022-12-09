@@ -3,6 +3,7 @@ package cmd
 import (
 	"bufio"
 	"context"
+	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -21,8 +22,8 @@ import (
 
 // OraclePubKeyInfo is a struct to store oracle public key and its remote report
 type OraclePubKeyInfo struct {
-	PublicKeyHex    string `json:"public_key_hex"`
-	RemoteReportHex string `json:"remote_report_hex"`
+	PublicKeyBase64    string `json:"public_key_base64"`
+	RemoteReportBase64 string `json:"remote_report_base64"`
 }
 
 func genOracleKeyCmd() *cobra.Command {
@@ -101,8 +102,8 @@ func genOracleKeyCmd() *cobra.Command {
 // storeOraclePubKey stores base64-encoded oracle public key and its remote report
 func storeOraclePubKey(oraclePubKey, oracleKeyRemoteReport []byte, filePath string) error {
 	oraclePubKeyData := OraclePubKeyInfo{
-		PublicKeyHex:    hex.EncodeToString(oraclePubKey),
-		RemoteReportHex: hex.EncodeToString(oracleKeyRemoteReport),
+		PublicKeyBase64:    base64.StdEncoding.EncodeToString(oraclePubKey),
+		RemoteReportBase64: base64.StdEncoding.EncodeToString(oracleKeyRemoteReport),
 	}
 
 	oraclePubKeyFile, err := json.Marshal(oraclePubKeyData)

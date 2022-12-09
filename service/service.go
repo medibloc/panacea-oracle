@@ -28,17 +28,11 @@ type Service struct {
 	ipfs        *ipfs.IPFS
 }
 
-func New(conf *config.Config) (*Service, error) {
+func NewWithoutOraclePrivKey(conf *config.Config) (*Service, error) {
 	oracleAccount, err := panacea.NewOracleAccount(conf.OracleMnemonic, conf.OracleAccNum, conf.OracleAccIndex)
 	if err != nil {
 		return nil, err
 	}
-	oraclePrivKeyBz, err := sgx.UnsealFromFile(conf.AbsOraclePrivKeyPath())
-	if err != nil {
-		return nil, fmt.Errorf("failed to unseal oracle_priv_key.sealed file: %w", err)
-	}
-
-	oraclePrivKey, _ := crypto.PrivKeyFromBytes(oraclePrivKeyBz)
 
 	selfEnclaveInfo, err := sgx.GetSelfEnclaveInfo()
 	if err != nil {
@@ -74,13 +68,31 @@ func New(conf *config.Config) (*Service, error) {
 	return &Service{
 		conf:          conf,
 		oracleAccount: oracleAccount,
-		oraclePrivKey: oraclePrivKey,
 		enclaveInfo:   selfEnclaveInfo,
 		queryClient:   queryClient,
 		grpcClient:    grpcClient,
 		subscriber:    subscriber,
 		ipfs:          newIpfs,
 	}, nil
+
+}
+
+func New(conf *config.Config) (*Service, error) {
+	svc, err := NewWithoutOraclePrivKey(conf)
+	if err != nil {
+		return nil, err
+	}
+
+	oraclePrivKeyBz, err := sgx.UnsealFromFile(conf.AbsOraclePrivKeyPath())
+	if err != nil {
+		return nil, fmt.Errorf("failed to unseal oracle_priv_key.sealed file: %w", err)
+	}
+
+	oraclePrivKey, _ := crypto.PrivKeyFromBytes(oraclePrivKeyBz)
+
+	svc.oraclePrivKey = oraclePrivKey
+
+	return svc, nil
 }
 
 func (s *Service) StartSubscriptions(events ...event.Event) error {
