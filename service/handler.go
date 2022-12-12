@@ -162,7 +162,11 @@ func (svc *Service) ValidateData(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	w.Write(marshaledPayload)
+	_, err = w.Write(marshaledPayload)
+	if err != nil {
+		log.Errorf("failed to write response payload: %s", err.Error())
+		return
+	}
 }
 
 func getCombinedKey(oraclePrivKey []byte, dealID uint64, dataHash [sha256.Size]byte) [sha256.Size]byte {
