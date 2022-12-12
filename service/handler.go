@@ -17,9 +17,9 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func (svc *Service) ValidateData(w http.ResponseWriter, r *http.Request) {
-	queryClient := svc.QueryClient()
-	oraclePrivKey := svc.OraclePrivKey()
+func (s *Service) ValidateData(w http.ResponseWriter, r *http.Request) {
+	queryClient := s.QueryClient()
+	oraclePrivKey := s.OraclePrivKey()
 
 	// Read a data from request body
 	dealIDStr := mux.Vars(r)["dealId"]
@@ -117,7 +117,7 @@ func (svc *Service) ValidateData(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Put data into IPFS
-	cid, err := svc.IPFS().Add(reEncryptedData)
+	cid, err := s.IPFS().Add(reEncryptedData)
 	if err != nil {
 		log.Errorf("failed to store data to IPFS: %s", err.Error())
 		http.Error(w, "failed to store data to IPFS", http.StatusInternalServerError)
@@ -127,7 +127,7 @@ func (svc *Service) ValidateData(w http.ResponseWriter, r *http.Request) {
 	// Issue a certificate to the client
 	unsignedDataCert := &datadealtypes.UnsignedCertificate{
 		Cid:             cid,
-		OracleAddress:   svc.OracleAcc().GetAddress(),
+		OracleAddress:   s.OracleAcc().GetAddress(),
 		DealId:          dealID,
 		ProviderAddress: reqBody.ProviderAddress,
 		DataHash:        dataHashStr,
