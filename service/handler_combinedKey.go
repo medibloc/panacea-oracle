@@ -9,12 +9,13 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/gorilla/mux"
+	"github.com/medibloc/panacea-oracle/crypto"
 	"github.com/medibloc/panacea-oracle/server/middleware"
 	log "github.com/sirupsen/logrus"
 )
 
 type Response struct {
-	CombinedKey []byte `json:"combinedKey"`
+	EncryptedCombinedKey []byte `json:"encrypted-combined-key"`
 }
 
 func (svc *Service) GetCombinedKey(w http.ResponseWriter, r *http.Request) {
@@ -34,37 +35,51 @@ func (svc *Service) GetCombinedKey(w http.ResponseWriter, r *http.Request) {
 	var dataHash32 [sha256.Size]byte
 	copy(dataHash32[:], dataHash)
 
-	if err != nil {
-		log.Errorf("failed to decode dataHash: %s", err.Error())
-		http.Error(w, "failed to decode dataHash", http.StatusBadRequest)
-		return
-	}
-
-	// Check if the certificate of data has been submitted
-	certificate, err := queryClient.GetCertificate(dealID, dataHashStr)
-	if err != nil {
-		log.Errorf("failed to get certificate: %s", err.Error())
-		http.Error(w, "failed to get certificate", http.StatusBadRequest)
-		return
-	}
-
 	// Check the address of the requested consumer
 	accAddr := r.Context().Value(middleware.ContextKeyAuthenticatedAccountAddress{}).(string)
+	deal, err := queryClient.GetDeal(dealID)
+	if err != nil {
+		log.Errorf("failed to get deal(%d): %s", dealID, err.Error())
+		http.Error(w, "failed to get deal", http.StatusBadRequest)
+		return
+	}
 
-	if accAddr != certificate.UnsignedCertificate.ProviderAddress {
+	if accAddr != deal.ConsumerAddress {
 		log.Error("only consumer request combined key")
 		http.Error(w, "only consumer request combined key", http.StatusBadRequest)
 		return
 	}
 
-	// response combinedKey
+	// Check if the certificate of data has been submitted
+	_, err = queryClient.GetCertificate(dealID, dataHashStr)
+	if err != nil {
+		log.Errorf("failed to get certificate(dealID: %d, dataHash %s): %s", dealID, dataHashStr, err.Error())
+		http.Error(w, "failed to get certificate", http.StatusBadRequest)
+		return
+	}
+
+	// make encrypted combined key using consumer public key
+	consumerAcc, err := queryClient.GetAccount(deal.ConsumerAddress)
+	if err != nil {
+		log.Errorf("failed to get deal(%d): %s", dealID, err.Error())
+		http.Error(w, "failed to get deal", http.StatusBadRequest)
+		return
+	}
+	consumerPubKey := consumerAcc.GetPubKey().Bytes()
 	combinedKey := getCombinedKey(oraclePrivKey.Serialize(), dealID, dataHash32)
+	encryptedCombinedKey, err := crypto.Encrypt(consumerPubKey, nil, combinedKey[:])
+	if err != nil {
+		log.Errorf("failed to encrypt combined key with consumer public key: %s", err.Error())
+		http.Error(w, "failed to encrypt combined key with consumer public key", http.StatusInternalServerError)
+		return
+	}
+
 	var response Response
-	response.CombinedKey = combinedKey[:]
+	response.EncryptedCombinedKey = encryptedCombinedKey
 	jsonResponse, err := json.Marshal(response)
 	if err != nil {
-		log.Errorf("failed to marshal payload: %s", err.Error())
-		http.Error(w, "failed to marshal payload", http.StatusInternalServerError)
+		log.Errorf("failed to marshal response: %s", err.Error())
+		http.Error(w, "failed to marshal response", http.StatusInternalServerError)
 		return
 	}
 

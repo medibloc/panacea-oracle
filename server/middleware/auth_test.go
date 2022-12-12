@@ -134,6 +134,10 @@ func testHTTPRequest(t *testing.T, authorizationHeader string, statusCode int, e
 
 type mockQueryClient struct{}
 
+func (c *mockQueryClient) GetDeal(_ uint64) (*types.Deal, error) {
+	return nil, nil
+}
+
 func (c *mockQueryClient) GetCertificate(_ uint64, _ string) (*types.Certificate, error) {
 	return nil, nil
 }

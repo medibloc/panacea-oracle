@@ -35,6 +35,7 @@ import (
 type QueryClient interface {
 	Close() error
 	GetAccount(address string) (authtypes.AccountI, error)
+	GetDeal(dealID uint64) (*datadealtypes.Deal, error)
 	GetCertificate(dealID uint64, dataHash string) (*datadealtypes.Certificate, error)
 }
 
@@ -348,6 +349,22 @@ func (q verifiedQueryClient) GetAccount(address string) (authtypes.AccountI, err
 	}
 
 	return account, nil
+}
+
+func (q verifiedQueryClient) GetDeal(dealID uint64) (*datadealtypes.Deal, error) {
+	key := datadealtypes.GetDealKey(dealID)
+
+	bz, err := q.GetStoreData(context.Background(), datadealtypes.StoreKey, key)
+	if err != nil {
+		return nil, err
+	}
+
+	var deal datadealtypes.Deal
+	if err = q.cdc.UnmarshalLengthPrefixed(bz, &deal); err != nil {
+		return nil, err
+	}
+
+	return &deal, nil
 }
 
 func (q verifiedQueryClient) GetCertificate(dealID uint64, dataHash string) (*datadealtypes.Certificate, error) {
