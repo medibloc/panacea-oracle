@@ -20,7 +20,7 @@ func makeMsgApproveOracleRegistration(uniqueID, approverAddr, targetAddr string,
 	}
 
 	shareKey := crypto.DeriveSharedKey(privKey, pubKey, crypto.KDFSHA256)
-	encryptedOraclePrivKey, err := crypto.EncryptWithAES256(shareKey, nil, oraclePrivKey)
+	encryptedOraclePrivKey, err := crypto.EncryptWithAES256(shareKey, oraclePrivKey)
 	if err != nil {
 		return nil, err
 	}

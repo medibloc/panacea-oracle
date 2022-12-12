@@ -81,7 +81,12 @@ func registerOracleCmd() *cobra.Command {
 			uniqueID := hex.EncodeToString(report.UniqueID)
 
 			// request register oracle Tx to Panacea
-			oracleCommissionRate, err := sdk.NewDecFromStr(flagOracleCommissionRate)
+			oracleCommissionRateStr, err := cmd.Flags().GetString(flagOracleCommissionRate)
+			if err != nil {
+				return err
+			}
+
+			oracleCommissionRate, err := sdk.NewDecFromStr(oracleCommissionRateStr)
 			if err != nil {
 				return err
 			}
@@ -94,7 +99,11 @@ func registerOracleCmd() *cobra.Command {
 			}
 			defer cli.Close()
 
-			defaultFeeAmount, _ := sdk.ParseCoinsNormalized(conf.Panacea.DefaultFeeAmount)
+			defaultFeeAmount, err := sdk.ParseCoinsNormalized(conf.Panacea.DefaultFeeAmount)
+			if err != nil {
+				return err
+			}
+
 			txBytes, err := txBuilder.GenerateSignedTxBytes(oracleAccount.GetPrivKey(), conf.Panacea.DefaultGasLimit, defaultFeeAmount, msgRegisterOracle)
 			if err != nil {
 				return fmt.Errorf("failed to generate signed Tx bytes: %w", err)
