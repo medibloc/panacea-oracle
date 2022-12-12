@@ -2,8 +2,12 @@ package service
 
 import (
 	"crypto/sha256"
+	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
+	"net/http"
+	"strconv"
+
 	"github.com/btcsuite/btcd/btcec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/gorilla/mux"
@@ -11,14 +15,12 @@ import (
 	"github.com/medibloc/panacea-oracle/crypto"
 	"github.com/medibloc/panacea-oracle/validation"
 	log "github.com/sirupsen/logrus"
-	"net/http"
-	"strconv"
 )
 
 type ValidateDataReq struct {
-	ProviderAddress string `json:"provider_address"`
-	EncryptedData   string `json:"encrypted_data"`
-	DataHash        string `json:"data_hash"`
+	ProviderAddress     string `json:"provider_address"`
+	EncryptedDataBase64 string `json:"encrypted_data_base64"`
+	DataHash            string `json:"data_hash"`
 }
 
 func (svc *Service) ValidateData(w http.ResponseWriter, r *http.Request) {
@@ -44,7 +46,7 @@ func (svc *Service) ValidateData(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
 	// Decrypt data
-	encryptedDataBz, err := hex.DecodeString(reqBody.EncryptedData)
+	encryptedDataBz, err := base64.StdEncoding.DecodeString(reqBody.EncryptedDataBase64)
 	if err != nil {
 		log.Errorf("failed to decode encrypted data: %s", err.Error())
 		http.Error(w, "failed to decode encrypted data", http.StatusBadRequest)
@@ -57,6 +59,13 @@ func (svc *Service) ValidateData(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "failed to get provider's account", http.StatusBadRequest)
 		return
 	}
+
+	if providerAcc.GetPubKey() == nil {
+		log.Errorf("failed to get public key of provider's account: %s", err.Error())
+		http.Error(w, "failed to get public key of provider's account", http.StatusBadRequest)
+		return
+	}
+
 	providerPubKeyBytes := providerAcc.GetPubKey().Bytes()
 
 	providerPubKey, err := btcec.ParsePubKey(providerPubKeyBytes, btcec.S256())
@@ -111,6 +120,7 @@ func (svc *Service) ValidateData(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Errorf("failed to store data to IPFS: %s", err.Error())
 		http.Error(w, "failed to store data to IPFS", http.StatusInternalServerError)
+		return
 	}
 
 	// Issue a certificate to the client
