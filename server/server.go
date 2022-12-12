@@ -17,6 +17,7 @@ type Server struct {
 func New(svc *service.Service) *Server {
 	router := mux.NewRouter()
 	router.HandleFunc("/v0/data-deal/deals/{dealId}/data", svc.ValidateData).Methods("POST")
+	router.HandleFunc("/v0/data-deal/combined-key/deals/{dealId}/dataHash/{dataHash}", svc.GetCombinedKey).Methods("GET")
 
 	mw := middleware.NewJWTAuthMiddleware(svc.QueryClient())
 	router.Use(mw.Middleware)

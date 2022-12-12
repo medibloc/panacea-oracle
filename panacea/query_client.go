@@ -15,6 +15,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/std"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/ibc-go/v2/modules/core/23-commitment/types"
+	datadealtypes "github.com/medibloc/panacea-core/v2/x/datadeal/types"
 	"github.com/medibloc/panacea-oracle/config"
 	sgxdb "github.com/medibloc/panacea-oracle/store/sgxleveldb"
 	log "github.com/sirupsen/logrus"
@@ -34,6 +35,7 @@ import (
 type QueryClient interface {
 	Close() error
 	GetAccount(address string) (authtypes.AccountI, error)
+	GetCertificate(dealID uint64, dataHash string) (*datadealtypes.Certificate, error)
 }
 
 const (
@@ -348,14 +350,32 @@ func (q verifiedQueryClient) GetAccount(address string) (authtypes.AccountI, err
 	return account, nil
 }
 
-//func (q verifiedQueryClient) GetOracleRegistration(oracleAddr, uniqueID, pubKey string) (*oracletypes.OracleRegistration, error) {
+func (q verifiedQueryClient) GetCertificate(dealID uint64, dataHash string) (*datadealtypes.Certificate, error) {
+
+	key := datadealtypes.GetCertificateKey(dealID, dataHash)
+
+	bz, err := q.GetStoreData(context.Background(), datadealtypes.StoreKey, key)
+	if err != nil {
+		return nil, err
+	}
+
+	var certificate datadealtypes.Certificate
+	err = q.cdc.UnmarshalLengthPrefixed(bz, &certificate)
+	if err != nil {
+		return nil, err
+	}
+
+	return &certificate, nil
+}
+
+//func (q verifiedQueryClient) GetOracleRegistration(oracleAddr, uniqueID string) (*oracletypes.OracleRegistration, error) {
 //
 //	acc, err := GetAccAddressFromBech32(oracleAddr)
 //	if err != nil {
 //		return nil, err
 //	}
 //
-//	key := oracletypes.GetOracleRegistrationKey(uniqueID, acc, pubKey)
+//	key := oracletypes.GetOracleRegistrationKey(uniqueID, acc)
 //
 //	bz, err := q.GetStoreData(context.Background(), oracletypes.StoreKey, key)
 //	if err != nil {

@@ -15,6 +15,7 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/lestrrat-go/jwx/v2/jwa"
 	"github.com/lestrrat-go/jwx/v2/jwt"
+	"github.com/medibloc/panacea-core/v2/x/datadeal/types"
 	"github.com/medibloc/panacea-oracle/server/middleware"
 	"github.com/stretchr/testify/require"
 )
@@ -132,6 +133,10 @@ func testHTTPRequest(t *testing.T, authorizationHeader string, statusCode int, e
 //// Mocks //////////////////////////////////////////////////////////////
 
 type mockQueryClient struct{}
+
+func (c *mockQueryClient) GetCertificate(_ uint64, _ string) (*types.Certificate, error) {
+	return nil, nil
+}
 
 func (c *mockQueryClient) Close() error {
 	return nil
