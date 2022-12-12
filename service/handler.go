@@ -17,12 +17,6 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-type ValidateDataReq struct {
-	ProviderAddress     string `json:"provider_address"`
-	EncryptedDataBase64 string `json:"encrypted_data_base64"`
-	DataHash            string `json:"data_hash"`
-}
-
 func (svc *Service) ValidateData(w http.ResponseWriter, r *http.Request) {
 	queryClient := svc.QueryClient()
 	oraclePrivKey := svc.OraclePrivKey()
@@ -45,13 +39,27 @@ func (svc *Service) ValidateData(w http.ResponseWriter, r *http.Request) {
 	}
 	defer r.Body.Close()
 
-	// Decrypt data
-	encryptedDataBz, err := base64.StdEncoding.DecodeString(reqBody.EncryptedDataBase64)
-	if err != nil {
-		log.Errorf("failed to decode encrypted data: %s", err.Error())
-		http.Error(w, "failed to decode encrypted data", http.StatusBadRequest)
+	if err := reqBody.ValidateBasic(); err != nil {
+		log.Errorf("invalid request body: %s", err.Error())
+		http.Error(w, "invalid request body", http.StatusBadRequest)
 		return
 	}
+
+	deal, err := queryClient.GetDeal(dealID)
+	if err != nil {
+		log.Errorf("failed to get deal(%d): %s", dealID, err.Error())
+		http.Error(w, "failed to get deal", http.StatusBadRequest)
+		return
+	}
+
+	if deal.Status != datadealtypes.DEAL_STATUS_ACTIVE {
+		log.Errorf("cannot provide data to INACTIVE/COMPLETED deal")
+		http.Error(w, "cannot provide data to INACTIVE/COMPLETED deal", http.StatusBadRequest)
+		return
+	}
+
+	// Decrypt data
+	encryptedDataBz, _ := base64.StdEncoding.DecodeString(reqBody.EncryptedDataBase64)
 
 	providerAcc, err := queryClient.GetAccount(reqBody.ProviderAddress)
 	if err != nil {
@@ -93,13 +101,6 @@ func (svc *Service) ValidateData(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	deal, err := queryClient.GetDeal(dealID)
-	if err != nil {
-		log.Errorf("failed to get deal(%d): %s", dealID, err.Error())
-		http.Error(w, "failed to get deal", http.StatusBadRequest)
-		return
-	}
-
 	if err := validation.ValidateJSONSchemata(decryptedData, deal.DataSchema); err != nil {
 		log.Errorf("failed to validate data: %s", err.Error())
 		http.Error(w, "failed to validate data", http.StatusBadRequest)
@@ -134,7 +135,7 @@ func (svc *Service) ValidateData(w http.ResponseWriter, r *http.Request) {
 
 	key, _ := btcec.PrivKeyFromBytes(btcec.S256(), oraclePrivKey.Serialize())
 
-	marshaledDataCert, err := json.Marshal(unsignedDataCert)
+	marshaledDataCert, err := unsignedDataCert.Marshal()
 	if err != nil {
 		log.Errorf("failed to marshal data certificate: %s", err.Error())
 		http.Error(w, "failed to marshal data certificate", http.StatusInternalServerError)
@@ -153,7 +154,7 @@ func (svc *Service) ValidateData(w http.ResponseWriter, r *http.Request) {
 		Signature:           sig.Serialize(),
 	}
 
-	marshaledPayload, err := json.Marshal(payload)
+	marshaledPayload, err := payload.Marshal()
 	if err != nil {
 		log.Errorf("failed to marshal payload: %s", err.Error())
 		http.Error(w, "failed to marshal payload", http.StatusInternalServerError)
@@ -162,8 +163,7 @@ func (svc *Service) ValidateData(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	_, err = w.Write(marshaledPayload)
-	if err != nil {
+	if _, err = w.Write(marshaledPayload); err != nil {
 		log.Errorf("failed to write response payload: %s", err.Error())
 		return
 	}
