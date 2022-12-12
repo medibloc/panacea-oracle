@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+
 	"github.com/medibloc/panacea-oracle/crypto"
 
 	"github.com/btcsuite/btcd/btcec"
@@ -21,7 +22,7 @@ type Service struct {
 	oracleAccount *panacea.OracleAccount
 	oraclePrivKey *btcec.PrivateKey
 
-	queryClient *panacea.QueryClient
+	queryClient panacea.QueryClient
 	grpcClient  *panacea.GRPCClient
 	subscriber  *event.PanaceaSubscriber
 	ipfs        *ipfs.IPFS
@@ -44,7 +45,7 @@ func New(conf *config.Config) (*Service, error) {
 		return nil, fmt.Errorf("failed to set self-enclave info: %w", err)
 	}
 
-	queryClient, err := panacea.LoadQueryClient(context.Background(), conf)
+	queryClient, err := panacea.LoadVerifiedQueryClient(context.Background(), conf)
 	if err != nil {
 		return nil, fmt.Errorf("failed to load query client: %w", err)
 	}
@@ -120,7 +121,7 @@ func (s *Service) GRPCClient() *panacea.GRPCClient {
 	return s.grpcClient
 }
 
-func (s *Service) QueryClient() *panacea.QueryClient {
+func (s *Service) QueryClient() panacea.QueryClient {
 	return s.queryClient
 }
 
