@@ -32,6 +32,11 @@ func (svc *Service) GetCombinedKey(w http.ResponseWriter, r *http.Request) {
 
 	dataHashStr := mux.Vars(r)["dataHash"]
 	dataHash, err := hex.DecodeString(dataHashStr)
+	if err != nil {
+		log.Errorf("failed to decode dataHash: %s", err.Error())
+		http.Error(w, "failed to decode dataHash", http.StatusBadRequest)
+		return
+	}
 	var dataHash32 [sha256.Size]byte
 	copy(dataHash32[:], dataHash)
 
