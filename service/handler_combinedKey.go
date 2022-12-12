@@ -72,7 +72,7 @@ func (svc *Service) GetCombinedKey(w http.ResponseWriter, r *http.Request) {
 	}
 	consumerPubKey := consumerAcc.GetPubKey().Bytes()
 	combinedKey := getCombinedKey(oraclePrivKey.Serialize(), dealID, dataHash32)
-	encryptedCombinedKey, err := crypto.Encrypt(consumerPubKey, nil, combinedKey[:])
+	encryptedCombinedKey, err := crypto.EncryptWithAES256(consumerPubKey, combinedKey[:])
 	if err != nil {
 		log.Errorf("failed to encrypt combined key with consumer public key: %s", err.Error())
 		http.Error(w, "failed to encrypt combined key with consumer public key", http.StatusInternalServerError)
