@@ -41,7 +41,7 @@ func (e RegisterOracleEvent) EventHandler(event ctypes.ResultEvent) error {
 		msgApproveOracleRegistration.ApproveOracleRegistration.TargetOracleAddress,
 	)
 
-	txBuilder := panacea.NewTxBuilder(*e.reactor.QueryClient())
+	txBuilder := panacea.NewTxBuilder(e.reactor.QueryClient())
 	txBytes, err := txBuilder.GenerateTxBytes(e.reactor.OracleAcc().GetPrivKey(), e.reactor.Config(), msgApproveOracleRegistration)
 	if err != nil {
 		return err

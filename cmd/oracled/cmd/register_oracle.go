@@ -59,7 +59,7 @@ func registerOracleCmd() *cobra.Command {
 			}
 
 			// initialize query client using trustedBlockInfo
-			queryClient, err := panacea.NewQueryClient(context.Background(), conf, *trustedBlockInfo)
+			queryClient, err := panacea.NewVerifiedQueryClient(context.Background(), conf, *trustedBlockInfo)
 			if err != nil {
 				return fmt.Errorf("failed to initialize QueryClient: %w", err)
 			}
@@ -92,7 +92,7 @@ func registerOracleCmd() *cobra.Command {
 			}
 
 			msgRegisterOracle := oracletypes.NewMsgRegisterOracle(uniqueID, oracleAccount.GetAddress(), nodePubKey, nodePubKeyRemoteReport, trustedBlockInfo.TrustedBlockHeight, trustedBlockInfo.TrustedBlockHash, flagOracleEndpoint, oracleCommissionRate)
-			txBuilder := panacea.NewTxBuilder(*queryClient)
+			txBuilder := panacea.NewTxBuilder(queryClient)
 			cli, err := panacea.NewGRPCClient(conf.Panacea.GRPCAddr)
 			if err != nil {
 				return fmt.Errorf("failed to generate gRPC client: %w", err)

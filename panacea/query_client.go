@@ -32,6 +32,15 @@ import (
 	dbm "github.com/tendermint/tm-db"
 )
 
+type QueryClient interface {
+	Close() error
+	GetAccount(address string) (authtypes.AccountI, error)
+	GetOracleRegistration(uniqueID, oracleAddr string) (*oracletypes.OracleRegistration, error)
+	GetLightBlock(height int64) (*tmtypes.LightBlock, error)
+	GetCdc() *codec.ProtoCodec
+	GetChainID() string
+}
+
 const (
 	trustedPeriod = 2 * 365 * 24 * time.Hour
 )
@@ -41,7 +50,7 @@ type TrustedBlockInfo struct {
 	TrustedBlockHash   []byte
 }
 
-type QueryClient struct {
+type verifiedQueryClient struct {
 	rpcClient   *rpchttp.HTTP
 	lightClient *light.Client
 	db          dbm.DB
@@ -59,28 +68,28 @@ func makeInterfaceRegistry() sdk.InterfaceRegistry {
 	return interfaceRegistry
 }
 
-// NewQueryClient set QueryClient with rpcClient & and returns, if successful,
-// a QueryClient that can be used to add query function.
-func NewQueryClient(ctx context.Context, config *config.Config, info TrustedBlockInfo) (*QueryClient, error) {
-	return newQueryClientWithSgxLevelDB(ctx, config, &info)
+// NewVerifiedQueryClient set verifiedQueryClient with rpcClient & and returns, if successful,
+// a verifiedQueryClient that can be used to add query function.
+func NewVerifiedQueryClient(ctx context.Context, config *config.Config, info TrustedBlockInfo) (QueryClient, error) {
+	return newVerifiedQueryClientWithSgxLevelDB(ctx, config, &info)
 }
 
-func LoadQueryClient(ctx context.Context, config *config.Config) (*QueryClient, error) {
-	return newQueryClientWithSgxLevelDB(ctx, config, nil)
+func LoadVerifiedQueryClient(ctx context.Context, config *config.Config) (QueryClient, error) {
+	return newVerifiedQueryClientWithSgxLevelDB(ctx, config, nil)
 }
 
-func newQueryClientWithSgxLevelDB(ctx context.Context, config *config.Config, info *TrustedBlockInfo) (*QueryClient, error) {
+func newVerifiedQueryClientWithSgxLevelDB(ctx context.Context, config *config.Config, info *TrustedBlockInfo) (QueryClient, error) {
 	db, err := sgxdb.NewSgxLevelDB("light-client", config.AbsDataDirPath())
 	if err != nil {
 		return nil, err
 	}
-	return NewQueryClientWithDB(ctx, config, info, db)
+	return newVerifiedQueryClientWithDB(ctx, config, info, db)
 }
 
-// NewQueryClientWithDB creates a QueryClient using a provided DB.
+// newVerifiedQueryClientWithDB creates a verifiedQueryClient using a provided DB.
 // If TrustedBlockInfo exists, a new lightClient is created based on this information,
 // and if TrustedBlockInfo is nil, a lightClient is created with information obtained from TrustedStore.
-func NewQueryClientWithDB(ctx context.Context, config *config.Config, info *TrustedBlockInfo, db dbm.DB) (*QueryClient, error) {
+func newVerifiedQueryClientWithDB(ctx context.Context, config *config.Config, info *TrustedBlockInfo, db dbm.DB) (QueryClient, error) {
 	lcMutex := sync.Mutex{}
 	chainID := config.Panacea.ChainID
 	rpcClient, err := rpchttp.New(config.Panacea.RPCAddr, "/websocket")
@@ -149,7 +158,7 @@ func NewQueryClientWithDB(ctx context.Context, config *config.Config, info *Trus
 		}
 	}()
 
-	return &QueryClient{
+	return &verifiedQueryClient{
 		rpcClient:   rpcClient,
 		lightClient: lc,
 		db:          db,
@@ -175,14 +184,14 @@ func newTMLogger(conf *config.Config) tmlog.Logger {
 	return logger
 }
 
-func (q QueryClient) safeUpdateLightClient(ctx context.Context) (*tmtypes.LightBlock, error) {
+func (q verifiedQueryClient) safeUpdateLightClient(ctx context.Context) (*tmtypes.LightBlock, error) {
 	q.mutex.Lock()
 	defer q.mutex.Unlock()
 
 	return q.lightClient.Update(ctx, time.Now())
 }
 
-func (q QueryClient) safeVerifyLightBlockAtHeight(ctx context.Context, height int64) (*tmtypes.LightBlock, error) {
+func (q verifiedQueryClient) safeVerifyLightBlockAtHeight(ctx context.Context, height int64) (*tmtypes.LightBlock, error) {
 	q.mutex.Lock()
 	defer q.mutex.Unlock()
 
@@ -215,9 +224,17 @@ func refresh(ctx context.Context, lc *light.Client, trustPeriod time.Duration, m
 	return nil
 }
 
+func (q verifiedQueryClient) GetCdc() *codec.ProtoCodec {
+	return q.cdc
+}
+
+func (q verifiedQueryClient) GetChainID() string {
+	return q.chainID
+}
+
 // GetStoreData get data from panacea with storeKey and key, then verify queried data with light client and merkle proof.
 // the returned data type is ResponseQuery.value ([]byte), so recommend to convert to expected type
-func (q QueryClient) GetStoreData(ctx context.Context, storeKey string, key []byte) ([]byte, error) {
+func (q verifiedQueryClient) GetStoreData(ctx context.Context, storeKey string, key []byte) ([]byte, error) {
 	var queryHeight int64
 
 	// get recent light block
@@ -282,13 +299,13 @@ func (q QueryClient) GetStoreData(ctx context.Context, storeKey string, key []by
 	return result.Response.Value, nil
 }
 
-func (q QueryClient) Close() error {
+func (q verifiedQueryClient) Close() error {
 	return q.db.Close()
 }
 
 // abciQueryWithOptions is a wrapper of rpcClient.ABCIQueryWithOptions,
 // but validates the details of result.Response even if rpcClient.ABCIQueryWithOptions returns no error.
-func (q QueryClient) abciQueryWithOptions(ctx context.Context, path string, data tmbytes.HexBytes, opts client.ABCIQueryOptions) (*ctypes.ResultABCIQuery, error) {
+func (q verifiedQueryClient) abciQueryWithOptions(ctx context.Context, path string, data tmbytes.HexBytes, opts client.ABCIQueryOptions) (*ctypes.ResultABCIQuery, error) {
 	res, err := q.rpcClient.ABCIQueryWithOptions(ctx, path, data, opts)
 	if err != nil {
 		return nil, err
@@ -315,7 +332,7 @@ func (q QueryClient) abciQueryWithOptions(ctx context.Context, path string, data
 	return res, nil
 }
 
-func (q QueryClient) GetLightBlock(height int64) (*tmtypes.LightBlock, error) {
+func (q verifiedQueryClient) GetLightBlock(height int64) (*tmtypes.LightBlock, error) {
 	return q.safeVerifyLightBlockAtHeight(context.Background(), height)
 }
 
@@ -323,7 +340,7 @@ func (q QueryClient) GetLightBlock(height int64) (*tmtypes.LightBlock, error) {
 // Need to set storeKey and key inside the query function, and change type to expected type.
 
 // GetAccount returns account from address.
-func (q QueryClient) GetAccount(address string) (authtypes.AccountI, error) {
+func (q verifiedQueryClient) GetAccount(address string) (authtypes.AccountI, error) {
 	acc, err := GetAccAddressFromBech32(address)
 	if err != nil {
 		return nil, err
@@ -344,7 +361,7 @@ func (q QueryClient) GetAccount(address string) (authtypes.AccountI, error) {
 	return account, nil
 }
 
-func (q QueryClient) GetOracleRegistration(uniqueID, oracleAddr string) (*oracletypes.OracleRegistration, error) {
+func (q verifiedQueryClient) GetOracleRegistration(uniqueID, oracleAddr string) (*oracletypes.OracleRegistration, error) {
 
 	acc, err := GetAccAddressFromBech32(oracleAddr)
 	if err != nil {
@@ -367,7 +384,7 @@ func (q QueryClient) GetOracleRegistration(uniqueID, oracleAddr string) (*oracle
 	return &oracleRegistration, nil
 }
 
-//func (q QueryClient) GetOracleParamsPublicKey() (*btcec.PublicKey, error) {
+//func (q verifiedQueryClient) GetOracleParamsPublicKey() (*btcec.PublicKey, error) {
 //	pubKeyBase64Bz, err := q.GetStoreData(context.Background(), paramstypes.StoreKey, append(append([]byte(oracletypes.StoreKey), '/'), oracletypes.KeyOraclePublicKey...))
 //	if err != nil {
 //		return nil, err
@@ -392,7 +409,7 @@ func (q QueryClient) GetOracleRegistration(uniqueID, oracleAddr string) (*oracle
 //	return btcec.ParsePubKey(pubKeyBz, btcec.S256())
 //}
 
-//func (q QueryClient) GetOracleUpgradeInfo() (*oracletypes.OracleUpgradeInfo, error) {
+//func (q verifiedQueryClient) GetOracleUpgradeInfo() (*oracletypes.OracleUpgradeInfo, error) {
 //	oracleUpgradeInfoBz, err := q.GetStoreData(context.Background(), oracletypes.StoreKey, oracletypes.OracleUpgradeInfoKey)
 //	if err != nil {
 //		return nil, err
@@ -404,7 +421,7 @@ func (q QueryClient) GetOracleRegistration(uniqueID, oracleAddr string) (*oracle
 //	}
 //	return &oracleUpgradeInfo, nil
 //}
-//func (q QueryClient) GetDeal(dealID uint64) (*datadealtypes.Deal, error) {
+//func (q verifiedQueryClient) GetDeal(dealID uint64) (*datadealtypes.Deal, error) {
 //	key := datadealtypes.GetDealKey(dealID)
 //
 //	bz, err := q.GetStoreData(context.Background(), datadealtypes.StoreKey, key)
@@ -421,7 +438,7 @@ func (q QueryClient) GetOracleRegistration(uniqueID, oracleAddr string) (*oracle
 //	return &deal, nil
 //}
 //
-//func (q QueryClient) GetDataSale(dataHash string, dealID uint64) (*datadealtypes.DataSale, error) {
+//func (q verifiedQueryClient) GetDataSale(dataHash string, dealID uint64) (*datadealtypes.DataSale, error) {
 //	key := datadealtypes.GetDataSaleKey(dataHash, dealID)
 //
 //	bz, err := q.GetStoreData(context.Background(), datadealtypes.StoreKey, key)

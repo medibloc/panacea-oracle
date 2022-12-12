@@ -42,7 +42,7 @@ func (tb TxBuilder) GenerateSignedTxBytes(
 	feeAmount sdk.Coins,
 	msg ...sdk.Msg,
 ) ([]byte, error) {
-	txConfig := authtx.NewTxConfig(tb.client.cdc, []signing.SignMode{signing.SignMode_SIGN_MODE_DIRECT})
+	txConfig := authtx.NewTxConfig(tb.client.GetCdc(), []signing.SignMode{signing.SignMode_SIGN_MODE_DIRECT})
 	txBuilder := txConfig.NewTxBuilder()
 	txBuilder.SetGasLimit(gasLimit)
 	txBuilder.SetFeeAmount(feeAmount)
@@ -75,7 +75,7 @@ func (tb TxBuilder) GenerateSignedTxBytes(
 	}
 
 	signerData := authsigning.SignerData{
-		ChainID:       tb.client.chainID,
+		ChainID:       tb.client.GetChainID(),
 		AccountNumber: signerAccount.GetAccountNumber(),
 		Sequence:      signerAccount.GetSequence(),
 	}
