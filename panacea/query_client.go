@@ -35,6 +35,7 @@ import (
 type QueryClient interface {
 	Close() error
 	GetAccount(address string) (authtypes.AccountI, error)
+	GetDeal(dealID uint64) (*datadealtypes.Deal, error)
 }
 
 const (
