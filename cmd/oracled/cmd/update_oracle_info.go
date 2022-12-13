@@ -6,7 +6,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	oracletypes "github.com/medibloc/panacea-core/v2/x/oracle/types"
-	"github.com/medibloc/panacea-oracle/client/flags"
 	"github.com/medibloc/panacea-oracle/panacea"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -22,13 +21,8 @@ func updateOracleInfoCmd() *cobra.Command {
 				return err
 			}
 
-			// get trusted block information
-			trustedBlockInfo, err := getTrustedBlockInfo(cmd)
-			if err != nil {
-				return fmt.Errorf("failed to get trusted block info: %w", err)
-			}
 
-			queryClient, err := panacea.NewVerifiedQueryClient(context.Background(), conf, *trustedBlockInfo)
+			queryClient, err := panacea.LoadVerifiedQueryClient(context.Background(), conf)
 			if err != nil {
 				return fmt.Errorf("failed to initialize QueryClient: %w", err)
 			}
@@ -87,12 +81,8 @@ func updateOracleInfoCmd() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().Int64(flags.FlagTrustedBlockHeight, 0, "Trusted block height")
-	cmd.Flags().String(flags.FlagTrustedBlockHash, "", "Trusted block hash")
 	cmd.Flags().String(flagOracleEndpoint, "", "endpoint of oracle")
 	cmd.Flags().String(flagOracleCommissionRate, "", "oracle commission rate")
-	_ = cmd.MarkFlagRequired(flags.FlagTrustedBlockHeight)
-	_ = cmd.MarkFlagRequired(flags.FlagTrustedBlockHash)
 
 	return cmd
 }
