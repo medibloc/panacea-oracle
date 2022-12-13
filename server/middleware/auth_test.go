@@ -16,6 +16,7 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/lestrrat-go/jwx/v2/jwa"
 	"github.com/lestrrat-go/jwx/v2/jwt"
+	datadealtypes "github.com/medibloc/panacea-core/v2/x/datadeal/types"
 	oracletypes "github.com/medibloc/panacea-core/v2/x/oracle/types"
 	"github.com/medibloc/panacea-oracle/server/middleware"
 	"github.com/stretchr/testify/require"
@@ -161,6 +162,11 @@ func (c *mockQueryClient) GetAccount(address string) (authtypes.AccountI, error)
 		return nil, fmt.Errorf("address not found: %v", address)
 	}
 	return &mockAccount{}, nil
+}
+
+// TODO: implement mock GetDeal for test
+func (c *mockQueryClient) GetDeal(_ uint64) (*datadealtypes.Deal, error) {
+	return nil, nil
 }
 
 type mockAccount struct{}
