@@ -91,7 +91,12 @@ func registerOracleCmd() *cobra.Command {
 				return err
 			}
 
-			msgRegisterOracle := oracletypes.NewMsgRegisterOracle(uniqueID, oracleAccount.GetAddress(), nodePubKey, nodePubKeyRemoteReport, trustedBlockInfo.TrustedBlockHeight, trustedBlockInfo.TrustedBlockHash, flagOracleEndpoint, oracleCommissionRate)
+			endPoint, err := cmd.Flags().GetString(flagOracleEndpoint)
+			if err != nil {
+				return err
+			}
+
+			msgRegisterOracle := oracletypes.NewMsgRegisterOracle(uniqueID, oracleAccount.GetAddress(), nodePubKey, nodePubKeyRemoteReport, trustedBlockInfo.TrustedBlockHeight, trustedBlockInfo.TrustedBlockHash, endPoint, oracleCommissionRate)
 			txBuilder := panacea.NewTxBuilder(queryClient)
 			cli, err := panacea.NewGRPCClient(conf.Panacea.GRPCAddr)
 			if err != nil {
