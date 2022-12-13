@@ -37,8 +37,6 @@ func (svc *Service) GetCombinedKey(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "failed to decode dataHash", http.StatusBadRequest)
 		return
 	}
-	var dataHash32 [sha256.Size]byte
-	copy(dataHash32[:], dataHash)
 
 	// Check the address of the requested consumer
 	accAddr := r.Context().Value(middleware.ContextKeyAuthenticatedAccountAddress{}).(string)
@@ -71,7 +69,7 @@ func (svc *Service) GetCombinedKey(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	consumerPubKey := consumerAcc.GetPubKey().Bytes()
-	combinedKey := getCombinedKey(oraclePrivKey.Serialize(), dealID, dataHash32)
+	combinedKey := getCombinedKey(oraclePrivKey.Serialize(), dealID, dataHash)
 	encryptedCombinedKey, err := crypto.EncryptWithAES256(consumerPubKey, combinedKey[:])
 	if err != nil {
 		log.Errorf("failed to encrypt combined key with consumer public key: %s", err.Error())
@@ -97,7 +95,7 @@ func (svc *Service) GetCombinedKey(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func getCombinedKey(oraclePrivKey []byte, dealID uint64, dataHash [sha256.Size]byte) [sha256.Size]byte {
+func getCombinedKey(oraclePrivKey []byte, dealID uint64, dataHash []byte) [sha256.Size]byte {
 	tmp := append(oraclePrivKey, sdk.Uint64ToBigEndian(dealID)...)
-	return sha256.Sum256(append(tmp, dataHash[:]...))
+	return sha256.Sum256(append(tmp, dataHash...))
 }
