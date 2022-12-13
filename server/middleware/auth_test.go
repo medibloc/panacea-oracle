@@ -9,15 +9,18 @@ import (
 	"time"
 
 	"github.com/btcsuite/btcd/btcec"
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/lestrrat-go/jwx/v2/jwa"
 	"github.com/lestrrat-go/jwx/v2/jwt"
-	"github.com/medibloc/panacea-core/v2/x/datadeal/types"
+	datadealtypes "github.com/medibloc/panacea-core/v2/x/datadeal/types"
+	oracletypes "github.com/medibloc/panacea-core/v2/x/oracle/types"
 	"github.com/medibloc/panacea-oracle/server/middleware"
 	"github.com/stretchr/testify/require"
+	tmtypes "github.com/tendermint/tendermint/types"
 )
 
 var (
@@ -134,12 +137,24 @@ func testHTTPRequest(t *testing.T, authorizationHeader string, statusCode int, e
 
 type mockQueryClient struct{}
 
-func (c *mockQueryClient) GetDeal(_ uint64) (*types.Deal, error) {
+func (c *mockQueryClient) GetCertificate(_ uint64, _ string) (*datadealtypes.Certificate, error) {
 	return nil, nil
 }
 
-func (c *mockQueryClient) GetCertificate(_ uint64, _ string) (*types.Certificate, error) {
+func (c *mockQueryClient) GetOracleRegistration(uniqueID, oracleAddr string) (*oracletypes.OracleRegistration, error) {
 	return nil, nil
+}
+
+func (c *mockQueryClient) GetLightBlock(height int64) (*tmtypes.LightBlock, error) {
+	return nil, nil
+}
+
+func (c *mockQueryClient) GetCdc() *codec.ProtoCodec {
+	return nil
+}
+
+func (c *mockQueryClient) GetChainID() string {
+	return ""
 }
 
 func (c *mockQueryClient) Close() error {
@@ -151,6 +166,11 @@ func (c *mockQueryClient) GetAccount(address string) (authtypes.AccountI, error)
 		return nil, fmt.Errorf("address not found: %v", address)
 	}
 	return &mockAccount{}, nil
+}
+
+// TODO: implement mock GetDeal for test
+func (c *mockQueryClient) GetDeal(_ uint64) (*datadealtypes.Deal, error) {
+	return nil, nil
 }
 
 type mockAccount struct{}

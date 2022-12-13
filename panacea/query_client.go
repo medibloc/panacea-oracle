@@ -16,6 +16,7 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/ibc-go/v2/modules/core/23-commitment/types"
 	datadealtypes "github.com/medibloc/panacea-core/v2/x/datadeal/types"
+	oracletypes "github.com/medibloc/panacea-core/v2/x/oracle/types"
 	"github.com/medibloc/panacea-oracle/config"
 	sgxdb "github.com/medibloc/panacea-oracle/store/sgxleveldb"
 	log "github.com/sirupsen/logrus"
@@ -35,6 +36,10 @@ import (
 type QueryClient interface {
 	Close() error
 	GetAccount(address string) (authtypes.AccountI, error)
+	GetOracleRegistration(uniqueID, oracleAddr string) (*oracletypes.OracleRegistration, error)
+	GetLightBlock(height int64) (*tmtypes.LightBlock, error)
+	GetCdc() *codec.ProtoCodec
+	GetChainID() string
 	GetDeal(dealID uint64) (*datadealtypes.Deal, error)
 	GetCertificate(dealID uint64, dataHash string) (*datadealtypes.Certificate, error)
 }
@@ -222,6 +227,14 @@ func refresh(ctx context.Context, lc *light.Client, trustPeriod time.Duration, m
 	return nil
 }
 
+func (q verifiedQueryClient) GetCdc() *codec.ProtoCodec {
+	return q.cdc
+}
+
+func (q verifiedQueryClient) GetChainID() string {
+	return q.chainID
+}
+
 // GetStoreData get data from panacea with storeKey and key, then verify queried data with light client and merkle proof.
 // the returned data type is ResponseQuery.value ([]byte), so recommend to convert to expected type
 func (q verifiedQueryClient) GetStoreData(ctx context.Context, storeKey string, key []byte) ([]byte, error) {
@@ -385,28 +398,28 @@ func (q verifiedQueryClient) GetCertificate(dealID uint64, dataHash string) (*da
 	return &certificate, nil
 }
 
-//func (q verifiedQueryClient) GetOracleRegistration(oracleAddr, uniqueID string) (*oracletypes.OracleRegistration, error) {
-//
-//	acc, err := GetAccAddressFromBech32(oracleAddr)
-//	if err != nil {
-//		return nil, err
-//	}
-//
-//	key := oracletypes.GetOracleRegistrationKey(uniqueID, acc)
-//
-//	bz, err := q.GetStoreData(context.Background(), oracletypes.StoreKey, key)
-//	if err != nil {
-//		return nil, err
-//	}
-//
-//	var oracleRegistration oracletypes.OracleRegistration
-//	err = q.cdc.UnmarshalLengthPrefixed(bz, &oracleRegistration)
-//	if err != nil {
-//		return nil, err
-//	}
-//
-//	return &oracleRegistration, nil
-//}
+func (q verifiedQueryClient) GetOracleRegistration(uniqueID, oracleAddr string) (*oracletypes.OracleRegistration, error) {
+
+	acc, err := GetAccAddressFromBech32(oracleAddr)
+	if err != nil {
+		return nil, err
+	}
+
+	key := oracletypes.GetOracleRegistrationKey(uniqueID, acc)
+
+	bz, err := q.GetStoreData(context.Background(), oracletypes.StoreKey, key)
+	if err != nil {
+		return nil, err
+	}
+
+	var oracleRegistration oracletypes.OracleRegistration
+	err = q.cdc.UnmarshalLengthPrefixed(bz, &oracleRegistration)
+	if err != nil {
+		return nil, err
+	}
+
+	return &oracleRegistration, nil
+}
 
 //func (q verifiedQueryClient) GetOracleParamsPublicKey() (*btcec.PublicKey, error) {
 //	pubKeyBase64Bz, err := q.GetStoreData(context.Background(), paramstypes.StoreKey, append(append([]byte(oracletypes.StoreKey), '/'), oracletypes.KeyOraclePublicKey...))
