@@ -18,6 +18,7 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/cosmos/ibc-go/v2/modules/core/23-commitment/types"
+	datadealtypes "github.com/medibloc/panacea-core/v2/x/datadeal/types"
 	oracletypes "github.com/medibloc/panacea-core/v2/x/oracle/types"
 	"github.com/medibloc/panacea-oracle/config"
 	sgxdb "github.com/medibloc/panacea-oracle/store/sgxleveldb"
@@ -43,6 +44,7 @@ type QueryClient interface {
 	GetCdc() *codec.ProtoCodec
 	GetChainID() string
 	GetOracleParamsPublicKey() (*btcec.PublicKey, error)
+	GetDeal(dealID uint64) (*datadealtypes.Deal, error)
 }
 
 const (
@@ -366,7 +368,6 @@ func (q verifiedQueryClient) GetAccount(address string) (authtypes.AccountI, err
 }
 
 func (q verifiedQueryClient) GetOracleRegistration(uniqueID, oracleAddr string) (*oracletypes.OracleRegistration, error) {
-
 	acc, err := GetAccAddressFromBech32(oracleAddr)
 	if err != nil {
 		return nil, err
@@ -386,6 +387,21 @@ func (q verifiedQueryClient) GetOracleRegistration(uniqueID, oracleAddr string) 
 	}
 
 	return &oracleRegistration, nil
+}
+func (q verifiedQueryClient) GetDeal(dealID uint64) (*datadealtypes.Deal, error) {
+	key := datadealtypes.GetDealKey(dealID)
+
+	bz, err := q.GetStoreData(context.Background(), datadealtypes.StoreKey, key)
+	if err != nil {
+		return nil, err
+	}
+
+	var deal datadealtypes.Deal
+	if err = q.cdc.UnmarshalLengthPrefixed(bz, &deal); err != nil {
+		return nil, err
+	}
+
+	return &deal, nil
 }
 
 func (q verifiedQueryClient) GetOracleParamsPublicKey() (*btcec.PublicKey, error) {
@@ -421,23 +437,6 @@ func (q verifiedQueryClient) GetOracleParamsPublicKey() (*btcec.PublicKey, error
 //	}
 //	return &oracleUpgradeInfo, nil
 //}
-//func (q verifiedQueryClient) GetDeal(dealID uint64) (*datadealtypes.Deal, error) {
-//	key := datadealtypes.GetDealKey(dealID)
-//
-//	bz, err := q.GetStoreData(context.Background(), datadealtypes.StoreKey, key)
-//	if err != nil {
-//		return nil, err
-//	}
-//
-//	var deal datadealtypes.Deal
-//	err = q.cdc.UnmarshalLengthPrefixed(bz, &deal)
-//	if err != nil {
-//		return nil, err
-//	}
-//
-//	return &deal, nil
-//}
-//
 //func (q verifiedQueryClient) GetDataSale(dataHash string, dealID uint64) (*datadealtypes.DataSale, error) {
 //	key := datadealtypes.GetDataSaleKey(dataHash, dealID)
 //

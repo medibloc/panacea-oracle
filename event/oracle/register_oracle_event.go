@@ -68,28 +68,26 @@ func (e RegisterOracleEvent) verifyAndGetMsgApproveOracleRegistration(uniqueID, 
 	approverUniqueID := e.reactor.EnclaveInfo().UniqueIDHex()
 
 	if uniqueID != approverUniqueID {
-		log.Infof("oracle's uniqueID does not match the requested uniqueID. expected(%s) got(%s)", approverUniqueID, uniqueID)
+		return nil, fmt.Errorf("oracle's uniqueID does not match the requested uniqueID. expected(%s) got(%s)", approverUniqueID, uniqueID)
 	} else {
 		oracleRegistration, err := queryClient.GetOracleRegistration(uniqueID, targetAddress)
 		if err != nil {
-			log.Infof("err while get oracleRegistration: %v", err)
+			log.Errorf("err while get oracleRegistration: %v", err)
 			return nil, err
 		}
 
 		if err := verifyTrustedBlockInfo(e.reactor.QueryClient(), oracleRegistration.TrustedBlockHeight, oracleRegistration.TrustedBlockHash); err != nil {
-			log.Infof("failed to verify trusted block. height(%d), hash(%s), err(%v)", oracleRegistration.TrustedBlockHeight, oracleRegistration.TrustedBlockHash, err)
+			log.Errorf("failed to verify trusted block. height(%d), hash(%s), err(%v)", oracleRegistration.TrustedBlockHeight, oracleRegistration.TrustedBlockHash, err)
 			return nil, err
 		}
 
 		nodePubKeyHash := sha256.Sum256(oracleRegistration.NodePubKey)
 
 		if err := sgx.VerifyRemoteReport(oracleRegistration.NodePubKeyRemoteReport, nodePubKeyHash[:], *e.reactor.EnclaveInfo()); err != nil {
-			log.Infof("failed to verification report. uniqueID(%s), address(%s), err(%v)", oracleRegistration.UniqueId, oracleRegistration.OracleAddress, err)
+			log.Errorf("failed to verification report. uniqueID(%s), address(%s), err(%v)", oracleRegistration.UniqueId, oracleRegistration.OracleAddress, err)
 			return nil, err
 		}
 
 		return makeMsgApproveOracleRegistration(approverUniqueID, approverAddress, targetAddress, oraclePrivKeyBz, oracleRegistration.NodePubKey)
 	}
-
-	return nil, nil
 }
