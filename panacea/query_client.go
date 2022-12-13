@@ -18,6 +18,7 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/cosmos/ibc-go/v2/modules/core/23-commitment/types"
+	datadealtypes "github.com/medibloc/panacea-core/v2/x/datadeal/types"
 	oracletypes "github.com/medibloc/panacea-core/v2/x/oracle/types"
 	"github.com/medibloc/panacea-oracle/config"
 	sgxdb "github.com/medibloc/panacea-oracle/store/sgxleveldb"
@@ -43,6 +44,7 @@ type QueryClient interface {
 	GetLightBlock(height int64) (*tmtypes.LightBlock, error)
 	GetCdc() *codec.ProtoCodec
 	GetChainID() string
+	GetDeal(dealID uint64) (*datadealtypes.Deal, error)
 }
 
 const (
@@ -386,6 +388,44 @@ func (q verifiedQueryClient) GetOracleRegistration(oracleAddr, uniqueID string) 
 
 	return &oracleRegistration, nil
 }
+func (q verifiedQueryClient) GetDeal(dealID uint64) (*datadealtypes.Deal, error) {
+	key := datadealtypes.GetDealKey(dealID)
+
+	bz, err := q.GetStoreData(context.Background(), datadealtypes.StoreKey, key)
+	if err != nil {
+		return nil, err
+	}
+
+	var deal datadealtypes.Deal
+	if err = q.cdc.UnmarshalLengthPrefixed(bz, &deal); err != nil {
+		return nil, err
+	}
+
+	return &deal, nil
+}
+
+//func (q QueryClient) GetOracleRegistration(oracleAddr, uniqueID, pubKey string) (*oracletypes.OracleRegistration, error) {
+//
+//	acc, err := GetAccAddressFromBech32(oracleAddr)
+//	if err != nil {
+//		return nil, err
+//	}
+//
+//	key := oracletypes.GetOracleRegistrationKey(uniqueID, acc, pubKey)
+//
+//	bz, err := q.GetStoreData(context.Background(), oracletypes.StoreKey, key)
+//	if err != nil {
+//		return nil, err
+//	}
+//
+//	var oracleRegistration oracletypes.OracleRegistration
+//	err = q.cdc.UnmarshalLengthPrefixed(bz, &oracleRegistration)
+//	if err != nil {
+//		return nil, err
+//	}
+//
+//	return &oracleRegistration, nil
+//}
 
 func (q verifiedQueryClient) GetOracleParamsPublicKey() (*btcec.PublicKey, error) {
 	pubKeyBase64Bz, err := q.GetStoreData(context.Background(), paramstypes.StoreKey, append(append([]byte(oracletypes.StoreKey), '/'), oracletypes.KeyOraclePublicKey...))
