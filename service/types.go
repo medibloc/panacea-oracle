@@ -4,7 +4,7 @@ import (
 	"encoding/base64"
 	"fmt"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/medibloc/panacea-oracle/panacea"
 )
 
 type ValidateDataReq struct {
@@ -14,7 +14,7 @@ type ValidateDataReq struct {
 }
 
 func (r *ValidateDataReq) ValidateBasic() error {
-	if _, err := sdk.AccAddressFromBech32(r.ProviderAddress); err != nil {
+	if _, err := panacea.GetAccAddressFromBech32(r.ProviderAddress); err != nil {
 		return fmt.Errorf("invalid provider address: %w", err)
 	}
 
