@@ -2,7 +2,7 @@ package panacea
 
 import (
 	"context"
-	"encoding/hex"
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"os"
@@ -444,9 +444,9 @@ func (q verifiedQueryClient) GetOracleParamsPublicKey() (*btcec.PublicKey, error
 		return nil, err
 	}
 
-	pubKeyBz, err := hex.DecodeString(pubKeyBase64)
+	pubKeyBz, err := base64.StdEncoding.DecodeString(pubKeyBase64)
 	if err != nil {
-		return nil, fmt.Errorf("failed to decode hex pubkey: %w", err)
+		return nil, fmt.Errorf("failed to decode base64 pubkey: %w", err)
 	}
 
 	return btcec.ParsePubKey(pubKeyBz, btcec.S256())
