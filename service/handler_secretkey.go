@@ -80,7 +80,7 @@ func (svc *Service) GetSecretKey(w http.ResponseWriter, r *http.Request) {
 	sharedKey := crypto.DeriveSharedKey(oraclePrivKey, consumerPubKey, crypto.KDFSHA256)
 
 	secretKey := getCombinedKey(oraclePrivKey.Serialize(), dealID, dataHash)
-	encryptedSecretKey, err := crypto.EncryptWithAES256(sharedKey, secretKey[:])
+	encryptedSecretKey, err := crypto.EncryptWithAES256(sharedKey, secretKey)
 	if err != nil {
 		log.Errorf("failed to encrypt secret key with shared key: %s", err.Error())
 		http.Error(w, "failed to encrypt secret key with shared key", http.StatusInternalServerError)
@@ -106,7 +106,10 @@ func (svc *Service) GetSecretKey(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func getCombinedKey(oraclePrivKey []byte, dealID uint64, dataHash []byte) [sha256.Size]byte {
-	tmp := append(oraclePrivKey, sdk.Uint64ToBigEndian(dealID)...)
-	return sha256.Sum256(append(tmp, dataHash...))
+func getCombinedKey(oraclePrivKey []byte, dealID uint64, dataHash []byte) []byte {
+	hash := sha256.New()
+	hash.Write(oraclePrivKey)
+	hash.Write(sdk.Uint64ToBigEndian(dealID))
+	hash.Write(dataHash)
+	return hash.Sum(nil)
 }
