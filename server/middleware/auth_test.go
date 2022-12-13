@@ -9,14 +9,17 @@ import (
 	"time"
 
 	"github.com/btcsuite/btcd/btcec"
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/lestrrat-go/jwx/v2/jwa"
 	"github.com/lestrrat-go/jwx/v2/jwt"
+	oracletypes "github.com/medibloc/panacea-core/v2/x/oracle/types"
 	"github.com/medibloc/panacea-oracle/server/middleware"
 	"github.com/stretchr/testify/require"
+	tmtypes "github.com/tendermint/tendermint/types"
 )
 
 var (
@@ -132,6 +135,22 @@ func testHTTPRequest(t *testing.T, authorizationHeader string, statusCode int, e
 //// Mocks //////////////////////////////////////////////////////////////
 
 type mockQueryClient struct{}
+
+func (c *mockQueryClient) GetOracleRegistration(uniqueID, oracleAddr string) (*oracletypes.OracleRegistration, error) {
+	return nil, nil
+}
+
+func (c *mockQueryClient) GetLightBlock(height int64) (*tmtypes.LightBlock, error) {
+	return nil, nil
+}
+
+func (c *mockQueryClient) GetCdc() *codec.ProtoCodec {
+	return nil
+}
+
+func (c *mockQueryClient) GetChainID() string {
+	return ""
+}
 
 func (c *mockQueryClient) Close() error {
 	return nil
