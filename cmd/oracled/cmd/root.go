@@ -37,6 +37,7 @@ func init() {
 		initCmd(),
 		genOracleKeyCmd(),
 		registerOracleCmd(),
+		getOracleKeyCmd(),
 		startCmd(),
 	)
 }

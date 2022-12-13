@@ -15,6 +15,7 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/lestrrat-go/jwx/v2/jwa"
 	"github.com/lestrrat-go/jwx/v2/jwt"
+	oracletypes "github.com/medibloc/panacea-core/v2/x/oracle/types"
 	"github.com/medibloc/panacea-oracle/server/middleware"
 	"github.com/stretchr/testify/require"
 )
@@ -142,6 +143,14 @@ func (c *mockQueryClient) GetAccount(address string) (authtypes.AccountI, error)
 		return nil, fmt.Errorf("address not found: %v", address)
 	}
 	return &mockAccount{}, nil
+}
+
+func (c *mockQueryClient) GetOracleParamsPublicKey() (*btcec.PublicKey, error) {
+	return nil, nil
+}
+
+func (c *mockQueryClient) GetOracleRegistration(oracleAddr, uniqueID string) (*oracletypes.OracleRegistration, error) {
+	return nil, nil
 }
 
 type mockAccount struct{}
