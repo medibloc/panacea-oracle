@@ -40,6 +40,9 @@ type QueryClient interface {
 	GetAccount(address string) (authtypes.AccountI, error)
 	GetOracleRegistration(oracleAddr, uniqueID string) (*oracletypes.OracleRegistration, error)
 	GetOracleParamsPublicKey() (*btcec.PublicKey, error)
+	GetLightBlock(height int64) (*tmtypes.LightBlock, error)
+	GetCdc() *codec.ProtoCodec
+	GetChainID() string
 }
 
 const (
@@ -225,6 +228,14 @@ func refresh(ctx context.Context, lc *light.Client, trustPeriod time.Duration, m
 	return nil
 }
 
+func (q verifiedQueryClient) GetCdc() *codec.ProtoCodec {
+	return q.cdc
+}
+
+func (q verifiedQueryClient) GetChainID() string {
+	return q.chainID
+}
+
 // GetStoreData get data from panacea with storeKey and key, then verify queried data with light client and merkle proof.
 // the returned data type is ResponseQuery.value ([]byte), so recommend to convert to expected type
 func (q verifiedQueryClient) GetStoreData(ctx context.Context, storeKey string, key []byte) ([]byte, error) {
@@ -355,7 +366,6 @@ func (q verifiedQueryClient) GetAccount(address string) (authtypes.AccountI, err
 }
 
 func (q verifiedQueryClient) GetOracleRegistration(oracleAddr, uniqueID string) (*oracletypes.OracleRegistration, error) {
-
 	acc, err := GetAccAddressFromBech32(oracleAddr)
 	if err != nil {
 		return nil, err
