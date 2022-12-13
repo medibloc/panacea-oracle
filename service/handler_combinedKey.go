@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/btcsuite/btcd/btcec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/gorilla/mux"
 	"github.com/medibloc/panacea-oracle/crypto"
@@ -68,15 +69,25 @@ func (svc *Service) GetCombinedKey(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "failed to get deal", http.StatusBadRequest)
 		return
 	}
-	consumerPubKey := consumerAcc.GetPubKey().Bytes()
-	combinedKey := getCombinedKey(oraclePrivKey.Serialize(), dealID, dataHash)
-	encryptedCombinedKey, err := crypto.EncryptWithAES256(consumerPubKey, combinedKey[:])
+	consumerPubKeyBz := consumerAcc.GetPubKey().Bytes()
+	consumerPubKey, err := btcec.ParsePubKey(consumerPubKeyBz, btcec.S256())
 	if err != nil {
-		log.Errorf("failed to encrypt combined key with consumer public key: %s", err.Error())
-		http.Error(w, "failed to encrypt combined key with consumer public key", http.StatusInternalServerError)
+		log.Errorf("failed to parse consumer public key: %s", err.Error())
+		http.Error(w, "failed to parse consumer public key", http.StatusBadRequest)
 		return
 	}
 
+	sharedKey := crypto.DeriveSharedKey(oraclePrivKey, consumerPubKey, crypto.KDFSHA256)
+
+	combinedKey := getCombinedKey(oraclePrivKey.Serialize(), dealID, dataHash)
+	encryptedCombinedKey, err := crypto.EncryptWithAES256(sharedKey, combinedKey[:])
+	if err != nil {
+		log.Errorf("failed to encrypt combined key with shared key: %s", err.Error())
+		http.Error(w, "failed to encrypt combined key with shared key", http.StatusInternalServerError)
+		return
+	}
+
+	// make response
 	var response Response
 	response.EncryptedCombinedKey = encryptedCombinedKey
 	jsonResponse, err := json.Marshal(response)
