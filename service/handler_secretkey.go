@@ -1,23 +1,17 @@
 package service
 
 import (
-	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
 	"net/http"
 	"strconv"
 
 	"github.com/btcsuite/btcd/btcec"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/gorilla/mux"
 	"github.com/medibloc/panacea-oracle/crypto"
 	"github.com/medibloc/panacea-oracle/server/middleware"
 	log "github.com/sirupsen/logrus"
 )
-
-type secretKeyResponse struct {
-	EncryptedSecretKey []byte `json:"encrypted_secret_key"`
-}
 
 func (svc *Service) GetSecretKey(w http.ResponseWriter, r *http.Request) {
 	queryClient := svc.QueryClient()
@@ -79,7 +73,7 @@ func (svc *Service) GetSecretKey(w http.ResponseWriter, r *http.Request) {
 
 	sharedKey := crypto.DeriveSharedKey(oraclePrivKey, consumerPubKey, crypto.KDFSHA256)
 
-	secretKey := getCombinedKey(oraclePrivKey.Serialize(), dealID, dataHash)
+	secretKey := GetCombinedKey(oraclePrivKey.Serialize(), dealID, dataHash)
 	encryptedSecretKey, err := crypto.Encrypt(sharedKey, nil, secretKey)
 	if err != nil {
 		log.Errorf("failed to encrypt secret key with shared key: %s", err.Error())
@@ -104,12 +98,4 @@ func (svc *Service) GetSecretKey(w http.ResponseWriter, r *http.Request) {
 		log.Errorf("failed to write response: %s", err.Error())
 		return
 	}
-}
-
-func getCombinedKey(oraclePrivKey []byte, dealID uint64, dataHash []byte) []byte {
-	hash := sha256.New()
-	hash.Write(oraclePrivKey)
-	hash.Write(sdk.Uint64ToBigEndian(dealID))
-	hash.Write(dataHash)
-	return hash.Sum(nil)
 }
