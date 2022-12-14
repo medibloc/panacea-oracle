@@ -161,6 +161,13 @@ func (s *service) BroadcastTx(msg ...sdk.Msg) (int64, string, error) {
 	}
 
 	resp, err := s.GRPCClient().BroadcastTx(txBytes)
+	if err != nil {
+		return 0, "", fmt.Errorf("broadcast transaction failed. txBytes(%v)", txBytes)
+	}
+
+	if resp.TxResponse.Code != 0 {
+		return 0, "", fmt.Errorf("transaction failed: %v", resp.TxResponse.RawLog)
+	}
 
 	return resp.TxResponse.Height, resp.TxResponse.TxHash, nil
 }
