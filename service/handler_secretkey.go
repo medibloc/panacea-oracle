@@ -7,7 +7,6 @@ import (
 	"strconv"
 
 	"github.com/btcsuite/btcd/btcec"
-	"github.com/gorilla/mux"
 	"github.com/medibloc/panacea-oracle/crypto"
 	"github.com/medibloc/panacea-oracle/server/middleware"
 	log "github.com/sirupsen/logrus"
@@ -17,7 +16,9 @@ func (svc *Service) GetSecretKey(w http.ResponseWriter, r *http.Request) {
 	queryClient := svc.QueryClient()
 	oraclePrivKey := svc.OraclePrivKey()
 
-	dealIDStr := mux.Vars(r)["dealId"]
+	queryParams := r.URL.Query()
+
+	dealIDStr := queryParams.Get("deal-id")
 	dealID, err := strconv.ParseUint(dealIDStr, 10, 64)
 	if err != nil {
 		log.Errorf("failed to parse deal ID: %s", err.Error())
@@ -25,7 +26,7 @@ func (svc *Service) GetSecretKey(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	dataHashStr := mux.Vars(r)["dataHash"]
+	dataHashStr := queryParams.Get("data-hash")
 	dataHash, err := hex.DecodeString(dataHashStr)
 	if err != nil {
 		log.Errorf("failed to decode dataHash: %s", err.Error())
