@@ -96,6 +96,7 @@ func registerOracleCmd() *cobra.Command {
 				return err
 			}
 
+			//TODO: The argument of NewMsgRegisterOracle will be changed when https://github.com/medibloc/panacea-core/pull/540 is merged.
 			msgRegisterOracle := oracletypes.NewMsgRegisterOracle(uniqueID, oracleAccount.GetAddress(), nodePubKey, nodePubKeyRemoteReport, trustedBlockInfo.TrustedBlockHeight, trustedBlockInfo.TrustedBlockHash, endPoint, oracleCommissionRate)
 			txBuilder := panacea.NewTxBuilder(queryClient)
 			cli, err := panacea.NewGRPCClient(conf.Panacea.GRPCAddr)
