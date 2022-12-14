@@ -45,6 +45,7 @@ type QueryClient interface {
 	GetCdc() *codec.ProtoCodec
 	GetChainID() string
 	GetDeal(dealID uint64) (*datadealtypes.Deal, error)
+	GetCertificate(dealID uint64, dataHash string) (*datadealtypes.Certificate, error)
 }
 
 const (
@@ -367,7 +368,42 @@ func (q verifiedQueryClient) GetAccount(address string) (authtypes.AccountI, err
 	return account, nil
 }
 
-func (q verifiedQueryClient) GetOracleRegistration(oracleAddr, uniqueID string) (*oracletypes.OracleRegistration, error) {
+func (q verifiedQueryClient) GetDeal(dealID uint64) (*datadealtypes.Deal, error) {
+	key := datadealtypes.GetDealKey(dealID)
+
+	bz, err := q.GetStoreData(context.Background(), datadealtypes.StoreKey, key)
+	if err != nil {
+		return nil, err
+	}
+
+	var deal datadealtypes.Deal
+	if err = q.cdc.UnmarshalLengthPrefixed(bz, &deal); err != nil {
+		return nil, err
+	}
+
+	return &deal, nil
+}
+
+func (q verifiedQueryClient) GetCertificate(dealID uint64, dataHash string) (*datadealtypes.Certificate, error) {
+
+	key := datadealtypes.GetCertificateKey(dealID, dataHash)
+
+	bz, err := q.GetStoreData(context.Background(), datadealtypes.StoreKey, key)
+	if err != nil {
+		return nil, err
+	}
+
+	var certificate datadealtypes.Certificate
+	err = q.cdc.UnmarshalLengthPrefixed(bz, &certificate)
+	if err != nil {
+		return nil, err
+	}
+
+	return &certificate, nil
+}
+
+func (q verifiedQueryClient) GetOracleRegistration(uniqueID, oracleAddr string) (*oracletypes.OracleRegistration, error) {
+
 	acc, err := GetAccAddressFromBech32(oracleAddr)
 	if err != nil {
 		return nil, err
@@ -388,44 +424,6 @@ func (q verifiedQueryClient) GetOracleRegistration(oracleAddr, uniqueID string) 
 
 	return &oracleRegistration, nil
 }
-func (q verifiedQueryClient) GetDeal(dealID uint64) (*datadealtypes.Deal, error) {
-	key := datadealtypes.GetDealKey(dealID)
-
-	bz, err := q.GetStoreData(context.Background(), datadealtypes.StoreKey, key)
-	if err != nil {
-		return nil, err
-	}
-
-	var deal datadealtypes.Deal
-	if err = q.cdc.UnmarshalLengthPrefixed(bz, &deal); err != nil {
-		return nil, err
-	}
-
-	return &deal, nil
-}
-
-//func (q QueryClient) GetOracleRegistration(oracleAddr, uniqueID, pubKey string) (*oracletypes.OracleRegistration, error) {
-//
-//	acc, err := GetAccAddressFromBech32(oracleAddr)
-//	if err != nil {
-//		return nil, err
-//	}
-//
-//	key := oracletypes.GetOracleRegistrationKey(uniqueID, acc, pubKey)
-//
-//	bz, err := q.GetStoreData(context.Background(), oracletypes.StoreKey, key)
-//	if err != nil {
-//		return nil, err
-//	}
-//
-//	var oracleRegistration oracletypes.OracleRegistration
-//	err = q.cdc.UnmarshalLengthPrefixed(bz, &oracleRegistration)
-//	if err != nil {
-//		return nil, err
-//	}
-//
-//	return &oracleRegistration, nil
-//}
 
 func (q verifiedQueryClient) GetOracleParamsPublicKey() (*btcec.PublicKey, error) {
 	pubKeyBase64Bz, err := q.GetStoreData(context.Background(), paramstypes.StoreKey, append(append([]byte(oracletypes.StoreKey), '/'), oracletypes.KeyOraclePublicKey...))

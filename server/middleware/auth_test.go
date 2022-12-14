@@ -137,6 +137,10 @@ func testHTTPRequest(t *testing.T, authorizationHeader string, statusCode int, e
 
 type mockQueryClient struct{}
 
+func (c *mockQueryClient) GetCertificate(_ uint64, _ string) (*datadealtypes.Certificate, error) {
+	return nil, nil
+}
+
 func (c *mockQueryClient) GetOracleRegistration(uniqueID, oracleAddr string) (*oracletypes.OracleRegistration, error) {
 	return nil, nil
 }
