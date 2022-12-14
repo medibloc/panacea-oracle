@@ -28,3 +28,7 @@ func (r *ValidateDataReq) ValidateBasic() error {
 
 	return nil
 }
+
+type secretKeyResponse struct {
+	EncryptedSecretKey []byte `json:"encrypted_secret_key"`
+}
