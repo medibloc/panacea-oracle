@@ -19,3 +19,8 @@ type Reactor interface {
 	IPFS() *ipfs.IPFS
 	BroadcastTx(txBytes []byte) (int64, string, error)
 }
+
+type OracleService interface {
+	Reactor
+	GetAndStoreOraclePrivKey() error
+}

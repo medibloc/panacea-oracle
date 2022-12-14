@@ -19,7 +19,7 @@ import (
 	"github.com/medibloc/panacea-oracle/crypto"
 	oracleevent "github.com/medibloc/panacea-oracle/event/oracle"
 	"github.com/medibloc/panacea-oracle/panacea"
-	"github.com/medibloc/panacea-oracle/service"
+	oracleservice "github.com/medibloc/panacea-oracle/service/oracle"
 	"github.com/medibloc/panacea-oracle/sgx"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -199,7 +199,7 @@ func generateAndSealedNodeKey(nodePrivKeyPath string) ([]byte, []byte, error) {
 }
 
 func subscribeApproveOracleRegistrationEvent(conf *config.Config) error {
-	svc, err := service.NewWithoutOraclePrivKey(conf)
+	svc, err := oracleservice.New(conf)
 	if err != nil {
 		return fmt.Errorf("failed to create service: %w", err)
 	}
