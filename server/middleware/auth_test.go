@@ -169,9 +169,6 @@ func (c *mockQueryClient) GetAccount(address string) (authtypes.AccountI, error)
 	}
 	return &mockAccount{}, nil
 }
-func (c *mockQueryClient) GetOracleParamsPublicKey() (*btcec.PublicKey, error) {
-	return nil, nil
-}
 
 // TODO: implement mock GetDeal for test
 func (c *mockQueryClient) GetDeal(_ uint64) (*datadealtypes.Deal, error) {
