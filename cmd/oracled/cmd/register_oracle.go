@@ -95,22 +95,22 @@ func registerOracleCmd() *cobra.Command {
 
 			oracleCommissionMaxRateStr, err := cmd.Flags().GetString(flagOracleCommissionMaxRate)
 			if err != nil {
-				return fmt.Errorf("failed to get oralce commission max rate")
+				return err
 			}
 
 			oracleCommissionMaxRate, err := sdk.NewDecFromStr(oracleCommissionMaxRateStr)
 			if err != nil {
-				return err
+				return fmt.Errorf("failed to get oralce commission max rate")
 			}
 
 			oracleCommissionMaxChangeRateStr, err := cmd.Flags().GetString(flagOracleCommissionMaxChangeRate)
 			if err != nil {
-				return fmt.Errorf("failed to get oralce commission max change rate")
+				return err
 			}
 
 			oracleCommissionMaxChangeRate, err := sdk.NewDecFromStr(oracleCommissionMaxChangeRateStr)
 			if err != nil {
-				return err
+				return fmt.Errorf("failed to get oralce commission max change rate")
 			}
 
 			endPoint, err := cmd.Flags().GetString(flagOracleEndpoint)
@@ -194,6 +194,8 @@ func registerOracleCmd() *cobra.Command {
 	cmd.Flags().String(flagOracleEndpoint, "", "endpoint of oracle")
 	cmd.Flags().String(flagOracleDescription, "", "description of oracle")
 	cmd.Flags().String(flagOracleCommissionRate, "0.1", "oracle commission rate")
+	cmd.Flags().String(flagOracleCommissionMaxRate, "", "oracle commission rate")
+	cmd.Flags().String(flagOracleCommissionMaxChangeRate, "", "oracle commission rate")
 	_ = cmd.MarkFlagRequired(flags.FlagTrustedBlockHeight)
 	_ = cmd.MarkFlagRequired(flags.FlagTrustedBlockHash)
 
