@@ -25,9 +25,11 @@ import (
 )
 
 const (
-	flagOracleEndpoint       = "oracle-endpoint"
-	flagOracleDescription    = "oracle-description"
-	flagOracleCommissionRate = "oracle-commission-rate"
+	flagOracleEndpoint                = "oracle-endpoint"
+	flagOracleDescription             = "oracle-description"
+	flagOracleCommissionRate          = "oracle-commission-rate"
+	flagOracleCommissionMaxRate       = "oracle-commission-max-rate"
+	flagOracleCommissionMaxChangeRate = "oracle-commission-max-change-rate"
 )
 
 func registerOracleCmd() *cobra.Command {
@@ -91,13 +93,32 @@ func registerOracleCmd() *cobra.Command {
 				return err
 			}
 
+			oracleCommissionMaxRateStr, err := cmd.Flags().GetString(flagOracleCommissionMaxRate)
+			if err != nil {
+				return fmt.Errorf("failed to get oralce commission max rate")
+			}
+
+			oracleCommissionMaxRate, err := sdk.NewDecFromStr(oracleCommissionMaxRateStr)
+			if err != nil {
+				return err
+			}
+
+			oracleCommissionMaxChangeRateStr, err := cmd.Flags().GetString(flagOracleCommissionMaxChangeRate)
+			if err != nil {
+				return fmt.Errorf("failed to get oralce commission max change rate")
+			}
+
+			oracleCommissionMaxChangeRate, err := sdk.NewDecFromStr(oracleCommissionMaxChangeRateStr)
+			if err != nil {
+				return err
+			}
+
 			endPoint, err := cmd.Flags().GetString(flagOracleEndpoint)
 			if err != nil {
 				return err
 			}
 
-			//TODO: The argument of NewMsgRegisterOracle will be changed when https://github.com/medibloc/panacea-core/pull/540 is merged.
-			msgRegisterOracle := oracletypes.NewMsgRegisterOracle(uniqueID, oracleAccount.GetAddress(), nodePubKey, nodePubKeyRemoteReport, trustedBlockInfo.TrustedBlockHeight, trustedBlockInfo.TrustedBlockHash, endPoint, oracleCommissionRate)
+			msgRegisterOracle := oracletypes.NewMsgRegisterOracle(uniqueID, oracleAccount.GetAddress(), nodePubKey, nodePubKeyRemoteReport, trustedBlockInfo.TrustedBlockHeight, trustedBlockInfo.TrustedBlockHash, endPoint, oracleCommissionRate, oracleCommissionMaxRate, oracleCommissionMaxChangeRate)
 			txBuilder := panacea.NewTxBuilder(queryClient)
 			cli, err := panacea.NewGRPCClient(conf.Panacea.GRPCAddr)
 			if err != nil {
