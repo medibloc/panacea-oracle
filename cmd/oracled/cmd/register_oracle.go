@@ -75,7 +75,6 @@ func registerOracleCmd() *cobra.Command {
 }
 
 func sendTxRegisterOracle(cmd *cobra.Command, conf *config.Config) error {
-	// initialize tx client
 	svc, err := service.New(conf)
 	if err != nil {
 		return err
