@@ -11,11 +11,11 @@ import (
 var _ event.Event = (*ApproveOracleRegistrationEvent)(nil)
 
 type ApproveOracleRegistrationEvent struct {
-	reactor  event.OracleService
+	service  event.ApproveOracleRegistrationService
 	doneChan chan error
 }
 
-func NewApproveOracleRegistrationEvent(s event.OracleService, doneChan chan error) ApproveOracleRegistrationEvent {
+func NewApproveOracleRegistrationEvent(s event.ApproveOracleRegistrationService, doneChan chan error) ApproveOracleRegistrationEvent {
 	return ApproveOracleRegistrationEvent{s, doneChan}
 }
 
@@ -27,14 +27,14 @@ func (e ApproveOracleRegistrationEvent) GetEventQuery() string {
 	return fmt.Sprintf("message.action = 'ApproveOracleRegistration' and %s.%s = '%s' and %s.%s = '%s'",
 		oracletypes.EventTypeApproveOracleRegistration,
 		oracletypes.AttributeKeyOracleAddress,
-		e.reactor.OracleAcc().GetAddress(),
+		e.service.OracleAcc().GetAddress(),
 		oracletypes.EventTypeApproveOracleRegistration,
 		oracletypes.AttributeKeyUniqueID,
-		e.reactor.EnclaveInfo().UniqueIDHex(),
+		e.service.EnclaveInfo().UniqueIDHex(),
 	)
 }
 
 func (e ApproveOracleRegistrationEvent) EventHandler(event ctypes.ResultEvent) error {
-	e.doneChan <- e.reactor.GetAndStoreOraclePrivKey()
+	e.doneChan <- e.service.GetAndStoreOraclePrivKey()
 	return nil
 }
