@@ -96,7 +96,8 @@ func registerOracleCmd() *cobra.Command {
 				return err
 			}
 
-			msgRegisterOracle := oracletypes.NewMsgRegisterOracle(uniqueID, oracleAccount.GetAddress(), nodePubKey, nodePubKeyRemoteReport, trustedBlockInfo.TrustedBlockHeight, trustedBlockInfo.TrustedBlockHash, endPoint, oracleCommissionRate)
+			// TODO: OracleCommissionMaxRate & OracleCommissionMaxChangeRate will be added in other PR.
+			msgRegisterOracle := oracletypes.NewMsgRegisterOracle(uniqueID, oracleAccount.GetAddress(), nodePubKey, nodePubKeyRemoteReport, trustedBlockInfo.TrustedBlockHeight, trustedBlockInfo.TrustedBlockHash, endPoint, oracleCommissionRate, sdk.NewDec(0), sdk.NewDec(0))
 			txBuilder := panacea.NewTxBuilder(queryClient)
 			cli, err := panacea.NewGRPCClient(conf.Panacea.GRPCAddr)
 			if err != nil {
