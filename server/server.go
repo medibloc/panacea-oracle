@@ -7,6 +7,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/medibloc/panacea-oracle/server/middleware"
 	"github.com/medibloc/panacea-oracle/server/service/datadeal"
+	"github.com/medibloc/panacea-oracle/server/service/key"
 	"github.com/medibloc/panacea-oracle/service"
 	log "github.com/sirupsen/logrus"
 )
@@ -19,6 +20,7 @@ func New(svc service.Service) *Server {
 	router := mux.NewRouter()
 
 	datadeal.RegisterHandlers(svc, router)
+	key.RegisterHandlers(svc, router)
 
 	mw := middleware.NewJWTAuthMiddleware(svc.QueryClient())
 	router.Use(mw.Middleware)

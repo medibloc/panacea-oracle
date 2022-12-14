@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/medibloc/panacea-oracle/crypto"
 	"github.com/tendermint/tendermint/libs/os"
 
@@ -23,9 +24,9 @@ type Service interface {
 	OraclePrivKey() *btcec.PrivateKey
 	Config() *config.Config
 	QueryClient() panacea.QueryClient
-	TxClient() *panacea.TxClient
 	IPFS() *ipfs.IPFS
-	StartSubscriptions(events ...event.Event) error
+	BroadcastTx(...sdk.Msg) (int64, string, error)
+	StartSubscriptions(...event.Event) error
 	Close() error
 }
 
@@ -39,7 +40,7 @@ type service struct {
 	queryClient panacea.QueryClient
 	grpcClient  *panacea.GRPCClient
 	subscriber  *event.PanaceaSubscriber
-	txClient    *panacea.TxClient
+	txBuilder   *panacea.TxBuilder
 	ipfs        *ipfs.IPFS
 }
 
@@ -76,10 +77,7 @@ func New(conf *config.Config) (Service, error) {
 		return nil, fmt.Errorf("failed to create a new gRPC client: %w", err)
 	}
 
-	txClient, err := panacea.NewTxClient(conf, grpcClient, queryClient)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create txClient: %w", err)
-	}
+	txBuilder := panacea.NewTxBuilder(queryClient)
 
 	subscriber, err := event.NewSubscriber(conf.Panacea.RPCAddr)
 	if err != nil {
@@ -101,7 +99,7 @@ func New(conf *config.Config) (Service, error) {
 		enclaveInfo:   selfEnclaveInfo,
 		queryClient:   queryClient,
 		grpcClient:    grpcClient,
-		txClient:      txClient,
+		txBuilder:     txBuilder,
 		subscriber:    subscriber,
 		ipfs:          newIpfs,
 	}, nil
@@ -149,8 +147,22 @@ func (s *service) QueryClient() panacea.QueryClient {
 	return s.queryClient
 }
 
-func (s *service) TxClient() *panacea.TxClient {
-	return s.txClient
+func (s *service) BroadcastTx(msg ...sdk.Msg) (int64, string, error) {
+	defaultFeeAmount, _ := sdk.ParseCoinsNormalized(s.Config().Panacea.DefaultFeeAmount)
+
+	txBytes, err := s.txBuilder.GenerateSignedTxBytes(
+		s.OracleAcc().GetPrivKey(),
+		s.Config().Panacea.DefaultGasLimit,
+		defaultFeeAmount,
+		msg...,
+	)
+	if err != nil {
+		return 0, "", fmt.Errorf("failed to generate signed Tx bytes: %w", err)
+	}
+
+	resp, err := s.GRPCClient().BroadcastTx(txBytes)
+
+	return resp.TxResponse.Height, resp.TxResponse.TxHash, nil
 }
 
 func (s *service) IPFS() *ipfs.IPFS {

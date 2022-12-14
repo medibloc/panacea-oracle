@@ -2,26 +2,25 @@ package event
 
 import (
 	"github.com/btcsuite/btcd/btcec"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/medibloc/panacea-oracle/config"
-	"github.com/medibloc/panacea-oracle/ipfs"
 	"github.com/medibloc/panacea-oracle/panacea"
 	"github.com/medibloc/panacea-oracle/sgx"
 )
 
-// Reactor contains all ingredients needed for handling all event types
-type Reactor interface {
-	GRPCClient() *panacea.GRPCClient
+// Service is 'service/service.go'
+type Service interface {
 	EnclaveInfo() *sgx.EnclaveInfo
 	OracleAcc() *panacea.OracleAccount
 	OraclePrivKey() *btcec.PrivateKey
-	Config() *config.Config
 	QueryClient() panacea.QueryClient
-	TxClient() *panacea.TxClient
-	IPFS() *ipfs.IPFS
-	Close() error
+	Config() *config.Config
+	BroadcastTx(...sdk.Msg) (int64, string, error)
 }
 
+// OracleService is 'service/oracle/service.go'
 type OracleService interface {
-	Reactor
+	EnclaveInfo() *sgx.EnclaveInfo
+	OracleAcc() *panacea.OracleAccount
 	GetAndStoreOraclePrivKey() error
 }

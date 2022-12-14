@@ -14,10 +14,10 @@ import (
 var _ event.Event = (*RegisterOracleEvent)(nil)
 
 type RegisterOracleEvent struct {
-	reactor event.Reactor
+	reactor event.Service
 }
 
-func NewRegisterOracleEvent(s event.Reactor) RegisterOracleEvent {
+func NewRegisterOracleEvent(s event.Service) RegisterOracleEvent {
 	return RegisterOracleEvent{s}
 }
 
@@ -44,7 +44,7 @@ func (e RegisterOracleEvent) EventHandler(event ctypes.ResultEvent) error {
 		msgApproveOracleRegistration.ApproveOracleRegistration.TargetOracleAddress,
 	)
 
-	txHeight, txHash, err := e.reactor.TxClient().BroadcastTx(msgApproveOracleRegistration)
+	txHeight, txHash, err := e.reactor.BroadcastTx(msgApproveOracleRegistration)
 	if err != nil {
 		return fmt.Errorf("failed to ApproveOracleRegistration transaction for new oracle registration: %v", err)
 	} else {

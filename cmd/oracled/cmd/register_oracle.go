@@ -53,6 +53,8 @@ func registerOracleCmd() *cobra.Command {
 	cmd.Flags().String(flags.FlagTrustedBlockHash, "", "Trusted block hash")
 	cmd.Flags().String(flags.FlagOracleEndpoint, "", "endpoint of oracle")
 	cmd.Flags().String(flags.FlagOracleCommissionRate, "0.1", "oracle commission rate")
+	cmd.Flags().String(flags.FlagOracleCommissionMaxRate, "", "oracle commission rate")
+	cmd.Flags().String(flags.FlagOracleCommissionMaxChangeRate, "", "oracle commission rate")
 	if err := cmd.MarkFlagRequired(flags.FlagTrustedBlockHeight); err != nil {
 		panic(err)
 	}
@@ -60,6 +62,12 @@ func registerOracleCmd() *cobra.Command {
 		panic(err)
 	}
 	if err := cmd.MarkFlagRequired(flags.FlagOracleCommissionRate); err != nil {
+		panic(err)
+	}
+	if err := cmd.MarkFlagRequired(flags.FlagOracleCommissionMaxRate); err != nil {
+		panic(err)
+	}
+	if err := cmd.MarkFlagRequired(flags.FlagOracleCommissionMaxChangeRate); err != nil {
 		panic(err)
 	}
 
@@ -75,10 +83,7 @@ func sendTxRegisterOracle(cmd *cobra.Command, conf *config.Config) error {
 	defer svc.Close()
 
 	// get oracle account from mnemonic.
-	oracleAccount, err := panacea.NewOracleAccount(conf.OracleMnemonic, conf.OracleAccNum, conf.OracleAccIndex)
-	if err != nil {
-		return fmt.Errorf("failed to get oracle account from mnemonic: %w", err)
-	}
+	oracleAccount := svc.OracleAcc()
 
 	// get trusted block information
 	trustedBlockInfo, err := getTrustedBlockInfo(cmd)
@@ -91,7 +96,7 @@ func sendTxRegisterOracle(cmd *cobra.Command, conf *config.Config) error {
 		return err
 	}
 
-	txHeight, txHash, err := svc.TxClient().BroadcastTx(msgRegisterOracle)
+	txHeight, txHash, err := svc.BroadcastTx(msgRegisterOracle)
 	if err != nil {
 		return fmt.Errorf("failed to broadcast transaction: %w", err)
 	}
@@ -141,6 +146,26 @@ func generateMsgRegisterOracle(cmd *cobra.Command, conf *config.Config, oracleAc
 		return nil, fmt.Errorf("failed to parse oracleCommissionRate. input(%s). %w", oracleCommissionRateStr, err)
 	}
 
+	oracleCommissionMaxRateStr, err := cmd.Flags().GetString(flags.FlagOracleCommissionMaxRate)
+	if err != nil {
+		return nil, err
+	}
+
+	oracleCommissionMaxRate, err := sdk.NewDecFromStr(oracleCommissionMaxRateStr)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get oralce commission max rate")
+	}
+
+	oracleCommissionMaxChangeRateStr, err := cmd.Flags().GetString(flags.FlagOracleCommissionMaxChangeRate)
+	if err != nil {
+		return nil, err
+	}
+
+	oracleCommissionMaxChangeRate, err := sdk.NewDecFromStr(oracleCommissionMaxChangeRateStr)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get oralce commission max change rate")
+	}
+
 	msgRegisterOracle := oracletypes.NewMsgRegisterOracle(
 		uniqueID,
 		oracleAccount.GetAddress(),
@@ -150,6 +175,8 @@ func generateMsgRegisterOracle(cmd *cobra.Command, conf *config.Config, oracleAc
 		trustedBlockInfo.TrustedBlockHash,
 		oracleEndpoint,
 		oracleCommissionRate,
+		oracleCommissionMaxRate,
+		oracleCommissionMaxChangeRate,
 	)
 	return msgRegisterOracle, nil
 }
