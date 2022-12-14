@@ -100,7 +100,7 @@ func registerOracleCmd() *cobra.Command {
 
 			oracleCommissionMaxRate, err := sdk.NewDecFromStr(oracleCommissionMaxRateStr)
 			if err != nil {
-				return err
+				return fmt.Errorf("failed to get oralce commission max rate")
 			}
 
 			oracleCommissionMaxChangeRateStr, err := cmd.Flags().GetString(flagOracleCommissionMaxChangeRate)
@@ -110,7 +110,7 @@ func registerOracleCmd() *cobra.Command {
 
 			oracleCommissionMaxChangeRate, err := sdk.NewDecFromStr(oracleCommissionMaxChangeRateStr)
 			if err != nil {
-				return err
+				return fmt.Errorf("failed to get oralce commission max change rate")
 			}
 
 			endPoint, err := cmd.Flags().GetString(flagOracleEndpoint)

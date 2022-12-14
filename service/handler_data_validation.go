@@ -126,6 +126,7 @@ func (s *Service) ValidateData(w http.ResponseWriter, r *http.Request) {
 	// Issue a certificate to the client
 	unsignedDataCert := &datadealtypes.UnsignedCertificate{
 		Cid:             cid,
+		UniqueId:        s.EnclaveInfo().UniqueIDHex(),
 		OracleAddress:   s.OracleAcc().GetAddress(),
 		DealId:          dealID,
 		ProviderAddress: reqBody.ProviderAddress,
