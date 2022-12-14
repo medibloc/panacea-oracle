@@ -94,7 +94,7 @@ func getOraclePrivKey(conf *config.Config, oracleRegistration *oracletypes.Oracl
 
 	shareKey := crypto.DeriveSharedKey(nodePrivKey, oraclePubKey, crypto.KDFSHA256)
 
-	oraclePrivKey, err := crypto.DecryptWithAES256(shareKey, oracleRegistration.EncryptedOraclePrivKey)
+	oraclePrivKey, err := crypto.Decrypt(shareKey, nil, oracleRegistration.EncryptedOraclePrivKey)
 	if err != nil {
 		return fmt.Errorf("failed to decrypt the encrypted oracle private key: %w", err)
 	}
