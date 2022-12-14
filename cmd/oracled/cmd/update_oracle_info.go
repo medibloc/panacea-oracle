@@ -47,10 +47,10 @@ func updateOracleInfoCmd() *cobra.Command {
 				return err
 			}
 
-			oracleCommissionMaxRateStr, err := cmd.Flags().GetString(flagOracleCommissionMaxRate)
-			if err != nil {
-				return err
-			}
+			//oracleCommissionMaxRateStr, err := cmd.Flags().GetString(flagOracleCommissionMaxRate)
+			//if err != nil {
+			//	return err
+			//}
 
 			//oracleCommissionMaxRate, err := sdk.NewDecFromStr(oracleCommissionMaxRateStr)
 			//if err != nil {
