@@ -16,7 +16,20 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-type Service struct {
+type Service interface {
+	GRPCClient() *panacea.GRPCClient
+	EnclaveInfo() *sgx.EnclaveInfo
+	OracleAcc() *panacea.OracleAccount
+	OraclePrivKey() *btcec.PrivateKey
+	Config() *config.Config
+	QueryClient() panacea.QueryClient
+	TxClient() *panacea.TxClient
+	IPFS() *ipfs.IPFS
+	StartSubscriptions(events ...event.Event) error
+	Close() error
+}
+
+type service struct {
 	conf        *config.Config
 	enclaveInfo *sgx.EnclaveInfo
 
@@ -26,10 +39,11 @@ type Service struct {
 	queryClient panacea.QueryClient
 	grpcClient  *panacea.GRPCClient
 	subscriber  *event.PanaceaSubscriber
+	txClient    *panacea.TxClient
 	ipfs        *ipfs.IPFS
 }
 
-func New(conf *config.Config) (*Service, error) {
+func New(conf *config.Config) (Service, error) {
 	oracleAccount, err := panacea.NewOracleAccount(conf.OracleMnemonic, conf.OracleAccNum, conf.OracleAccIndex)
 	if err != nil {
 		return nil, err
@@ -62,6 +76,11 @@ func New(conf *config.Config) (*Service, error) {
 		return nil, fmt.Errorf("failed to create a new gRPC client: %w", err)
 	}
 
+	txClient, err := panacea.NewTxClient(conf, grpcClient, queryClient)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create txClient: %w", err)
+	}
+
 	subscriber, err := event.NewSubscriber(conf.Panacea.RPCAddr)
 	if err != nil {
 		if err := queryClient.Close(); err != nil {
@@ -75,23 +94,24 @@ func New(conf *config.Config) (*Service, error) {
 
 	newIpfs := ipfs.NewIPFS(conf.IPFS.IPFSNodeAddr)
 
-	return &Service{
+	return &service{
 		conf:          conf,
 		oracleAccount: oracleAccount,
 		oraclePrivKey: oraclePrivKey,
 		enclaveInfo:   selfEnclaveInfo,
 		queryClient:   queryClient,
 		grpcClient:    grpcClient,
+		txClient:      txClient,
 		subscriber:    subscriber,
 		ipfs:          newIpfs,
 	}, nil
 }
 
-func (s *Service) StartSubscriptions(events ...event.Event) error {
+func (s *service) StartSubscriptions(events ...event.Event) error {
 	return s.subscriber.Run(events...)
 }
 
-func (s *Service) Close() error {
+func (s *service) Close() error {
 	if err := s.queryClient.Close(); err != nil {
 		log.Warn(err)
 	}
@@ -105,43 +125,34 @@ func (s *Service) Close() error {
 	return nil
 }
 
-func (s *Service) Config() *config.Config {
+func (s *service) Config() *config.Config {
 	return s.conf
 }
 
-func (s *Service) OracleAcc() *panacea.OracleAccount {
+func (s *service) OracleAcc() *panacea.OracleAccount {
 	return s.oracleAccount
 }
 
-func (s *Service) OraclePrivKey() *btcec.PrivateKey {
+func (s *service) OraclePrivKey() *btcec.PrivateKey {
 	return s.oraclePrivKey
 }
 
-func (s *Service) EnclaveInfo() *sgx.EnclaveInfo {
+func (s *service) EnclaveInfo() *sgx.EnclaveInfo {
 	return s.enclaveInfo
 }
 
-func (s *Service) GRPCClient() *panacea.GRPCClient {
+func (s *service) GRPCClient() *panacea.GRPCClient {
 	return s.grpcClient
 }
 
-func (s *Service) QueryClient() panacea.QueryClient {
+func (s *service) QueryClient() panacea.QueryClient {
 	return s.queryClient
 }
 
-func (s *Service) IPFS() *ipfs.IPFS {
-	return s.ipfs
+func (s *service) TxClient() *panacea.TxClient {
+	return s.txClient
 }
 
-func (s *Service) BroadcastTx(txBytes []byte) (int64, string, error) {
-	resp, err := s.GRPCClient().BroadcastTx(txBytes)
-	if err != nil {
-		return 0, "", fmt.Errorf("broadcast transaction failed. txBytes(%v)", txBytes)
-	}
-
-	if resp.TxResponse.Code != 0 {
-		return 0, "", fmt.Errorf("transaction failed: %v", resp.TxResponse.RawLog)
-	}
-
-	return resp.TxResponse.Height, resp.TxResponse.TxHash, nil
+func (s *service) IPFS() *ipfs.IPFS {
+	return s.ipfs
 }

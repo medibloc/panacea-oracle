@@ -16,8 +16,9 @@ type Reactor interface {
 	OraclePrivKey() *btcec.PrivateKey
 	Config() *config.Config
 	QueryClient() panacea.QueryClient
+	TxClient() *panacea.TxClient
 	IPFS() *ipfs.IPFS
-	BroadcastTx(txBytes []byte) (int64, string, error)
+	Close() error
 }
 
 type OracleService interface {

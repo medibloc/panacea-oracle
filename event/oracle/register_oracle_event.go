@@ -6,7 +6,6 @@ import (
 
 	oracletypes "github.com/medibloc/panacea-core/v2/x/oracle/types"
 	"github.com/medibloc/panacea-oracle/event"
-	"github.com/medibloc/panacea-oracle/panacea"
 	"github.com/medibloc/panacea-oracle/sgx"
 	log "github.com/sirupsen/logrus"
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
@@ -45,13 +44,7 @@ func (e RegisterOracleEvent) EventHandler(event ctypes.ResultEvent) error {
 		msgApproveOracleRegistration.ApproveOracleRegistration.TargetOracleAddress,
 	)
 
-	txBuilder := panacea.NewTxBuilder(e.reactor.QueryClient())
-	txBytes, err := txBuilder.GenerateTxBytes(e.reactor.OracleAcc().GetPrivKey(), e.reactor.Config(), msgApproveOracleRegistration)
-	if err != nil {
-		return err
-	}
-
-	txHeight, txHash, err := e.reactor.BroadcastTx(txBytes)
+	txHeight, txHash, err := e.reactor.TxClient().BroadcastTx(msgApproveOracleRegistration)
 	if err != nil {
 		return fmt.Errorf("failed to ApproveOracleRegistration transaction for new oracle registration: %v", err)
 	} else {

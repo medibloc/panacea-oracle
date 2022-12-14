@@ -1,4 +1,4 @@
-package service
+package datadeal
 
 import (
 	"crypto/sha256"
@@ -17,7 +17,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func (s *Service) ValidateData(w http.ResponseWriter, r *http.Request) {
+func (s *dataDealService) ValidateData(w http.ResponseWriter, r *http.Request) {
 	queryClient := s.QueryClient()
 	oraclePrivKey := s.OraclePrivKey()
 

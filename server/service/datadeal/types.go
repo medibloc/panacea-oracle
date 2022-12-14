@@ -1,4 +1,4 @@
-package service
+package datadeal
 
 import (
 	"encoding/base64"
