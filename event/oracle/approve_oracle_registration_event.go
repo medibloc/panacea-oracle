@@ -11,11 +11,11 @@ import (
 var _ event.Event = (*ApproveOracleRegistrationEvent)(nil)
 
 type ApproveOracleRegistrationEvent struct {
-	service  event.ApproveOracleRegistrationService
+	service  event.OracleService
 	doneChan chan error
 }
 
-func NewApproveOracleRegistrationEvent(s event.ApproveOracleRegistrationService, doneChan chan error) ApproveOracleRegistrationEvent {
+func NewApproveOracleRegistrationEvent(s event.OracleService, doneChan chan error) ApproveOracleRegistrationEvent {
 	return ApproveOracleRegistrationEvent{s, doneChan}
 }
 

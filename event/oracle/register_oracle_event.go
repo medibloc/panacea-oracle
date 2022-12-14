@@ -15,10 +15,10 @@ import (
 var _ event.Event = (*RegisterOracleEvent)(nil)
 
 type RegisterOracleEvent struct {
-	reactor event.RegisterOracleService
+	reactor event.Service
 }
 
-func NewRegisterOracleEvent(s event.RegisterOracleService) RegisterOracleEvent {
+func NewRegisterOracleEvent(s event.Service) RegisterOracleEvent {
 	return RegisterOracleEvent{s}
 }
 

@@ -7,16 +7,17 @@ import (
 	"github.com/medibloc/panacea-oracle/sgx"
 )
 
-type RegisterOracleService interface {
+type Service interface {
 	EnclaveInfo() *sgx.EnclaveInfo
 	OracleAcc() *panacea.OracleAccount
 	OraclePrivKey() *btcec.PrivateKey
 	QueryClient() panacea.QueryClient
 	Config() *config.Config
-	BroadcastTx(txBytes []byte) (int64, string, error)
+	BroadcastTx([]byte) (int64, string, error)
 }
 
-type ApproveOracleRegistrationService interface {
+// OracleService is 'service/oracle/service.go'
+type OracleService interface {
 	EnclaveInfo() *sgx.EnclaveInfo
 	OracleAcc() *panacea.OracleAccount
 	GetAndStoreOraclePrivKey() error
