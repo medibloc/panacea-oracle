@@ -9,7 +9,6 @@ import (
 	"strconv"
 
 	"github.com/btcsuite/btcd/btcec"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/gorilla/mux"
 	datadealtypes "github.com/medibloc/panacea-core/v2/x/datadeal/types"
 	"github.com/medibloc/panacea-oracle/crypto"
@@ -108,7 +107,7 @@ func (s *Service) ValidateData(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Re-encrypt data using a combined key
-	combinedKey := getCombinedKey(oraclePrivKey.Serialize(), dealID, dataHash)
+	combinedKey := GetCombinedKey(oraclePrivKey.Serialize(), dealID, dataHash[:])
 	reEncryptedData, err := crypto.Encrypt(combinedKey[:], nil, decryptedData)
 	if err != nil {
 		log.Errorf("failed to re-encrypt data with the combined key: %s", err.Error())
@@ -127,6 +126,7 @@ func (s *Service) ValidateData(w http.ResponseWriter, r *http.Request) {
 	// Issue a certificate to the client
 	unsignedDataCert := &datadealtypes.UnsignedCertificate{
 		Cid:             cid,
+		UniqueId:        s.EnclaveInfo().UniqueIDHex(),
 		OracleAddress:   s.OracleAcc().GetAddress(),
 		DealId:          dealID,
 		ProviderAddress: reqBody.ProviderAddress,
@@ -167,9 +167,4 @@ func (s *Service) ValidateData(w http.ResponseWriter, r *http.Request) {
 		log.Errorf("failed to write response payload: %s", err.Error())
 		return
 	}
-}
-
-func getCombinedKey(oraclePrivKey []byte, dealID uint64, dataHash [sha256.Size]byte) [sha256.Size]byte {
-	tmp := append(oraclePrivKey, sdk.Uint64ToBigEndian(dealID)...)
-	return sha256.Sum256(append(tmp, dataHash[:]...))
 }

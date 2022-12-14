@@ -139,6 +139,10 @@ func testHTTPRequest(t *testing.T, authorizationHeader string, statusCode int, e
 
 type mockQueryClient struct{}
 
+func (c *mockQueryClient) GetCertificate(_ uint64, _ string) (*datadealtypes.Certificate, error) {
+	return nil, nil
+}
+
 func (c *mockQueryClient) GetOracleRegistration(uniqueID, oracleAddr string) (*oracletypes.OracleRegistration, error) {
 	return nil, nil
 }
@@ -164,6 +168,9 @@ func (c *mockQueryClient) GetAccount(address string) (authtypes.AccountI, error)
 		return nil, fmt.Errorf("address not found: %v", address)
 	}
 	return &mockAccount{}, nil
+}
+func (c *mockQueryClient) GetOracleParamsPublicKey() (*btcec.PublicKey, error) {
+	return nil, nil
 }
 
 // TODO: implement mock GetDeal for test

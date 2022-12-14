@@ -5,6 +5,9 @@ const (
 	FlagTrustedBlockHeight = "trusted-block-height"
 	FlagTrustedBlockHash   = "trusted-block-hash"
 
-	FlagOracleEndpoint       = "oracle-endpoint"
-	FlagOracleCommissionRate = "oracle-commission-rate"
+	FlagOracleEndpoint                = "oracle-endpoint"
+	FlagOracleDescription             = "oracle-description"
+	FlagOracleCommissionRate          = "oracle-commission-rate"
+	FlagOracleCommissionMaxRate       = "oracle-commission-max-rate"
+	FlagOracleCommissionMaxChangeRate = "oracle-commission-max-change-rate"
 )

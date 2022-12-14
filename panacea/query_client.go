@@ -39,12 +39,13 @@ import (
 type QueryClient interface {
 	Close() error
 	GetAccount(address string) (authtypes.AccountI, error)
-	GetOracleRegistration(uniqueID, oracleAddr string) (*oracletypes.OracleRegistration, error)
+	GetOracleRegistration(oracleAddr, uniqueID string) (*oracletypes.OracleRegistration, error)
 	GetLightBlock(height int64) (*tmtypes.LightBlock, error)
 	GetCdc() *codec.ProtoCodec
 	GetChainID() string
 	GetOracleParamsPublicKey() (*btcec.PublicKey, error)
 	GetDeal(dealID uint64) (*datadealtypes.Deal, error)
+	GetCertificate(dealID uint64, dataHash string) (*datadealtypes.Certificate, error)
 }
 
 const (
@@ -367,6 +368,40 @@ func (q verifiedQueryClient) GetAccount(address string) (authtypes.AccountI, err
 	return account, nil
 }
 
+func (q verifiedQueryClient) GetDeal(dealID uint64) (*datadealtypes.Deal, error) {
+	key := datadealtypes.GetDealKey(dealID)
+
+	bz, err := q.GetStoreData(context.Background(), datadealtypes.StoreKey, key)
+	if err != nil {
+		return nil, err
+	}
+
+	var deal datadealtypes.Deal
+	if err = q.cdc.UnmarshalLengthPrefixed(bz, &deal); err != nil {
+		return nil, err
+	}
+
+	return &deal, nil
+}
+
+func (q verifiedQueryClient) GetCertificate(dealID uint64, dataHash string) (*datadealtypes.Certificate, error) {
+
+	key := datadealtypes.GetCertificateKey(dealID, dataHash)
+
+	bz, err := q.GetStoreData(context.Background(), datadealtypes.StoreKey, key)
+	if err != nil {
+		return nil, err
+	}
+
+	var certificate datadealtypes.Certificate
+	err = q.cdc.UnmarshalLengthPrefixed(bz, &certificate)
+	if err != nil {
+		return nil, err
+	}
+
+	return &certificate, nil
+}
+
 func (q verifiedQueryClient) GetOracleRegistration(uniqueID, oracleAddr string) (*oracletypes.OracleRegistration, error) {
 	acc, err := GetAccAddressFromBech32(oracleAddr)
 	if err != nil {
@@ -388,26 +423,15 @@ func (q verifiedQueryClient) GetOracleRegistration(uniqueID, oracleAddr string) 
 
 	return &oracleRegistration, nil
 }
-func (q verifiedQueryClient) GetDeal(dealID uint64) (*datadealtypes.Deal, error) {
-	key := datadealtypes.GetDealKey(dealID)
-
-	bz, err := q.GetStoreData(context.Background(), datadealtypes.StoreKey, key)
-	if err != nil {
-		return nil, err
-	}
-
-	var deal datadealtypes.Deal
-	if err = q.cdc.UnmarshalLengthPrefixed(bz, &deal); err != nil {
-		return nil, err
-	}
-
-	return &deal, nil
-}
 
 func (q verifiedQueryClient) GetOracleParamsPublicKey() (*btcec.PublicKey, error) {
 	pubKeyBase64Bz, err := q.GetStoreData(context.Background(), paramstypes.StoreKey, append(append([]byte(oracletypes.StoreKey), '/'), oracletypes.KeyOraclePublicKey...))
 	if err != nil {
 		return nil, err
+	}
+
+	if pubKeyBase64Bz == nil {
+		return nil, errors.New("the oracle public key's value is nil")
 	}
 
 	// If you get a value from params, you should not use protoCodec, but use legacyAmino.
@@ -419,7 +443,7 @@ func (q verifiedQueryClient) GetOracleParamsPublicKey() (*btcec.PublicKey, error
 
 	pubKeyBz, err := base64.StdEncoding.DecodeString(pubKeyBase64)
 	if err != nil {
-		return nil, fmt.Errorf("failed to decode hex pubkey: %w", err)
+		return nil, fmt.Errorf("failed to decode base64 pubkey: %w", err)
 	}
 
 	return btcec.ParsePubKey(pubKeyBz, btcec.S256())

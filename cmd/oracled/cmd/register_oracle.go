@@ -53,6 +53,8 @@ func registerOracleCmd() *cobra.Command {
 	cmd.Flags().String(flags.FlagTrustedBlockHash, "", "Trusted block hash")
 	cmd.Flags().String(flags.FlagOracleEndpoint, "", "endpoint of oracle")
 	cmd.Flags().String(flags.FlagOracleCommissionRate, "0.1", "oracle commission rate")
+	cmd.Flags().String(flags.FlagOracleCommissionMaxRate, "", "oracle commission rate")
+	cmd.Flags().String(flags.FlagOracleCommissionMaxChangeRate, "", "oracle commission rate")
 	if err := cmd.MarkFlagRequired(flags.FlagTrustedBlockHeight); err != nil {
 		panic(err)
 	}
@@ -60,6 +62,12 @@ func registerOracleCmd() *cobra.Command {
 		panic(err)
 	}
 	if err := cmd.MarkFlagRequired(flags.FlagOracleCommissionRate); err != nil {
+		panic(err)
+	}
+	if err := cmd.MarkFlagRequired(flags.FlagOracleCommissionMaxRate); err != nil {
+		panic(err)
+	}
+	if err := cmd.MarkFlagRequired(flags.FlagOracleCommissionMaxChangeRate); err != nil {
 		panic(err)
 	}
 
@@ -163,6 +171,26 @@ func generateMsgRegisterOracle(cmd *cobra.Command, conf *config.Config, oracleAc
 		return nil, fmt.Errorf("failed to parse oracleCommissionRate. input(%s). %w", oracleCommissionRateStr, err)
 	}
 
+	oracleCommissionMaxRateStr, err := cmd.Flags().GetString(flags.FlagOracleCommissionMaxRate)
+	if err != nil {
+		return nil, err
+	}
+
+	oracleCommissionMaxRate, err := sdk.NewDecFromStr(oracleCommissionMaxRateStr)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get oralce commission max rate")
+	}
+
+	oracleCommissionMaxChangeRateStr, err := cmd.Flags().GetString(flags.FlagOracleCommissionMaxChangeRate)
+	if err != nil {
+		return nil, err
+	}
+
+	oracleCommissionMaxChangeRate, err := sdk.NewDecFromStr(oracleCommissionMaxChangeRateStr)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get oralce commission max change rate")
+	}
+
 	msgRegisterOracle := oracletypes.NewMsgRegisterOracle(
 		uniqueID,
 		oracleAccount.GetAddress(),
@@ -172,6 +200,8 @@ func generateMsgRegisterOracle(cmd *cobra.Command, conf *config.Config, oracleAc
 		trustedBlockInfo.TrustedBlockHash,
 		oracleEndpoint,
 		oracleCommissionRate,
+		oracleCommissionMaxRate,
+		oracleCommissionMaxChangeRate,
 	)
 	return msgRegisterOracle, nil
 }
