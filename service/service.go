@@ -73,13 +73,8 @@ func NewWithQueryClient(conf *config.Config, queryClient panacea.QueryClient) (S
 		return nil, fmt.Errorf("failed to set self-enclave info: %w", err)
 	}
 
-
-
 	grpcClient, err := panacea.NewGRPCClient(conf.Panacea.GRPCAddr)
 	if err != nil {
-		if err := queryClient.Close(); err != nil {
-			log.Warn(err)
-		}
 		return nil, fmt.Errorf("failed to create a new gRPC client: %w", err)
 	}
 
@@ -87,12 +82,6 @@ func NewWithQueryClient(conf *config.Config, queryClient panacea.QueryClient) (S
 
 	subscriber, err := event.NewSubscriber(conf.Panacea.RPCAddr)
 	if err != nil {
-		if err := queryClient.Close(); err != nil {
-			log.Warn(err)
-		}
-		if err := grpcClient.Close(); err != nil {
-			log.Warn(err)
-		}
 		return nil, fmt.Errorf("failed to init subscriber: %w", err)
 	}
 
@@ -116,6 +105,7 @@ func (s *service) StartSubscriptions(events ...event.Event) error {
 }
 
 func (s *service) Close() error {
+	log.Info("calling the service's close function")
 	if err := s.queryClient.Close(); err != nil {
 		log.Warn(err)
 	}

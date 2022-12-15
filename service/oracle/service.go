@@ -5,7 +5,6 @@ import (
 
 	"github.com/medibloc/panacea-oracle/config"
 	"github.com/medibloc/panacea-oracle/crypto"
-	"github.com/medibloc/panacea-oracle/panacea"
 	"github.com/medibloc/panacea-oracle/service"
 	"github.com/medibloc/panacea-oracle/sgx"
 	"github.com/tendermint/tendermint/libs/os"
@@ -15,8 +14,8 @@ type oracleService struct {
 	service.Service
 }
 
-func NewWithQueryClient(conf *config.Config, queryClient panacea.QueryClient) (*oracleService, error) {
-	svc, err := service.NewWithQueryClient(conf, queryClient)
+func New(conf *config.Config) (*oracleService, error) {
+	svc, err := service.New(conf)
 	if err != nil {
 		return nil, err
 	}

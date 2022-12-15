@@ -38,22 +38,11 @@ func registerOracleCmd() *cobra.Command {
 				return err
 			}
 
-			// get trusted block information
-			trustedBlockInfo, err := getTrustedBlockInfo(cmd)
-			if err != nil {
-				return err
-			}
-
-			queryClient, err := panacea.NewVerifiedQueryClient(context.Background(), conf, trustedBlockInfo)
-			if err != nil {
-				return fmt.Errorf("failed to create queryClient: %w", err)
-			}
-
-			if err := sendTxRegisterOracle(cmd, conf, queryClient, trustedBlockInfo); err != nil {
+			if err := sendTxRegisterOracle(cmd, conf); err != nil {
 				return fmt.Errorf("failed to send tx RegisterOracle. %w", err)
 			}
 
-			if err := subscribeApproveOracleRegistrationEvent(conf, queryClient); err != nil {
+			if err := subscribeApproveOracleRegistrationEvent(conf); err != nil {
 				return err
 			}
 
@@ -86,7 +75,18 @@ func registerOracleCmd() *cobra.Command {
 	return cmd
 }
 
-func sendTxRegisterOracle(cmd *cobra.Command, conf *config.Config, queryClient panacea.QueryClient, trustedBlockInfo *panacea.TrustedBlockInfo ) error {
+func sendTxRegisterOracle(cmd *cobra.Command, conf *config.Config) error {
+	// get trusted block information
+	trustedBlockInfo, err := getTrustedBlockInfo(cmd)
+	if err != nil {
+		return err
+	}
+
+	queryClient, err := panacea.NewVerifiedQueryClient(context.Background(), conf, trustedBlockInfo)
+	if err != nil {
+		return fmt.Errorf("failed to create queryClient: %w", err)
+	}
+
 	svc, err := service.NewWithQueryClient(conf, queryClient)
 	if err != nil {
 		return fmt.Errorf("failed to create service: %w", err)
@@ -210,8 +210,8 @@ func generateAndSealedNodeKey(nodePrivKeyPath string) ([]byte, []byte, error) {
 	return nodePubKey, nodeKeyRemoteReport, nil
 }
 
-func subscribeApproveOracleRegistrationEvent(conf *config.Config, queryClient panacea.QueryClient) error {
-	svc, err := oracleservice.NewWithQueryClient(conf, queryClient)
+func subscribeApproveOracleRegistrationEvent(conf *config.Config) error {
+	svc, err := oracleservice.New(conf)
 	if err != nil {
 		return fmt.Errorf("failed to create service: %w", err)
 	}
