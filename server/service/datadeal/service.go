@@ -8,10 +8,10 @@ import (
 )
 
 type dataDealService struct {
-	serverservice.Reactor
+	serverservice.Service
 }
 
-func RegisterHandlers(svc serverservice.Reactor, router *mux.Router) {
+func RegisterHandlers(svc serverservice.Service, router *mux.Router) {
 	s := &dataDealService{svc}
 
 	router.HandleFunc("/v0/data-deal/deals/{dealId}/data", s.ValidateData).Methods(http.MethodPost)

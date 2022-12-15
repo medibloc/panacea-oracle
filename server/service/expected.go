@@ -7,7 +7,8 @@ import (
 	"github.com/medibloc/panacea-oracle/sgx"
 )
 
-type Reactor interface {
+// Service is 'service/service.go'
+type Service interface {
 	EnclaveInfo() *sgx.EnclaveInfo
 	OracleAcc() *panacea.OracleAccount
 	OraclePrivKey() *btcec.PrivateKey
