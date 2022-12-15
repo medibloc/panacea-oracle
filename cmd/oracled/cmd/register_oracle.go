@@ -105,7 +105,7 @@ func sendTxRegisterOracle(cmd *cobra.Command, conf *config.Config, queryClient p
 
 	txHeight, txHash, err := svc.BroadcastTx(msgRegisterOracle)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to RegisterOracle transaction: %v", err)
 	}
 
 	log.Infof("register-oracle transaction succeed. height(%v), hash(%s)", txHeight, txHash)
