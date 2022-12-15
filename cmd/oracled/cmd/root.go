@@ -40,6 +40,7 @@ func init() {
 		getOracleKeyCmd(),
 		updateOracleInfoCmd(),
 		startCmd(),
+		verifyReportCmd(),
 	)
 }
 

@@ -45,6 +45,15 @@ type service struct {
 }
 
 func New(conf *config.Config) (Service, error) {
+	queryClient, err := panacea.LoadVerifiedQueryClient(context.Background(), conf)
+	if err != nil {
+		return nil, fmt.Errorf("failed to load query client: %w", err)
+	}
+
+	return NewWithQueryClient(conf, queryClient)
+}
+
+func NewWithQueryClient(conf *config.Config, queryClient panacea.QueryClient) (Service, error) {
 	oracleAccount, err := panacea.NewOracleAccount(conf.OracleMnemonic, conf.OracleAccNum, conf.OracleAccIndex)
 	if err != nil {
 		return nil, err
@@ -64,10 +73,7 @@ func New(conf *config.Config) (Service, error) {
 		return nil, fmt.Errorf("failed to set self-enclave info: %w", err)
 	}
 
-	queryClient, err := panacea.LoadVerifiedQueryClient(context.Background(), conf)
-	if err != nil {
-		return nil, fmt.Errorf("failed to load query client: %w", err)
-	}
+
 
 	grpcClient, err := panacea.NewGRPCClient(conf.Panacea.GRPCAddr)
 	if err != nil {
