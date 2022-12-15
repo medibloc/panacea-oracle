@@ -321,7 +321,7 @@ func (q verifiedQueryClient) abciQueryWithOptions(ctx context.Context, path stri
 
 	// Validate the response.
 	if resp.IsErr() {
-		return nil, fmt.Errorf("err response code: %v", resp.Code)
+		return nil, fmt.Errorf("err response. code(%v) codeSpace(%v) log(%v)", resp.Code, resp.Codespace, resp.Log)
 	}
 	if len(resp.Key) == 0 {
 		return nil, ErrEmptyKey
