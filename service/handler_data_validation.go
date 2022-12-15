@@ -154,7 +154,7 @@ func (s *Service) ValidateData(w http.ResponseWriter, r *http.Request) {
 		Signature:           sig.Serialize(),
 	}
 
-	marshaledPayload, err := payload.Marshal()
+	marshaledPayload, err := json.Marshal(payload)
 	if err != nil {
 		log.Errorf("failed to marshal payload: %s", err.Error())
 		http.Error(w, "failed to marshal payload", http.StatusInternalServerError)
