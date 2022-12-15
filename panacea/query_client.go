@@ -77,8 +77,8 @@ func makeInterfaceRegistry() sdk.InterfaceRegistry {
 
 // NewVerifiedQueryClient set verifiedQueryClient with rpcClient & and returns, if successful,
 // a verifiedQueryClient that can be used to add query function.
-func NewVerifiedQueryClient(ctx context.Context, config *config.Config, info TrustedBlockInfo) (QueryClient, error) {
-	return newVerifiedQueryClientWithSgxLevelDB(ctx, config, &info)
+func NewVerifiedQueryClient(ctx context.Context, config *config.Config, info *TrustedBlockInfo) (QueryClient, error) {
+	return newVerifiedQueryClientWithSgxLevelDB(ctx, config, info)
 }
 
 func LoadVerifiedQueryClient(ctx context.Context, config *config.Config) (QueryClient, error) {

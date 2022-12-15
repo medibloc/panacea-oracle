@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"bufio"
+	"context"
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
@@ -37,11 +38,22 @@ func registerOracleCmd() *cobra.Command {
 				return err
 			}
 
-			if err := sendTxRegisterOracle(cmd, conf); err != nil {
+			// get trusted block information
+			trustedBlockInfo, err := getTrustedBlockInfo(cmd)
+			if err != nil {
+				return err
+			}
+
+			queryClient, err := panacea.NewVerifiedQueryClient(context.Background(), conf, trustedBlockInfo)
+			if err != nil {
+				return fmt.Errorf("failed to create queryClient: %w", err)
+			}
+
+			if err := sendTxRegisterOracle(cmd, conf, queryClient, trustedBlockInfo); err != nil {
 				return fmt.Errorf("failed to send tx RegisterOracle. %w", err)
 			}
 
-			if err := subscribeApproveOracleRegistrationEvent(conf); err != nil {
+			if err := subscribeApproveOracleRegistrationEvent(conf, queryClient); err != nil {
 				return err
 			}
 
@@ -74,8 +86,8 @@ func registerOracleCmd() *cobra.Command {
 	return cmd
 }
 
-func sendTxRegisterOracle(cmd *cobra.Command, conf *config.Config) error {
-	svc, err := service.New(conf)
+func sendTxRegisterOracle(cmd *cobra.Command, conf *config.Config, queryClient panacea.QueryClient, trustedBlockInfo *panacea.TrustedBlockInfo ) error {
+	svc, err := service.NewWithQueryClient(conf, queryClient)
 	if err != nil {
 		return fmt.Errorf("failed to create service: %w", err)
 	}
@@ -83,11 +95,7 @@ func sendTxRegisterOracle(cmd *cobra.Command, conf *config.Config) error {
 	// get oracle account from mnemonic.
 	oracleAccount := svc.OracleAcc()
 
-	// get trusted block information
-	trustedBlockInfo, err := getTrustedBlockInfo(cmd)
-	if err != nil {
-		return err
-	}
+
 
 	msgRegisterOracle, err := generateMsgRegisterOracle(cmd, conf, oracleAccount, trustedBlockInfo)
 	if err != nil {
@@ -210,8 +218,8 @@ func generateAndSealedNodeKey(nodePrivKeyPath string) ([]byte, []byte, error) {
 	return nodePubKey, nodeKeyRemoteReport, nil
 }
 
-func subscribeApproveOracleRegistrationEvent(conf *config.Config) error {
-	svc, err := oracleservice.New(conf)
+func subscribeApproveOracleRegistrationEvent(conf *config.Config, queryClient panacea.QueryClient) error {
+	svc, err := oracleservice.NewWithQueryClient(conf, queryClient)
 	if err != nil {
 		return fmt.Errorf("failed to create service: %w", err)
 	}

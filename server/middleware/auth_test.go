@@ -18,13 +18,14 @@ import (
 	"github.com/lestrrat-go/jwx/v2/jwt"
 	datadealtypes "github.com/medibloc/panacea-core/v2/x/datadeal/types"
 	oracletypes "github.com/medibloc/panacea-core/v2/x/oracle/types"
+	"github.com/medibloc/panacea-oracle/crypto"
 	"github.com/medibloc/panacea-oracle/server/middleware"
 	"github.com/stretchr/testify/require"
 	tmtypes "github.com/tendermint/tendermint/types"
 )
 
 var (
-	testPrivKey = secp256k1.GenPrivKey()
+	testPrivKey, _ = crypto.GeneratePrivateKeyFromMnemonic("", 371, 0, 0)
 	testAccAddr = "test-addr"
 
 	testHandler = middleware.NewJWTAuthMiddleware(&mockQueryClient{}).Middleware(
@@ -81,7 +82,10 @@ func TestInvalidJWT(t *testing.T) {
 }
 
 func TestAccountNotFound(t *testing.T) {
-	jwt := testGenerateJWT(t, "dummy-account", testPrivKey, 10*time.Second)
+	priv := &secp256k1.PrivKey{
+		Key: testPrivKey.Bytes(),
+	}
+	jwt := testGenerateJWT(t, "dummy-account", priv, 10*time.Second)
 	testHTTPRequest(
 		t,
 		fmt.Sprintf("Bearer %s", string(jwt)),
