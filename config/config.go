@@ -13,6 +13,8 @@ type Config struct {
 	Panacea PanaceaConfig `mapstructure:"panacea"`
 
 	IPFS IPFSConfig `mapstructure:"ipfs"`
+
+	API APIConfig `mapstructure:"api"`
 }
 
 type BaseConfig struct {
@@ -22,13 +24,13 @@ type BaseConfig struct {
 	OracleMnemonic string `mapstructure:"oracle-mnemonic"`
 	OracleAccNum   uint32 `mapstructure:"oracle-acc-num"`
 	OracleAccIndex uint32 `mapstructure:"oracle-acc-index"`
-	ListenAddr     string `mapstructure:"listen_addr"`
+	ListenAddr     string `mapstructure:"listen-addr"`
 	Subscriber     string `mapstructure:"subscriber"`
-	DataDir        string `mapstructure:"data_dir"`
+	DataDir        string `mapstructure:"data-dir"`
 
-	OraclePrivKeyFile string `mapstructure:"oracle_priv_key_file"`
-	OraclePubKeyFile  string `mapstructure:"oracle_pub_key_file"`
-	NodePrivKeyFile   string `mapstructure:"node_priv_key_file"`
+	OraclePrivKeyFile string `mapstructure:"oracle-priv-key-file"`
+	OraclePubKeyFile  string `mapstructure:"oracle-pub-key-file"`
+	NodePrivKeyFile   string `mapstructure:"node-priv-key-file"`
 }
 
 type PanaceaConfig struct {
@@ -44,6 +46,12 @@ type PanaceaConfig struct {
 
 type IPFSConfig struct {
 	IPFSNodeAddr string `mapstructure:"ipfs-node-addr"`
+}
+
+type APIConfig struct {
+	ListenAddr   string `mapstructure:"listen-addr"`
+	WriteTimeout int64  `mapstructure:"write-timeout"`
+	ReadTimeout  int64  `mapstructure:"read-timeout"`
 }
 
 func DefaultConfig() *Config {
@@ -73,6 +81,10 @@ func DefaultConfig() *Config {
 		},
 		IPFS: IPFSConfig{
 			IPFSNodeAddr: "127.0.0.1:5001",
+		},
+		API: APIConfig{
+			WriteTimeout: 60,
+			ReadTimeout:  15,
 		},
 	}
 }

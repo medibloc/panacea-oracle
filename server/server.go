@@ -26,8 +26,8 @@ func New(svc *service.Service) *Server {
 		&http.Server{
 			Handler:      router,
 			Addr:         svc.Config().ListenAddr,
-			WriteTimeout: 15 * time.Second,
-			ReadTimeout:  15 * time.Second,
+			WriteTimeout: time.Duration(svc.Config().API.WriteTimeout) * time.Second,
+			ReadTimeout:  time.Duration(svc.Config().API.ReadTimeout) * time.Second,
 		},
 	}
 }
