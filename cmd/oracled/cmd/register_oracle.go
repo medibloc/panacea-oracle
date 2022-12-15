@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"bufio"
-	"context"
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
@@ -19,6 +18,7 @@ import (
 	"github.com/medibloc/panacea-oracle/crypto"
 	oracleevent "github.com/medibloc/panacea-oracle/event/oracle"
 	"github.com/medibloc/panacea-oracle/panacea"
+	"github.com/medibloc/panacea-oracle/service"
 	oracleservice "github.com/medibloc/panacea-oracle/service/oracle"
 	"github.com/medibloc/panacea-oracle/sgx"
 	log "github.com/sirupsen/logrus"
@@ -75,11 +75,13 @@ func registerOracleCmd() *cobra.Command {
 }
 
 func sendTxRegisterOracle(cmd *cobra.Command, conf *config.Config) error {
-	// get oracle account from mnemonic.
-	oracleAccount, err := panacea.NewOracleAccount(conf.OracleMnemonic, conf.OracleAccNum, conf.OracleAccIndex)
+	svc, err := service.New(conf)
 	if err != nil {
-		return fmt.Errorf("failed to get oracle account from mnemonic: %w", err)
+		return fmt.Errorf("failed to create service: %w", err)
 	}
+
+	// get oracle account from mnemonic.
+	oracleAccount := svc.OracleAcc()
 
 	// get trusted block information
 	trustedBlockInfo, err := getTrustedBlockInfo(cmd)
@@ -87,25 +89,12 @@ func sendTxRegisterOracle(cmd *cobra.Command, conf *config.Config) error {
 		return err
 	}
 
-	// initialize query client using trustedBlockInfo
-	queryClient, err := panacea.NewVerifiedQueryClient(context.Background(), conf, *trustedBlockInfo)
-	if err != nil {
-		return fmt.Errorf("failed to initialize QueryClient: %w", err)
-	}
-	defer queryClient.Close()
-
 	msgRegisterOracle, err := generateMsgRegisterOracle(cmd, conf, oracleAccount, trustedBlockInfo)
 	if err != nil {
 		return err
 	}
 
-	txBuilder := panacea.NewTxBuilder(queryClient)
-	cli, err := panacea.NewGRPCClient(conf.Panacea.GRPCAddr)
-	if err != nil {
-		return fmt.Errorf("failed to generate gRPC client: %w", err)
-	}
-	defer cli.Close()
-
+	txBuilder := panacea.NewTxBuilder(svc.QueryClient())
 	defaultFeeAmount, _ := sdk.ParseCoinsNormalized(conf.Panacea.DefaultFeeAmount)
 	txBytes, err := txBuilder.GenerateSignedTxBytes(
 		oracleAccount.GetPrivKey(),
@@ -117,16 +106,9 @@ func sendTxRegisterOracle(cmd *cobra.Command, conf *config.Config) error {
 		return fmt.Errorf("failed to generate signed Tx bytes: %w", err)
 	}
 
-	resp, err := cli.BroadcastTx(txBytes)
-	if err != nil {
-		return fmt.Errorf("failed to broadcast transaction: %w", err)
-	}
+	txHeight, txHash, err := svc.BroadcastTx(txBytes)
 
-	if resp.TxResponse.Code != 0 {
-		return fmt.Errorf("register oracle transaction failed: %v", resp.TxResponse.RawLog)
-	}
-
-	log.Infof("register-oracle transaction succeed. height(%v), hash(%s)", resp.TxResponse.Height, resp.TxResponse.TxHash)
+	log.Infof("register-oracle transaction succeed. height(%v), hash(%s)", txHeight, txHash)
 
 	return nil
 }
