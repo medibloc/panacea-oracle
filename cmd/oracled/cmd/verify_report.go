@@ -15,7 +15,16 @@ func verifyReportCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "verify-report [report-file-path]",
 		Short: "Verify whether the report was properly generated in the SGX environment",
-		Args:  cobra.ExactArgs(1),
+		Long: `
+			You can manually verify that the key pair(secp256k1) and its remote report are generated in the SGX environment.
+
+			The desired format of remote report file is:
+			{
+				"public_key_base64":"<base64-encoded-public-key>",
+				"remote_report_base64":"<base64-encoded-remote-report>"
+			}
+		`,
+		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			// read oracle remote targetReport
 			pubKeyInfo, err := readOracleRemoteReport(args[0])
