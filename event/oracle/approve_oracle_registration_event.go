@@ -5,17 +5,19 @@ import (
 
 	oracletypes "github.com/medibloc/panacea-core/v2/x/oracle/types"
 	"github.com/medibloc/panacea-oracle/event"
+	"github.com/medibloc/panacea-oracle/key"
+	"github.com/medibloc/panacea-oracle/service"
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 )
 
 var _ event.Event = (*ApproveOracleRegistrationEvent)(nil)
 
 type ApproveOracleRegistrationEvent struct {
-	service  event.OracleService
+	service  service.Service
 	doneChan chan error
 }
 
-func NewApproveOracleRegistrationEvent(s event.OracleService, doneChan chan error) ApproveOracleRegistrationEvent {
+func NewApproveOracleRegistrationEvent(s service.Service, doneChan chan error) ApproveOracleRegistrationEvent {
 	return ApproveOracleRegistrationEvent{s, doneChan}
 }
 
@@ -35,6 +37,6 @@ func (e ApproveOracleRegistrationEvent) GetEventQuery() string {
 }
 
 func (e ApproveOracleRegistrationEvent) EventHandler(event ctypes.ResultEvent) error {
-	e.doneChan <- e.service.GetAndStoreOraclePrivKey()
+	e.doneChan <- key.GetAndStoreOraclePrivKey(e.service)
 	return nil
 }

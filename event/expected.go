@@ -17,10 +17,3 @@ type Service interface {
 	Config() *config.Config
 	BroadcastTx(...sdk.Msg) (int64, string, error)
 }
-
-// OracleService is 'service/oracle/service.go'
-type OracleService interface {
-	EnclaveInfo() *sgx.EnclaveInfo
-	OracleAcc() *panacea.OracleAccount
-	GetAndStoreOraclePrivKey() error
-}

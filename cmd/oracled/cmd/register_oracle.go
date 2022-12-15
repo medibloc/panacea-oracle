@@ -20,7 +20,6 @@ import (
 	oracleevent "github.com/medibloc/panacea-oracle/event/oracle"
 	"github.com/medibloc/panacea-oracle/panacea"
 	"github.com/medibloc/panacea-oracle/service"
-	oracleservice "github.com/medibloc/panacea-oracle/service/oracle"
 	"github.com/medibloc/panacea-oracle/sgx"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -38,11 +37,28 @@ func registerOracleCmd() *cobra.Command {
 				return err
 			}
 
-			if err := sendTxRegisterOracle(cmd, conf); err != nil {
+			// get trusted block information
+			trustedBlockInfo, err := getTrustedBlockInfo(cmd)
+			if err != nil {
+				return err
+			}
+
+			queryClient, err := panacea.NewVerifiedQueryClient(context.Background(), conf, trustedBlockInfo)
+			if err != nil {
+				return fmt.Errorf("failed to create queryClient: %w", err)
+			}
+
+			svc, err := service.NewWithQueryClient(conf, queryClient)
+			if err != nil {
+				return fmt.Errorf("failed to create service: %w", err)
+			}
+			defer svc.Close()
+
+			if err := sendTxRegisterOracle(cmd, conf, svc, trustedBlockInfo); err != nil {
 				return fmt.Errorf("failed to send tx RegisterOracle. %w", err)
 			}
 
-			if err := subscribeApproveOracleRegistrationEvent(conf); err != nil {
+			if err := subscribeApproveOracleRegistrationEvent(conf, svc); err != nil {
 				return err
 			}
 
@@ -75,28 +91,11 @@ func registerOracleCmd() *cobra.Command {
 	return cmd
 }
 
-func sendTxRegisterOracle(cmd *cobra.Command, conf *config.Config) error {
-	// get trusted block information
-	trustedBlockInfo, err := getTrustedBlockInfo(cmd)
-	if err != nil {
-		return err
-	}
+func sendTxRegisterOracle(cmd *cobra.Command, conf *config.Config, svc service.Service, trustedBlockInfo *panacea.TrustedBlockInfo) error {
 
-	queryClient, err := panacea.NewVerifiedQueryClient(context.Background(), conf, trustedBlockInfo)
-	if err != nil {
-		return fmt.Errorf("failed to create queryClient: %w", err)
-	}
-
-	svc, err := service.NewWithQueryClient(conf, queryClient)
-	if err != nil {
-		return fmt.Errorf("failed to create service: %w", err)
-	}
-	defer svc.Close()
 
 	// get oracle account from mnemonic.
 	oracleAccount := svc.OracleAcc()
-
-
 
 	msgRegisterOracle, err := generateMsgRegisterOracle(cmd, conf, oracleAccount, trustedBlockInfo)
 	if err != nil {
@@ -210,17 +209,11 @@ func generateAndSealedNodeKey(nodePrivKeyPath string) ([]byte, []byte, error) {
 	return nodePubKey, nodeKeyRemoteReport, nil
 }
 
-func subscribeApproveOracleRegistrationEvent(conf *config.Config) error {
-	svc, err := oracleservice.New(conf)
-	if err != nil {
-		return fmt.Errorf("failed to create service: %w", err)
-	}
-	defer svc.Close()
-
+func subscribeApproveOracleRegistrationEvent(conf *config.Config, svc service.Service) error {
 	doneChan := make(chan error, 1)
 	sigChan := make(chan os.Signal, 1)
 
-	err = svc.StartSubscriptions(
+	err := svc.StartSubscriptions(
 		oracleevent.NewApproveOracleRegistrationEvent(svc, doneChan),
 	)
 	if err != nil {
