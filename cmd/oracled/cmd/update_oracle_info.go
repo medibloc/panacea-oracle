@@ -23,7 +23,7 @@ func updateOracleInfoCmd() *cobra.Command {
 
 			svc, err := service.New(conf)
 			if err != nil {
-				return err
+				return fmt.Errorf("failed to create service: %w", err)
 			}
 			defer svc.Close()
 
@@ -47,7 +47,6 @@ func updateOracleInfoCmd() *cobra.Command {
 				return err
 			}
 
-			//TODO: The argument of NewMsgUpdateOracleInfo will be changed when https://github.com/medibloc/panacea-core/pull/540 is merged.
 			msgUpdateOracleInfo := oracletypes.NewMsgUpdateOracleInfo(oracleAccount.GetAddress(), oracleEndPoint, &oracleCommissionRate)
 			txHeight, txHash, err := svc.BroadcastTx(msgUpdateOracleInfo)
 			if err != nil {
