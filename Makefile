@@ -17,6 +17,12 @@ build: go.sum
 test:
 	$(GO) test -v ./...
 
+lint:
+	GO111MODULE=off go get github.com/golangci/golangci-lint/cmd/golangci-lint
+	golangci-lint run --timeout 5m0s --allow-parallel-runners
+	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" | xargs gofmt -d -s
+	go mod verify
+
 # Prepare ./scripts/private.pem that you want to use. If not, this command will generate a new one.
 sign-prod:
 	ego sign ./scripts/enclave-prod.json

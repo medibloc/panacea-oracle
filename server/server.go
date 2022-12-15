@@ -6,6 +6,8 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/medibloc/panacea-oracle/server/middleware"
+	"github.com/medibloc/panacea-oracle/server/service/datadeal"
+	"github.com/medibloc/panacea-oracle/server/service/key"
 	"github.com/medibloc/panacea-oracle/service"
 	log "github.com/sirupsen/logrus"
 )
@@ -14,10 +16,11 @@ type Server struct {
 	*http.Server
 }
 
-func New(svc *service.Service) *Server {
+func New(svc service.Service) *Server {
 	router := mux.NewRouter()
-	router.HandleFunc("/v0/data-deal/deals/{dealId}/data", svc.ValidateData).Methods("POST")
-	router.HandleFunc("/v0/data-deal/secret-key", svc.GetSecretKey).Methods("GET")
+
+	datadeal.RegisterHandlers(svc, router)
+	key.RegisterHandlers(svc, router)
 
 	mw := middleware.NewJWTAuthMiddleware(svc.QueryClient())
 	router.Use(mw.Middleware)
