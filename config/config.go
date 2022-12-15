@@ -24,7 +24,6 @@ type BaseConfig struct {
 	OracleMnemonic string `mapstructure:"oracle-mnemonic"`
 	OracleAccNum   uint32 `mapstructure:"oracle-acc-num"`
 	OracleAccIndex uint32 `mapstructure:"oracle-acc-index"`
-	ListenAddr     string `mapstructure:"listen-addr"`
 	Subscriber     string `mapstructure:"subscriber"`
 	DataDir        string `mapstructure:"data-dir"`
 
@@ -49,8 +48,9 @@ type IPFSConfig struct {
 }
 
 type APIConfig struct {
-	WriteTimeout int64 `mapstructure:"write-timeout"`
-	ReadTimeout  int64 `mapstructure:"read-timeout"`
+	ListenAddr   string `mapstructure:"listen-addr"`
+	WriteTimeout int64  `mapstructure:"write-timeout"`
+	ReadTimeout  int64  `mapstructure:"read-timeout"`
 }
 
 func DefaultConfig() *Config {
@@ -60,7 +60,6 @@ func DefaultConfig() *Config {
 			OracleMnemonic: "",
 			OracleAccNum:   0,
 			OracleAccIndex: 0,
-			ListenAddr:     "127.0.0.1:8080",
 			DataDir:        "data",
 
 			OraclePrivKeyFile: "oracle_priv_key.sealed",
@@ -82,6 +81,7 @@ func DefaultConfig() *Config {
 			IPFSNodeAddr: "127.0.0.1:5001",
 		},
 		API: APIConfig{
+			ListenAddr:   "127.0.0.1:8080",
 			WriteTimeout: 60,
 			ReadTimeout:  15,
 		},

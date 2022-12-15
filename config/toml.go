@@ -23,7 +23,6 @@ log-level = "{{ .BaseConfig.LogLevel }}"
 oracle-mnemonic = "{{ .BaseConfig.OracleMnemonic }}"
 oracle-acc-num = "{{ .BaseConfig.OracleAccNum }}"
 oracle-acc-index = "{{ .BaseConfig.OracleAccIndex }}"
-listen-addr = "{{ .BaseConfig.ListenAddr }}"
 data-dir = "{{ .BaseConfig.DataDir }}"
 
 oracle-priv-key-file = "{{ .BaseConfig.OraclePrivKeyFile }}"
@@ -68,6 +67,7 @@ ipfs-node-addr = "{{ .IPFS.IPFSNodeAddr }}"
 
 [api]
 
+listen-addr = "{{ .API.ListenAddr }}"
 write-timeout = "{{ .API.WriteTimeout }}"
 read-timeout = "{{ .API.ReadTimeout }}"
 `
