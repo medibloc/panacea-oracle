@@ -49,9 +49,8 @@ type IPFSConfig struct {
 }
 
 type APIConfig struct {
-	ListenAddr   string `mapstructure:"listen-addr"`
-	WriteTimeout int64  `mapstructure:"write-timeout"`
-	ReadTimeout  int64  `mapstructure:"read-timeout"`
+	WriteTimeout int64 `mapstructure:"write-timeout"`
+	ReadTimeout  int64 `mapstructure:"read-timeout"`
 }
 
 func DefaultConfig() *Config {
