@@ -77,7 +77,7 @@ func registerOracleCmd() *cobra.Command {
 func sendTxRegisterOracle(cmd *cobra.Command, conf *config.Config) error {
 	svc, err := service.New(conf)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to create service: %w", err)
 	}
 	defer svc.Close()
 
