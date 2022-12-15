@@ -48,26 +48,6 @@ func updateOracleInfoCmd() *cobra.Command {
 				return err
 			}
 
-			//oracleCommissionMaxRateStr, err := cmd.Flags().GetString(flagOracleCommissionMaxRate)
-			//if err != nil {
-			//	return err
-			//}
-
-			//oracleCommissionMaxRate, err := sdk.NewDecFromStr(oracleCommissionMaxRateStr)
-			//if err != nil {
-			//	return err
-			//}
-			//
-			//oracleCommissionMaxChangeRateStr, err := cmd.Flags().GetString(flagOracleCommissionMaxRate)
-			//if err != nil {
-			//	return err
-			//}
-			//
-			//oracleCommissionMaxChangeRate, err := sdk.NewDecFromStr(oracleCommissionMaxChangeRateStr)
-			//if err != nil {
-			//	return err
-			//}
-
 			//TODO: The argument of NewMsgUpdateOracleInfo will be changed when https://github.com/medibloc/panacea-core/pull/540 is merged.
 			msgUpdateOracleInfo := oracletypes.NewMsgUpdateOracleInfo(oracleAccount.GetAddress(), oracleEndPoint, &oracleCommissionRate)
 			txBuilder := panacea.NewTxBuilder(queryClient)
@@ -103,8 +83,6 @@ func updateOracleInfoCmd() *cobra.Command {
 
 	cmd.Flags().String(flags.FlagOracleEndpoint, "", "endpoint of oracle")
 	cmd.Flags().String(flags.FlagOracleCommissionRate, "", "oracle commission rate")
-	cmd.Flags().String(flags.FlagOracleCommissionMaxRate, "", "oracle commission max rate")
-	cmd.Flags().String(flags.FlagOracleCommissionMaxChangeRate, "", "oracle commission max change rate")
 
 	return cmd
 }
