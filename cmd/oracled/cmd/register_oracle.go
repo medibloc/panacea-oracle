@@ -103,19 +103,7 @@ func sendTxRegisterOracle(cmd *cobra.Command, conf *config.Config) error {
 		return err
 	}
 
-	txBuilder := panacea.NewTxBuilder(svc.QueryClient())
-	defaultFeeAmount, _ := sdk.ParseCoinsNormalized(conf.Panacea.DefaultFeeAmount)
-	txBytes, err := txBuilder.GenerateSignedTxBytes(
-		oracleAccount.GetPrivKey(),
-		conf.Panacea.DefaultGasLimit,
-		defaultFeeAmount,
-		msgRegisterOracle,
-	)
-	if err != nil {
-		return fmt.Errorf("failed to generate signed Tx bytes: %w", err)
-	}
-
-	txHeight, txHash, err := svc.BroadcastTx(txBytes)
+	txHeight, txHash, err := svc.BroadcastTx(msgRegisterOracle)
 	if err != nil {
 		return fmt.Errorf("failed to RegisterOracle transaction: %v", err)
 	}

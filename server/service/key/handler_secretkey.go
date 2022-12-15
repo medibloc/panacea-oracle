@@ -1,4 +1,4 @@
-package service
+package key
 
 import (
 	"encoding/hex"
@@ -12,7 +12,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func (svc *Service) GetSecretKey(w http.ResponseWriter, r *http.Request) {
+func (svc *combinedKeyService) GetSecretKey(w http.ResponseWriter, r *http.Request) {
 	queryClient := svc.QueryClient()
 	oraclePrivKey := svc.OraclePrivKey()
 

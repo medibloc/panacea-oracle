@@ -11,7 +11,7 @@ import (
 )
 
 type oracleService struct {
-	*service.Service
+	service.Service
 }
 
 func New(conf *config.Config) (*oracleService, error) {

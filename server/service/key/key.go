@@ -1,4 +1,4 @@
-package service
+package key
 
 import (
 	"crypto/sha256"

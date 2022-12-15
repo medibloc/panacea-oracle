@@ -2,6 +2,7 @@ package event
 
 import (
 	"github.com/btcsuite/btcd/btcec"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/medibloc/panacea-oracle/config"
 	"github.com/medibloc/panacea-oracle/panacea"
 	"github.com/medibloc/panacea-oracle/sgx"
@@ -14,7 +15,7 @@ type Service interface {
 	OraclePrivKey() *btcec.PrivateKey
 	QueryClient() panacea.QueryClient
 	Config() *config.Config
-	BroadcastTx([]byte) (int64, string, error)
+	BroadcastTx(...sdk.Msg) (int64, string, error)
 }
 
 // OracleService is 'service/oracle/service.go'
