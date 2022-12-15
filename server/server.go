@@ -16,11 +16,15 @@ type Server struct {
 
 func New(svc *service.Service) *Server {
 	router := mux.NewRouter()
-	router.HandleFunc("/v0/data-deal/deals/{dealId}/data", svc.ValidateData).Methods("POST")
-	router.HandleFunc("/v0/data-deal/secret-key", svc.GetSecretKey).Methods("GET")
 
-	mw := middleware.NewJWTAuthMiddleware(svc.QueryClient())
-	router.Use(mw.Middleware)
+	jwtAuthMiddleware := middleware.NewJWTAuthMiddleware(svc.QueryClient())
+
+	dealRouter := router.PathPrefix("/v0/data-deal").Subrouter()
+	dealRouter.HandleFunc("/deals/{dealId}/data", svc.ValidateData).Methods("POST")
+	dealRouter.HandleFunc("/secret-key", svc.GetSecretKey).Methods("GET")
+	dealRouter.Use(jwtAuthMiddleware.Middleware)
+
+	router.HandleFunc("/v0/status", svc.GetStatus).Methods("GET")
 
 	return &Server{
 		&http.Server{
