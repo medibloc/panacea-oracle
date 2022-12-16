@@ -25,9 +25,9 @@ func New(svc *service.Service) *Server {
 	return &Server{
 		&http.Server{
 			Handler:      router,
-			Addr:         svc.Config().ListenAddr,
-			WriteTimeout: 15 * time.Second,
-			ReadTimeout:  15 * time.Second,
+			Addr:         svc.Config().API.ListenAddr,
+			WriteTimeout: time.Duration(svc.Config().API.WriteTimeout) * time.Second,
+			ReadTimeout:  time.Duration(svc.Config().API.ReadTimeout) * time.Second,
 		},
 	}
 }
