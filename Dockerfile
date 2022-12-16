@@ -1,4 +1,4 @@
-FROM ubuntu:focal-20220801 AS ego-base
+FROM ubuntu:focal-20220801 AS egobase
 
 # Install Intel SGX drivers
 # https://github.com/edgelesssys/edgelessdb/blob/c91d353d45370e68218e885e9cbea621fdedf642/Dockerfile#L45
@@ -28,7 +28,7 @@ RUN wget https://github.com/edgelesssys/ego/releases/download/v1.0.1/ego_1.0.1_a
 
 ####################################################
 
-FROM ego-base AS oracle-build
+FROM egobase AS oraclebase
 
 # Install prerequisites
 RUN apt-get update && apt-get install -y --no-install-recommends git build-essential
@@ -41,9 +41,9 @@ RUN ego sign ./scripts/enclave-prod.json
 
 ####################################################
 
-FROM ego-base
+FROM egobase
 
-COPY --from=oracle-build /src/build/oracled /usr/bin/oracled
+COPY --from=oraclebase /src/build/oracled /usr/bin/oracled
 RUN chmod +x /usr/bin/oracled
 
 EXPOSE 8080
