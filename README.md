@@ -23,5 +23,5 @@ You can check if your hardware supports SGX and it is enabled in the BIOS by fol
 
 ## Usages
 
-- [Initialize and run the doracle](./docs/usage-init-run.md)
+- [Initialize and run the oracle](./docs/usage-init-run.md)
 
