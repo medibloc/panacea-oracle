@@ -5,6 +5,7 @@ import (
 )
 
 type Event interface {
+	Name() string
 	GetEventQuery() string
 	EventHandler(event ctypes.ResultEvent) error
 }

@@ -25,8 +25,9 @@ import (
 )
 
 var (
-	testPrivKey = secp256k1.GenPrivKey()
-	testAccAddr = "test-addr"
+	testPrivKey          = secp256k1.GenPrivKey()
+	testOraclePrivKey, _ = btcec.NewPrivateKey(btcec.S256())
+	testAccAddr          = "test-addr"
 )
 
 func TestAuthSuccess(t *testing.T) {
@@ -187,9 +188,6 @@ func (c *mockQueryClient) GetAccount(address string) (authtypes.AccountI, error)
 	}
 	return c.account, nil
 }
-func (c *mockQueryClient) GetOracleParamsPublicKey() (*btcec.PublicKey, error) {
-	return nil, nil
-}
 
 // TODO: implement mock GetDeal for test
 func (c *mockQueryClient) GetDeal(_ uint64) (*datadealtypes.Deal, error) {
@@ -238,6 +236,10 @@ func (a *mockAccount) GetSequence() uint64 {
 
 func (a *mockAccount) SetSequence(u uint64) error {
 	return nil
+}
+
+func (c *mockQueryClient) GetOracleParamsPublicKey() (*btcec.PublicKey, error) {
+	return testOraclePrivKey.PubKey(), nil
 }
 
 type mockAccountWithoutPubKey struct {

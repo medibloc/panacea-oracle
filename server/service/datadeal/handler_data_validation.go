@@ -1,4 +1,4 @@
-package service
+package datadeal
 
 import (
 	"crypto/sha256"
@@ -12,11 +12,12 @@ import (
 	"github.com/gorilla/mux"
 	datadealtypes "github.com/medibloc/panacea-core/v2/x/datadeal/types"
 	"github.com/medibloc/panacea-oracle/crypto"
+	"github.com/medibloc/panacea-oracle/server/service/key"
 	"github.com/medibloc/panacea-oracle/validation"
 	log "github.com/sirupsen/logrus"
 )
 
-func (s *Service) ValidateData(w http.ResponseWriter, r *http.Request) {
+func (s *dataDealService) ValidateData(w http.ResponseWriter, r *http.Request) {
 	queryClient := s.QueryClient()
 	oraclePrivKey := s.OraclePrivKey()
 
@@ -107,7 +108,7 @@ func (s *Service) ValidateData(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Re-encrypt data using a combined key
-	combinedKey := GetCombinedKey(oraclePrivKey.Serialize(), dealID, dataHash[:])
+	combinedKey := key.GetCombinedKey(oraclePrivKey.Serialize(), dealID, dataHash[:])
 	reEncryptedData, err := crypto.Encrypt(combinedKey[:], nil, decryptedData)
 	if err != nil {
 		log.Errorf("failed to re-encrypt data with the combined key: %s", err.Error())

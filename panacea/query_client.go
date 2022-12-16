@@ -40,10 +40,10 @@ type QueryClient interface {
 	Close() error
 	GetAccount(address string) (authtypes.AccountI, error)
 	GetOracleRegistration(oracleAddr, uniqueID string) (*oracletypes.OracleRegistration, error)
-	GetOracleParamsPublicKey() (*btcec.PublicKey, error)
 	GetLightBlock(height int64) (*tmtypes.LightBlock, error)
 	GetCdc() *codec.ProtoCodec
 	GetChainID() string
+	GetOracleParamsPublicKey() (*btcec.PublicKey, error)
 	GetDeal(dealID uint64) (*datadealtypes.Deal, error)
 	GetCertificate(dealID uint64, dataHash string) (*datadealtypes.Certificate, error)
 }
@@ -77,8 +77,8 @@ func makeInterfaceRegistry() sdk.InterfaceRegistry {
 
 // NewVerifiedQueryClient set verifiedQueryClient with rpcClient & and returns, if successful,
 // a verifiedQueryClient that can be used to add query function.
-func NewVerifiedQueryClient(ctx context.Context, config *config.Config, info TrustedBlockInfo) (QueryClient, error) {
-	return newVerifiedQueryClientWithSgxLevelDB(ctx, config, &info)
+func NewVerifiedQueryClient(ctx context.Context, config *config.Config, info *TrustedBlockInfo) (QueryClient, error) {
+	return newVerifiedQueryClientWithSgxLevelDB(ctx, config, info)
 }
 
 func LoadVerifiedQueryClient(ctx context.Context, config *config.Config) (QueryClient, error) {
@@ -321,7 +321,7 @@ func (q verifiedQueryClient) abciQueryWithOptions(ctx context.Context, path stri
 
 	// Validate the response.
 	if resp.IsErr() {
-		return nil, fmt.Errorf("err response code: %v", resp.Code)
+		return nil, fmt.Errorf("err response. code(%v) codeSpace(%v) log(%v)", resp.Code, resp.Codespace, resp.Log)
 	}
 	if len(resp.Key) == 0 {
 		return nil, ErrEmptyKey
@@ -403,7 +403,6 @@ func (q verifiedQueryClient) GetCertificate(dealID uint64, dataHash string) (*da
 }
 
 func (q verifiedQueryClient) GetOracleRegistration(uniqueID, oracleAddr string) (*oracletypes.OracleRegistration, error) {
-
 	acc, err := GetAccAddressFromBech32(oracleAddr)
 	if err != nil {
 		return nil, err
@@ -462,23 +461,6 @@ func (q verifiedQueryClient) GetOracleParamsPublicKey() (*btcec.PublicKey, error
 //	}
 //	return &oracleUpgradeInfo, nil
 //}
-//func (q verifiedQueryClient) GetDeal(dealID uint64) (*datadealtypes.Deal, error) {
-//	key := datadealtypes.GetDealKey(dealID)
-//
-//	bz, err := q.GetStoreData(context.Background(), datadealtypes.StoreKey, key)
-//	if err != nil {
-//		return nil, err
-//	}
-//
-//	var deal datadealtypes.Deal
-//	err = q.cdc.UnmarshalLengthPrefixed(bz, &deal)
-//	if err != nil {
-//		return nil, err
-//	}
-//
-//	return &deal, nil
-//}
-//
 //func (q verifiedQueryClient) GetDataSale(dataHash string, dealID uint64) (*datadealtypes.DataSale, error) {
 //	key := datadealtypes.GetDataSaleKey(dataHash, dealID)
 //

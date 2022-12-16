@@ -6,7 +6,6 @@ import (
 
 	oracletypes "github.com/medibloc/panacea-core/v2/x/oracle/types"
 	"github.com/medibloc/panacea-oracle/event"
-	"github.com/medibloc/panacea-oracle/panacea"
 	"github.com/medibloc/panacea-oracle/sgx"
 	log "github.com/sirupsen/logrus"
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
@@ -15,11 +14,15 @@ import (
 var _ event.Event = (*RegisterOracleEvent)(nil)
 
 type RegisterOracleEvent struct {
-	reactor event.Reactor
+	reactor event.Service
 }
 
-func NewRegisterOracleEvent(s event.Reactor) RegisterOracleEvent {
+func NewRegisterOracleEvent(s event.Service) RegisterOracleEvent {
 	return RegisterOracleEvent{s}
+}
+
+func (e RegisterOracleEvent) Name() string {
+	return "RegisterOracleEvent"
 }
 
 func (e RegisterOracleEvent) GetEventQuery() string {
@@ -41,18 +44,12 @@ func (e RegisterOracleEvent) EventHandler(event ctypes.ResultEvent) error {
 		msgApproveOracleRegistration.ApproveOracleRegistration.TargetOracleAddress,
 	)
 
-	txBuilder := panacea.NewTxBuilder(e.reactor.QueryClient())
-	txBytes, err := txBuilder.GenerateTxBytes(e.reactor.OracleAcc().GetPrivKey(), e.reactor.Config(), msgApproveOracleRegistration)
-	if err != nil {
-		return err
-	}
-
-	txHeight, txHash, err := e.reactor.BroadcastTx(txBytes)
+	txHeight, txHash, err := e.reactor.BroadcastTx(msgApproveOracleRegistration)
 	if err != nil {
 		return fmt.Errorf("failed to ApproveOracleRegistration transaction for new oracle registration: %v", err)
-	} else {
-		log.Infof("succeeded to ApproveOracleRegistration transaction for new oracle registration. height(%v), hash(%s)", txHeight, txHash)
 	}
+
+	log.Infof("succeeded to ApproveOracleRegistration transaction for new oracle registration. height(%v), hash(%s)", txHeight, txHash)
 
 	return nil
 }
@@ -67,7 +64,10 @@ func (e RegisterOracleEvent) verifyAndGetMsgApproveOracleRegistration(uniqueID, 
 		return nil, fmt.Errorf("oracle's uniqueID does not match the requested uniqueID. expected(%s) got(%s)", approverUniqueID, uniqueID)
 	} else {
 		oracleRegistration, err := queryClient.GetOracleRegistration(uniqueID, targetAddress)
-		log.Errorf("err while get oracleRegistration: %v", err)
+		if err != nil {
+			log.Errorf("err while get oracleRegistration: %v", err)
+			return nil, err
+		}
 
 		if err := verifyTrustedBlockInfo(e.reactor.QueryClient(), oracleRegistration.TrustedBlockHeight, oracleRegistration.TrustedBlockHash); err != nil {
 			log.Errorf("failed to verify trusted block. height(%d), hash(%s), err(%v)", oracleRegistration.TrustedBlockHeight, oracleRegistration.TrustedBlockHash, err)
@@ -83,5 +83,4 @@ func (e RegisterOracleEvent) verifyAndGetMsgApproveOracleRegistration(uniqueID, 
 
 		return makeMsgApproveOracleRegistration(approverUniqueID, approverAddress, targetAddress, oraclePrivKeyBz, oracleRegistration.NodePubKey)
 	}
-
 }

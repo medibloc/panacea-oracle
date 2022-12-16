@@ -1,4 +1,4 @@
-package service
+package status
 
 import (
 	"encoding/base64"
@@ -8,7 +8,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func (s *Service) GetStatus(w http.ResponseWriter, _ *http.Request) {
+func (s *statusService) GetStatus(w http.ResponseWriter, _ *http.Request) {
 	resp := statusResponse{
 		OracleAccountAddress: s.OracleAcc().GetAddress(),
 		API: statusAPI{
