@@ -14,5 +14,5 @@ type dataDealService struct {
 func RegisterHandlers(svc serverservice.Service, router *mux.Router) {
 	s := &dataDealService{svc}
 
-	router.HandleFunc("/v0/data-deal/deals/{dealId}/data", s.ValidateData).Methods(http.MethodPost)
+	router.HandleFunc("/deals/{dealId}/data", s.ValidateData).Methods(http.MethodPost)
 }

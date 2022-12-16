@@ -27,6 +27,7 @@ func New(svc service.Service) *Server {
 
 	datadeal.RegisterHandlers(svc, dealRouter)
 	key.RegisterHandlers(svc, dealRouter)
+
 	status.RegisterHandlers(svc, router)
 
 	return &Server{
