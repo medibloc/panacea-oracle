@@ -47,9 +47,9 @@ func (e RegisterOracleEvent) EventHandler(event ctypes.ResultEvent) error {
 	txHeight, txHash, err := e.reactor.BroadcastTx(msgApproveOracleRegistration)
 	if err != nil {
 		return fmt.Errorf("failed to ApproveOracleRegistration transaction for new oracle registration: %v", err)
-	} else {
-		log.Infof("succeeded to ApproveOracleRegistration transaction for new oracle registration. height(%v), hash(%s)", txHeight, txHash)
 	}
+
+	log.Infof("succeeded to ApproveOracleRegistration transaction for new oracle registration. height(%v), hash(%s)", txHeight, txHash)
 
 	return nil
 }

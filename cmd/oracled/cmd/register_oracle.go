@@ -58,7 +58,7 @@ func registerOracleCmd() *cobra.Command {
 				return fmt.Errorf("failed to send tx RegisterOracle. %w", err)
 			}
 
-			if err := subscribeApproveOracleRegistrationEvent(conf, svc); err != nil {
+			if err := subscribeApproveOracleRegistrationEvent(svc); err != nil {
 				return err
 			}
 
@@ -92,7 +92,6 @@ func registerOracleCmd() *cobra.Command {
 }
 
 func sendTxRegisterOracle(cmd *cobra.Command, conf *config.Config, svc service.Service, trustedBlockInfo *panacea.TrustedBlockInfo) error {
-
 
 	// get oracle account from mnemonic.
 	oracleAccount := svc.OracleAcc()
@@ -209,7 +208,7 @@ func generateAndSealedNodeKey(nodePrivKeyPath string) ([]byte, []byte, error) {
 	return nodePubKey, nodeKeyRemoteReport, nil
 }
 
-func subscribeApproveOracleRegistrationEvent(conf *config.Config, svc service.Service) error {
+func subscribeApproveOracleRegistrationEvent(svc service.Service) error {
 	doneChan := make(chan error, 1)
 	sigChan := make(chan os.Signal, 1)
 
