@@ -12,7 +12,7 @@ func (s *Service) GetStatus(w http.ResponseWriter, _ *http.Request) {
 	resp := statusResponse{
 		OracleAccountAddress: s.OracleAcc().GetAddress(),
 		API: statusAPI{
-			ListenAddr: s.Config().ListenAddr,
+			ListenAddr: s.Config().API.ListenAddr,
 		},
 		EnclaveInfo: statusEnclaveInfo{
 			ProductIDBase64: base64.StdEncoding.EncodeToString(s.EnclaveInfo().ProductID),
