@@ -23,12 +23,11 @@ log-level = "{{ .BaseConfig.LogLevel }}"
 oracle-mnemonic = "{{ .BaseConfig.OracleMnemonic }}"
 oracle-acc-num = "{{ .BaseConfig.OracleAccNum }}"
 oracle-acc-index = "{{ .BaseConfig.OracleAccIndex }}"
-listen_addr = "{{ .BaseConfig.ListenAddr }}"
-data_dir = "{{ .BaseConfig.DataDir }}"
+data-dir = "{{ .BaseConfig.DataDir }}"
 
-oracle_priv_key_file = "{{ .BaseConfig.OraclePrivKeyFile }}"
-oracle_pub_key_file = "{{ .BaseConfig.OraclePubKeyFile }}"
-node_priv_key_file = "{{ .BaseConfig.NodePrivKeyFile }}"
+oracle-priv-key-file = "{{ .BaseConfig.OraclePrivKeyFile }}"
+oracle-pub-key-file = "{{ .BaseConfig.OraclePubKeyFile }}"
+node-priv-key-file = "{{ .BaseConfig.NodePrivKeyFile }}"
 
 ###############################################################################
 ###                         Panacea Configuration                           ###
@@ -61,6 +60,16 @@ light-client-log-level = "{{ .Panacea.LightClientLogLevel }}"
 [ipfs]
 
 ipfs-node-addr = "{{ .IPFS.IPFSNodeAddr }}"
+
+###############################################################################
+###                         API Configuration                           ###
+###############################################################################
+
+[api]
+
+listen-addr = "{{ .API.ListenAddr }}"
+write-timeout = "{{ .API.WriteTimeout }}"
+read-timeout = "{{ .API.ReadTimeout }}"
 `
 
 var configTemplate *template.Template

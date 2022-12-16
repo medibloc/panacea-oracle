@@ -13,6 +13,8 @@ type Config struct {
 	Panacea PanaceaConfig `mapstructure:"panacea"`
 
 	IPFS IPFSConfig `mapstructure:"ipfs"`
+
+	API APIConfig `mapstructure:"api"`
 }
 
 type BaseConfig struct {
@@ -22,13 +24,12 @@ type BaseConfig struct {
 	OracleMnemonic string `mapstructure:"oracle-mnemonic"`
 	OracleAccNum   uint32 `mapstructure:"oracle-acc-num"`
 	OracleAccIndex uint32 `mapstructure:"oracle-acc-index"`
-	ListenAddr     string `mapstructure:"listen_addr"`
 	Subscriber     string `mapstructure:"subscriber"`
-	DataDir        string `mapstructure:"data_dir"`
+	DataDir        string `mapstructure:"data-dir"`
 
-	OraclePrivKeyFile string `mapstructure:"oracle_priv_key_file"`
-	OraclePubKeyFile  string `mapstructure:"oracle_pub_key_file"`
-	NodePrivKeyFile   string `mapstructure:"node_priv_key_file"`
+	OraclePrivKeyFile string `mapstructure:"oracle-priv-key-file"`
+	OraclePubKeyFile  string `mapstructure:"oracle-pub-key-file"`
+	NodePrivKeyFile   string `mapstructure:"node-priv-key-file"`
 }
 
 type PanaceaConfig struct {
@@ -46,6 +47,12 @@ type IPFSConfig struct {
 	IPFSNodeAddr string `mapstructure:"ipfs-node-addr"`
 }
 
+type APIConfig struct {
+	ListenAddr   string `mapstructure:"listen-addr"`
+	WriteTimeout int64  `mapstructure:"write-timeout"`
+	ReadTimeout  int64  `mapstructure:"read-timeout"`
+}
+
 func DefaultConfig() *Config {
 	return &Config{
 		BaseConfig: BaseConfig{
@@ -53,7 +60,6 @@ func DefaultConfig() *Config {
 			OracleMnemonic: "",
 			OracleAccNum:   0,
 			OracleAccIndex: 0,
-			ListenAddr:     "127.0.0.1:8080",
 			DataDir:        "data",
 
 			OraclePrivKeyFile: "oracle_priv_key.sealed",
@@ -73,6 +79,11 @@ func DefaultConfig() *Config {
 		},
 		IPFS: IPFSConfig{
 			IPFSNodeAddr: "127.0.0.1:5001",
+		},
+		API: APIConfig{
+			ListenAddr:   "127.0.0.1:8080",
+			WriteTimeout: 60,
+			ReadTimeout:  15,
 		},
 	}
 }
