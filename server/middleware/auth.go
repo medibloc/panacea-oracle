@@ -76,12 +76,17 @@ func (mw *jwtAuthMiddleware) queryAccountPubKey(addr string) (*ecdsa.PublicKey, 
 		return nil, fmt.Errorf("failed to query account: %w", err)
 	}
 
-	pubKey, err := btcec.ParsePubKey(account.GetPubKey().Bytes(), btcec.S256())
+	pubKey := account.GetPubKey()
+	if pubKey == nil {
+		return nil, fmt.Errorf("no pubkey registered to the account yet")
+	}
+
+	parsedPubKey, err := btcec.ParsePubKey(pubKey.Bytes(), btcec.S256())
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse account pubkey: %w", err)
 	}
 
-	return pubKey.ToECDSA(), nil
+	return parsedPubKey.ToECDSA(), nil
 }
 
 func parseBearerToken(authHeader string) (string, error) {

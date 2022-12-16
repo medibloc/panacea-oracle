@@ -8,6 +8,7 @@ import (
 	"github.com/medibloc/panacea-oracle/server/middleware"
 	"github.com/medibloc/panacea-oracle/server/service/datadeal"
 	"github.com/medibloc/panacea-oracle/server/service/key"
+	"github.com/medibloc/panacea-oracle/server/service/status"
 	"github.com/medibloc/panacea-oracle/service"
 	log "github.com/sirupsen/logrus"
 )
@@ -19,11 +20,14 @@ type Server struct {
 func New(svc service.Service) *Server {
 	router := mux.NewRouter()
 
-	datadeal.RegisterHandlers(svc, router)
-	key.RegisterHandlers(svc, router)
+	jwtAuthMiddleware := middleware.NewJWTAuthMiddleware(svc.QueryClient())
 
-	mw := middleware.NewJWTAuthMiddleware(svc.QueryClient())
-	router.Use(mw.Middleware)
+	dealRouter := router.PathPrefix("/v0/data-deal").Subrouter()
+	dealRouter.Use(jwtAuthMiddleware.Middleware)
+
+	datadeal.RegisterHandlers(svc, dealRouter)
+	key.RegisterHandlers(svc, dealRouter)
+	status.RegisterHandlers(svc, router)
 
 	return &Server{
 		&http.Server{
