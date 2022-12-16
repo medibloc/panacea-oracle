@@ -24,7 +24,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates
 # Install EGo
 # https://docs.edgeless.systems/ego/#/getting-started/install?id=install-the-deb-package
 RUN wget https://github.com/edgelesssys/ego/releases/download/v1.0.1/ego_1.0.1_amd64.deb \
-  && apt install ./ego_1.0.1_amd64.deb \
+  && apt install ./ego_1.0.1_amd64.deb
 
 ####################################################
 
