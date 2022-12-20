@@ -343,7 +343,7 @@ func (q verifiedQueryClient) GetLightBlock(height int64) (*tmtypes.LightBlock, e
 	return q.safeVerifyLightBlockAtHeight(context.Background(), height)
 }
 
-// Below are examples of query function that use GetStoreData function to verify queried result.
+// Below are query functions that use GetStoreData function to verify queried result.
 // Need to set storeKey and key inside the query function, and change type to expected type.
 
 // GetAccount returns account from address.
@@ -448,32 +448,3 @@ func (q verifiedQueryClient) GetOracleParamsPublicKey() (*btcec.PublicKey, error
 
 	return btcec.ParsePubKey(pubKeyBz, btcec.S256())
 }
-
-//func (q verifiedQueryClient) GetOracleUpgradeInfo() (*oracletypes.OracleUpgradeInfo, error) {
-//	oracleUpgradeInfoBz, err := q.GetStoreData(context.Background(), oracletypes.StoreKey, oracletypes.OracleUpgradeInfoKey)
-//	if err != nil {
-//		return nil, err
-//	}
-//
-//	var oracleUpgradeInfo oracletypes.OracleUpgradeInfo
-//	if err := q.cdc.UnmarshalLengthPrefixed(oracleUpgradeInfoBz, &oracleUpgradeInfo); err != nil {
-//		return nil, err
-//	}
-//	return &oracleUpgradeInfo, nil
-//}
-//func (q verifiedQueryClient) GetDataSale(dataHash string, dealID uint64) (*datadealtypes.DataSale, error) {
-//	key := datadealtypes.GetDataSaleKey(dataHash, dealID)
-//
-//	bz, err := q.GetStoreData(context.Background(), datadealtypes.StoreKey, key)
-//	if err != nil {
-//		return nil, err
-//	}
-//
-//	var dataSale datadealtypes.DataSale
-//	err = q.cdc.UnmarshalLengthPrefixed(bz, &dataSale)
-//	if err != nil {
-//		return nil, err
-//	}
-//
-//	return &dataSale, nil
-//}
