@@ -48,7 +48,7 @@ func (mw *jwtAuthMiddleware) Middleware(next http.Handler) http.Handler {
 			return
 		}
 
-		pubKey, err := mw.queryAccountPubKey(parsedJWT.Issuer())
+		pubKey, err := mw.queryAccountPubKey(r.Context(), parsedJWT.Issuer())
 		if err != nil {
 			log.Error(err)
 			http.Error(w, "cannot query account pubkey", http.StatusUnauthorized)
@@ -70,8 +70,8 @@ func (mw *jwtAuthMiddleware) Middleware(next http.Handler) http.Handler {
 	})
 }
 
-func (mw *jwtAuthMiddleware) queryAccountPubKey(addr string) (*ecdsa.PublicKey, error) {
-	account, err := mw.panaceaQueryClient.GetAccount(addr)
+func (mw *jwtAuthMiddleware) queryAccountPubKey(ctx context.Context, addr string) (*ecdsa.PublicKey, error) {
+	account, err := mw.panaceaQueryClient.GetAccount(ctx, addr)
 	if err != nil {
 		return nil, fmt.Errorf("failed to query account: %w", err)
 	}

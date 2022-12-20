@@ -38,14 +38,15 @@ import (
 
 type QueryClient interface {
 	Close() error
-	GetAccount(address string) (authtypes.AccountI, error)
-	GetOracleRegistration(oracleAddr, uniqueID string) (*oracletypes.OracleRegistration, error)
+	GetAccount(context.Context, string) (authtypes.AccountI, error)
+	GetOracleRegistration(context.Context, string, string) (*oracletypes.OracleRegistration, error)
 	GetLightBlock(height int64) (*tmtypes.LightBlock, error)
 	GetCdc() *codec.ProtoCodec
 	GetChainID() string
-	GetOracleParamsPublicKey() (*btcec.PublicKey, error)
-	GetDeal(dealID uint64) (*datadealtypes.Deal, error)
-	GetCertificate(dealID uint64, dataHash string) (*datadealtypes.Certificate, error)
+	GetOracleParamsPublicKey(context.Context) (*btcec.PublicKey, error)
+	GetDeal(context.Context, uint64) (*datadealtypes.Deal, error)
+	GetCertificate(context.Context, uint64, string) (*datadealtypes.Certificate, error)
+	GetLastBlockHeight(context.Context) (int64, error)
 }
 
 const (
@@ -242,21 +243,9 @@ func (q verifiedQueryClient) GetChainID() string {
 // GetStoreData get data from panacea with storeKey and key, then verify queried data with light client and merkle proof.
 // the returned data type is ResponseQuery.value ([]byte), so recommend to convert to expected type
 func (q verifiedQueryClient) GetStoreData(ctx context.Context, storeKey string, key []byte) ([]byte, error) {
-	var queryHeight int64
-
-	// get recent light block
-	// if the latest block has already been updated, get LastTrustedHeight
-	trustedBlock, err := q.safeUpdateLightClient(ctx)
+	queryHeight, err := q.getQueryBlockHeight(ctx)
 	if err != nil {
 		return nil, err
-	}
-	if trustedBlock == nil {
-		queryHeight, err = q.lightClient.LastTrustedHeight()
-		if err != nil {
-			return nil, err
-		}
-	} else {
-		queryHeight = trustedBlock.Height
 	}
 
 	//set queryOption prove to true
@@ -298,12 +287,20 @@ func (q verifiedQueryClient) GetStoreData(ctx context.Context, storeKey string, 
 	merkleRootKey := types.NewMerkleRoot(nextTrustedBlock.AppHash.Bytes())
 
 	merklePath := types.NewMerklePath(storeKey, string(key))
+
 	err = merkleProof.VerifyMembership(sdkSpecs, merkleRootKey, merklePath, result.Response.Value)
 	if err != nil {
 		return nil, err
 	}
 
 	return result.Response.Value, nil
+}
+
+func (q verifiedQueryClient) getQueryBlockHeight(ctx context.Context) (int64, error) {
+	if height := ctx.Value(ContextKeyQueryBlockHeight{}); height != nil {
+		return height.(int64), nil
+	}
+	return q.GetLastBlockHeight(ctx)
 }
 
 func (q verifiedQueryClient) Close() error {
@@ -347,14 +344,14 @@ func (q verifiedQueryClient) GetLightBlock(height int64) (*tmtypes.LightBlock, e
 // Need to set storeKey and key inside the query function, and change type to expected type.
 
 // GetAccount returns account from address.
-func (q verifiedQueryClient) GetAccount(address string) (authtypes.AccountI, error) {
+func (q verifiedQueryClient) GetAccount(ctx context.Context, address string) (authtypes.AccountI, error) {
 	acc, err := GetAccAddressFromBech32(address)
 	if err != nil {
 		return nil, err
 	}
 
 	key := authtypes.AddressStoreKey(acc)
-	bz, err := q.GetStoreData(context.Background(), authtypes.StoreKey, key)
+	bz, err := q.GetStoreData(ctx, authtypes.StoreKey, key)
 	if err != nil {
 		return nil, err
 	}
@@ -368,10 +365,10 @@ func (q verifiedQueryClient) GetAccount(address string) (authtypes.AccountI, err
 	return account, nil
 }
 
-func (q verifiedQueryClient) GetDeal(dealID uint64) (*datadealtypes.Deal, error) {
+func (q verifiedQueryClient) GetDeal(ctx context.Context, dealID uint64) (*datadealtypes.Deal, error) {
 	key := datadealtypes.GetDealKey(dealID)
 
-	bz, err := q.GetStoreData(context.Background(), datadealtypes.StoreKey, key)
+	bz, err := q.GetStoreData(ctx, datadealtypes.StoreKey, key)
 	if err != nil {
 		return nil, err
 	}
@@ -384,11 +381,11 @@ func (q verifiedQueryClient) GetDeal(dealID uint64) (*datadealtypes.Deal, error)
 	return &deal, nil
 }
 
-func (q verifiedQueryClient) GetCertificate(dealID uint64, dataHash string) (*datadealtypes.Certificate, error) {
+func (q verifiedQueryClient) GetCertificate(ctx context.Context, dealID uint64, dataHash string) (*datadealtypes.Certificate, error) {
 
 	key := datadealtypes.GetCertificateKey(dealID, dataHash)
 
-	bz, err := q.GetStoreData(context.Background(), datadealtypes.StoreKey, key)
+	bz, err := q.GetStoreData(ctx, datadealtypes.StoreKey, key)
 	if err != nil {
 		return nil, err
 	}
@@ -402,7 +399,7 @@ func (q verifiedQueryClient) GetCertificate(dealID uint64, dataHash string) (*da
 	return &certificate, nil
 }
 
-func (q verifiedQueryClient) GetOracleRegistration(uniqueID, oracleAddr string) (*oracletypes.OracleRegistration, error) {
+func (q verifiedQueryClient) GetOracleRegistration(ctx context.Context, uniqueID, oracleAddr string) (*oracletypes.OracleRegistration, error) {
 	acc, err := GetAccAddressFromBech32(oracleAddr)
 	if err != nil {
 		return nil, err
@@ -410,7 +407,7 @@ func (q verifiedQueryClient) GetOracleRegistration(uniqueID, oracleAddr string) 
 
 	key := oracletypes.GetOracleRegistrationKey(uniqueID, acc)
 
-	bz, err := q.GetStoreData(context.Background(), oracletypes.StoreKey, key)
+	bz, err := q.GetStoreData(ctx, oracletypes.StoreKey, key)
 	if err != nil {
 		return nil, err
 	}
@@ -424,8 +421,8 @@ func (q verifiedQueryClient) GetOracleRegistration(uniqueID, oracleAddr string) 
 	return &oracleRegistration, nil
 }
 
-func (q verifiedQueryClient) GetOracleParamsPublicKey() (*btcec.PublicKey, error) {
-	pubKeyBase64Bz, err := q.GetStoreData(context.Background(), paramstypes.StoreKey, append(append([]byte(oracletypes.StoreKey), '/'), oracletypes.KeyOraclePublicKey...))
+func (q verifiedQueryClient) GetOracleParamsPublicKey(ctx context.Context) (*btcec.PublicKey, error) {
+	pubKeyBase64Bz, err := q.GetStoreData(ctx, paramstypes.StoreKey, append(append([]byte(oracletypes.StoreKey), '/'), oracletypes.KeyOraclePublicKey...))
 	if err != nil {
 		return nil, err
 	}
@@ -447,6 +444,25 @@ func (q verifiedQueryClient) GetOracleParamsPublicKey() (*btcec.PublicKey, error
 	}
 
 	return btcec.ParsePubKey(pubKeyBz, btcec.S256())
+}
+
+func (q verifiedQueryClient) GetLastBlockHeight(ctx context.Context) (int64, error) {
+	// get recent light block
+	// if the latest block has already been updated, get LastTrustedHeight
+	trustedBlock, err := q.safeUpdateLightClient(ctx)
+	if err != nil {
+		return 0, err
+	}
+
+	if trustedBlock == nil {
+		return q.lightClient.LastTrustedHeight()
+	}
+
+	return trustedBlock.Height, nil
+}
+
+func SetQueryBlockHeightToContext(ctx context.Context, height int64) context.Context {
+	return context.WithValue(ctx, ContextKeyQueryBlockHeight{}, height)
 }
 
 //func (q verifiedQueryClient) GetOracleUpgradeInfo() (*oracletypes.OracleUpgradeInfo, error) {
