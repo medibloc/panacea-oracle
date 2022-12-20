@@ -298,8 +298,8 @@ func (q verifiedQueryClient) GetStoreData(ctx context.Context, storeKey string, 
 	sdkSpecs := []*ics23.ProofSpec{ics23.IavlSpec, ics23.TendermintSpec}
 	merkleRootKey := types.NewMerkleRoot(nextTrustedBlock.AppHash.Bytes())
 
-	ketPath := url.PathEscape(string(key))
-	merklePath := types.NewMerklePath(storeKey, ketPath)
+	keyPath := url.PathEscape(string(key))
+	merklePath := types.NewMerklePath(storeKey, keyPath)
 	err = merkleProof.VerifyMembership(sdkSpecs, merkleRootKey, merklePath, result.Response.Value)
 	if err != nil {
 		return nil, err
