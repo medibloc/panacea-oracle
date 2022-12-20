@@ -2,6 +2,7 @@ package ipfs
 
 import (
 	"bytes"
+	"fmt"
 
 	shell "github.com/ipfs/go-ipfs-api"
 	log "github.com/sirupsen/logrus"
@@ -12,18 +13,18 @@ type IPFS struct {
 }
 
 // NewIPFS generates an IPFS node with IPFS url.
-func NewIPFS(url string) *IPFS {
+func NewIPFS(url string) (*IPFS, error) {
 	newShell := shell.NewShell(url)
 
 	if !newShell.IsUp() {
-		log.Errorf("IPFS is not connected")
-	} else {
-		log.Info("successfully connect to IPFS node")
+		return nil, fmt.Errorf("IPFS is not connected")
 	}
+
+	log.Info("successfully connect to IPFS node")
 
 	return &IPFS{
 		sh: newShell,
-	}
+	}, nil
 }
 
 // Add method adds a data and returns a CID.
