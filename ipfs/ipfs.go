@@ -15,7 +15,11 @@ type IPFS struct {
 func NewIPFS(url string) *IPFS {
 	newShell := shell.NewShell(url)
 
-	log.Info("successfully connect to IPFS node")
+	if !newShell.IsUp() {
+		log.Errorf("IPFS is not connected")
+	} else {
+		log.Info("successfully connect to IPFS node")
+	}
 
 	return &IPFS{
 		sh: newShell,
