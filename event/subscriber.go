@@ -62,11 +62,11 @@ func (s *PanaceaSubscriber) subscribe(event Event) error {
 			height, err := strconv.ParseInt(tx.Events["tx.height"][0], 10, 64)
 			// If an error occurs, the context does not set the height.
 			if err == nil {
-				log.Infof("Set height to %v", height)
+				log.Debugf("Set height to %v", height)
 				ctx = panacea.SetQueryBlockHeightToContext(ctx, height)
 			}
 			log.Infof("received event a %s", e.Name())
-			if err := e.EventHandler(context.Background(), tx); err != nil {
+			if err := e.EventHandler(ctx, tx); err != nil {
 				log.Errorf("failed to handle event '%s': %v", query, err)
 			}
 		}
