@@ -5,18 +5,23 @@ import (
 	"crypto/tls"
 	"fmt"
 	"net/url"
+	"time"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/types/tx"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	log "github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 )
 
 type GRPCClient struct {
-	conn *grpc.ClientConn
+	conn    *grpc.ClientConn
+	cdc     *codec.ProtoCodec
+	chainID string
 }
 
-func NewGRPCClient(grpcAddr string) (*GRPCClient, error) {
+func NewGRPCClient(grpcAddr, chainID string) (*GRPCClient, error) {
 	log.Infof("dialing to Panacea gRPC endpoint: %s", grpcAddr)
 
 	parsedUrl, err := url.Parse(grpcAddr)
@@ -38,7 +43,9 @@ func NewGRPCClient(grpcAddr string) (*GRPCClient, error) {
 	}
 
 	return &GRPCClient{
-		conn: conn,
+		conn:    conn,
+		cdc:     codec.NewProtoCodec(makeInterfaceRegistry()),
+		chainID: chainID,
 	}, nil
 }
 
@@ -57,4 +64,29 @@ func (c *GRPCClient) BroadcastTx(txBytes []byte) (*tx.BroadcastTxResponse, error
 			TxBytes: txBytes,
 		},
 	)
+}
+
+func (c *GRPCClient) GetCdc() *codec.ProtoCodec {
+	return c.cdc
+}
+
+func (c *GRPCClient) GetChainID() string {
+	return c.chainID
+}
+
+func (c *GRPCClient) GetAccount(address string) (authtypes.AccountI, error) {
+	client := authtypes.NewQueryClient(c.conn)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+
+	response, err := client.Account(ctx, &authtypes.QueryAccountRequest{Address: address})
+	if err != nil {
+		return nil, fmt.Errorf("failed to get account info via grpc: %w", err)
+	}
+
+	var acc authtypes.AccountI
+	if err := c.cdc.UnpackAny(response.GetAccount(), &acc); err != nil {
+		return nil, fmt.Errorf("failed to unpack account info: %w", err)
+	}
+	return acc, nil
 }
