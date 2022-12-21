@@ -1,8 +1,6 @@
 package panacea
 
 import (
-	"context"
-
 	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -14,10 +12,10 @@ import (
 )
 
 type TxBuilder struct {
-	client QueryClient
+	client GRPCClient
 }
 
-func NewTxBuilder(client QueryClient) *TxBuilder {
+func NewTxBuilder(client GRPCClient) *TxBuilder {
 	return &TxBuilder{
 		client: client,
 	}
@@ -58,7 +56,7 @@ func (tb TxBuilder) GenerateSignedTxBytes(
 		return nil, err
 	}
 
-	signerAccount, err := tb.client.GetAccount(context.Background(), signerAddress)
+	signerAccount, err := tb.client.GetAccount(signerAddress)
 	if err != nil {
 		return nil, err
 	}

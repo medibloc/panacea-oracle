@@ -73,12 +73,12 @@ func NewWithQueryClient(conf *config.Config, queryClient panacea.QueryClient) (S
 		return nil, fmt.Errorf("failed to set self-enclave info: %w", err)
 	}
 
-	grpcClient, err := panacea.NewGRPCClient(conf.Panacea.GRPCAddr)
+	grpcClient, err := panacea.NewGRPCClient(conf.Panacea.GRPCAddr, conf.Panacea.ChainID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create a new gRPC client: %w", err)
 	}
 
-	txBuilder := panacea.NewTxBuilder(queryClient)
+	txBuilder := panacea.NewTxBuilder(*grpcClient)
 
 	subscriber, err := event.NewSubscriber(conf.Panacea.RPCAddr)
 	if err != nil {
