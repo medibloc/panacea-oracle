@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"net/url"
 	"os"
 	"strings"
 	"sync"
@@ -274,8 +275,8 @@ func (q verifiedQueryClient) GetStoreData(ctx context.Context, storeKey string, 
 	sdkSpecs := []*ics23.ProofSpec{ics23.IavlSpec, ics23.TendermintSpec}
 	merkleRootKey := types.NewMerkleRoot(nextTrustedBlock.AppHash.Bytes())
 
-	merklePath := types.NewMerklePath(storeKey, string(key))
-
+	keyPath := url.PathEscape(string(key))
+	merklePath := types.NewMerklePath(storeKey, keyPath)
 	err = merkleProof.VerifyMembership(sdkSpecs, merkleRootKey, merklePath, result.Response.Value)
 	if err != nil {
 		return nil, err
