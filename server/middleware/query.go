@@ -7,22 +7,22 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-type queryMiddleware struct {
+type queryHeightMiddleware struct {
 	panaceaQueryClient panacea.QueryClient
 }
 
-func NewQueryMiddleWare(queryClient panacea.QueryClient) *queryMiddleware {
-	return &queryMiddleware{
+func NewQueryMiddleWare(queryClient panacea.QueryClient) *queryHeightMiddleware {
+	return &queryHeightMiddleware{
 		panaceaQueryClient: queryClient,
 	}
 }
 
-func (mw *queryMiddleware) Middleware(next http.Handler) http.Handler {
+func (mw *queryHeightMiddleware) Middleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		log.Debug("Retrieving the last block")
 		height, err := mw.panaceaQueryClient.GetLastBlockHeight(r.Context())
 		if err == nil {
-			log.Debugf("Set the previous value of the last block heignt. LastHeight: %v, SetHeight: %v", height, height-1)
+			log.Debugf("Set the previous height of the last block height. LastHeight: %v, SetHeight: %v", height, height-1)
 			r = r.WithContext(
 				panacea.SetQueryBlockHeightToContext(r.Context(), height-1),
 			)
