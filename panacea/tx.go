@@ -1,6 +1,8 @@
 package panacea
 
 import (
+	"fmt"
+
 	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -58,7 +60,7 @@ func (tb TxBuilder) GenerateSignedTxBytes(
 
 	signerAccount, err := tb.client.GetAccount(signerAddress)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("can not get signer account from address(%s): %w", signerAddress, err)
 	}
 
 	sigV2 := signing.SignatureV2{

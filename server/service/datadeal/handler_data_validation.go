@@ -45,7 +45,7 @@ func (s *dataDealService) ValidateData(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	deal, err := queryClient.GetDeal(dealID)
+	deal, err := queryClient.GetDeal(r.Context(), dealID)
 	if err != nil {
 		log.Errorf("failed to get deal(%d): %s", dealID, err.Error())
 		http.Error(w, "failed to get deal", http.StatusBadRequest)
@@ -61,7 +61,7 @@ func (s *dataDealService) ValidateData(w http.ResponseWriter, r *http.Request) {
 	// Decrypt data
 	encryptedDataBz, _ := base64.StdEncoding.DecodeString(reqBody.EncryptedDataBase64)
 
-	providerAcc, err := queryClient.GetAccount(reqBody.ProviderAddress)
+	providerAcc, err := queryClient.GetAccount(r.Context(), reqBody.ProviderAddress)
 	if err != nil {
 		log.Errorf("failed to get provider's account: %s", err.Error())
 		http.Error(w, "failed to get provider's account", http.StatusBadRequest)
