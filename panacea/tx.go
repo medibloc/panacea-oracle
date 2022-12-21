@@ -14,10 +14,10 @@ import (
 )
 
 type TxBuilder struct {
-	client QueryClient
+	client GRPCClient
 }
 
-func NewTxBuilder(client QueryClient) *TxBuilder {
+func NewTxBuilder(client GRPCClient) *TxBuilder {
 	return &TxBuilder{
 		client: client,
 	}

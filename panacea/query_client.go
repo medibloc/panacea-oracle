@@ -42,8 +42,6 @@ type QueryClient interface {
 	GetAccount(address string) (authtypes.AccountI, error)
 	GetOracleRegistration(oracleAddr, uniqueID string) (*oracletypes.OracleRegistration, error)
 	GetLightBlock(height int64) (*tmtypes.LightBlock, error)
-	GetCdc() *codec.ProtoCodec
-	GetChainID() string
 	GetOracleParamsPublicKey() (*btcec.PublicKey, error)
 	GetDeal(dealID uint64) (*datadealtypes.Deal, error)
 	GetCertificate(dealID uint64, dataHash string) (*datadealtypes.Certificate, error)
@@ -65,7 +63,6 @@ type verifiedQueryClient struct {
 	mutex       *sync.Mutex
 	cdc         *codec.ProtoCodec
 	aminoCdc    *codec.AminoCodec
-	chainID     string
 }
 
 // makeInterfaceRegistry
@@ -173,7 +170,6 @@ func newVerifiedQueryClientWithDB(ctx context.Context, config *config.Config, in
 		mutex:       &lcMutex,
 		cdc:         codec.NewProtoCodec(makeInterfaceRegistry()),
 		aminoCdc:    codec.NewAminoCodec(codec.NewLegacyAmino()),
-		chainID:     chainID,
 	}, nil
 }
 
@@ -230,14 +226,6 @@ func refresh(ctx context.Context, lc *light.Client, trustPeriod time.Duration, m
 	}
 
 	return nil
-}
-
-func (q verifiedQueryClient) GetCdc() *codec.ProtoCodec {
-	return q.cdc
-}
-
-func (q verifiedQueryClient) GetChainID() string {
-	return q.chainID
 }
 
 // GetStoreData get data from panacea with storeKey and key, then verify queried data with light client and merkle proof.
