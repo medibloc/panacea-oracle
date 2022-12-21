@@ -1,6 +1,7 @@
 package oracle
 
 import (
+	"context"
 	"fmt"
 
 	oracletypes "github.com/medibloc/panacea-core/v2/x/oracle/types"
@@ -36,7 +37,7 @@ func (e ApproveOracleRegistrationEvent) GetEventQuery() string {
 	)
 }
 
-func (e ApproveOracleRegistrationEvent) EventHandler(event ctypes.ResultEvent) error {
-	e.doneChan <- key.GetAndStoreOraclePrivKey(e.service)
+func (e ApproveOracleRegistrationEvent) EventHandler(ctx context.Context, _ ctypes.ResultEvent) error {
+	e.doneChan <- key.GetAndStoreOraclePrivKey(ctx, e.service)
 	return nil
 }
