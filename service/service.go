@@ -73,6 +73,11 @@ func NewWithQueryClient(conf *config.Config, queryClient panacea.QueryClient) (S
 		return nil, fmt.Errorf("failed to set self-enclave info: %w", err)
 	}
 
+	newIpfs, err := ipfs.NewIPFS(conf.IPFS.IPFSNodeAddr)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create connection to IPFS node(%s): %w", conf.IPFS.IPFSNodeAddr, err)
+	}
+
 	grpcClient, err := panacea.NewGRPCClient(conf.Panacea.GRPCAddr, conf.Panacea.ChainID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create a new gRPC client: %w", err)
@@ -84,8 +89,6 @@ func NewWithQueryClient(conf *config.Config, queryClient panacea.QueryClient) (S
 	if err != nil {
 		return nil, fmt.Errorf("failed to init subscriber: %w", err)
 	}
-
-	newIpfs := ipfs.NewIPFS(conf.IPFS.IPFSNodeAddr)
 
 	return &service{
 		conf:          conf,
