@@ -1,7 +1,6 @@
 package middleware_test
 
 import (
-	"context"
 	"fmt"
 	"io"
 	"net/http"
@@ -159,11 +158,11 @@ type mockQueryClient struct {
 	account authtypes.AccountI
 }
 
-func (c *mockQueryClient) GetCertificate(_ context.Context, _ uint64, _ string) (*datadealtypes.Certificate, error) {
+func (c *mockQueryClient) GetCertificate(_ int64, _ uint64, _ string) (*datadealtypes.Certificate, error) {
 	return nil, nil
 }
 
-func (c *mockQueryClient) GetOracleRegistration(_ context.Context, uniqueID, oracleAddr string) (*oracletypes.OracleRegistration, error) {
+func (c *mockQueryClient) GetOracleRegistration(_ int64, uniqueID, oracleAddr string) (*oracletypes.OracleRegistration, error) {
 	return nil, nil
 }
 
@@ -183,7 +182,7 @@ func (c *mockQueryClient) Close() error {
 	return nil
 }
 
-func (c *mockQueryClient) GetAccount(_ context.Context, address string) (authtypes.AccountI, error) {
+func (c *mockQueryClient) GetAccount(_ int64, address string) (authtypes.AccountI, error) {
 	if address != testAccAddr {
 		return nil, fmt.Errorf("address not found: %v", address)
 	}
@@ -191,7 +190,7 @@ func (c *mockQueryClient) GetAccount(_ context.Context, address string) (authtyp
 }
 
 // TODO: implement mock GetDeal for test
-func (c *mockQueryClient) GetDeal(_ context.Context, _ uint64) (*datadealtypes.Deal, error) {
+func (c *mockQueryClient) GetDeal(_ int64, _ uint64) (*datadealtypes.Deal, error) {
 	return nil, nil
 }
 
@@ -239,7 +238,7 @@ func (a *mockAccount) SetSequence(u uint64) error {
 	return nil
 }
 
-func (c *mockQueryClient) GetOracleParamsPublicKey(_ context.Context) (*btcec.PublicKey, error) {
+func (c *mockQueryClient) GetOracleParamsPublicKey(_ int64) (*btcec.PublicKey, error) {
 	return testOraclePrivKey.PubKey(), nil
 }
 
@@ -251,6 +250,6 @@ func (a *mockAccountWithoutPubKey) GetPubKey() cryptotypes.PubKey {
 	return nil
 }
 
-func (c *mockQueryClient) GetLastBlockHeight(_ context.Context) (int64, error) {
+func (c *mockQueryClient) GetLastBlockHeight() (int64, error) {
 	return 0, nil
 }

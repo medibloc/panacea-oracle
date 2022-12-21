@@ -1,8 +1,6 @@
 package panacea
 
 import (
-	"context"
-
 	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -58,7 +56,12 @@ func (tb TxBuilder) GenerateSignedTxBytes(
 		return nil, err
 	}
 
-	signerAccount, err := tb.client.GetAccount(context.Background(), signerAddress)
+	height, err := tb.client.GetLastBlockHeight()
+	if err != nil {
+		return nil, err
+	}
+
+	signerAccount, err := tb.client.GetAccount(height-1, signerAddress)
 	if err != nil {
 		return nil, err
 	}

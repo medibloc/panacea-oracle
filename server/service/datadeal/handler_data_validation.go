@@ -20,6 +20,12 @@ import (
 func (s *dataDealService) ValidateData(w http.ResponseWriter, r *http.Request) {
 	queryClient := s.QueryClient()
 	oraclePrivKey := s.OraclePrivKey()
+	queryHeight, err := s.Service.GetQueryHeight()
+	if err != nil {
+		log.Errorf("failed to get query height. %v", err)
+		http.Error(w, "failed to get query height.", http.StatusInternalServerError)
+		return
+	}
 
 	// Read a data from request body
 	dealIDStr := mux.Vars(r)["dealId"]
@@ -45,7 +51,7 @@ func (s *dataDealService) ValidateData(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	deal, err := queryClient.GetDeal(r.Context(), dealID)
+	deal, err := queryClient.GetDeal(queryHeight, dealID)
 	if err != nil {
 		log.Errorf("failed to get deal(%d): %s", dealID, err.Error())
 		http.Error(w, "failed to get deal", http.StatusBadRequest)
@@ -61,7 +67,7 @@ func (s *dataDealService) ValidateData(w http.ResponseWriter, r *http.Request) {
 	// Decrypt data
 	encryptedDataBz, _ := base64.StdEncoding.DecodeString(reqBody.EncryptedDataBase64)
 
-	providerAcc, err := queryClient.GetAccount(r.Context(), reqBody.ProviderAddress)
+	providerAcc, err := queryClient.GetAccount(queryHeight, reqBody.ProviderAddress)
 	if err != nil {
 		log.Errorf("failed to get provider's account: %s", err.Error())
 		http.Error(w, "failed to get provider's account", http.StatusBadRequest)

@@ -21,13 +21,9 @@ func New(svc service.Service) *Server {
 	router := mux.NewRouter()
 
 	jwtAuthMiddleware := middleware.NewJWTAuthMiddleware(svc.QueryClient())
-	queryMiddleware := middleware.NewQueryMiddleWare(svc.QueryClient())
 
 	dealRouter := router.PathPrefix("/v0/data-deal").Subrouter()
-	dealRouter.Use(
-		queryMiddleware.Middleware,
-		jwtAuthMiddleware.Middleware,
-	)
+	dealRouter.Use(jwtAuthMiddleware.Middleware)
 
 	datadeal.RegisterHandlers(svc, dealRouter)
 	key.RegisterHandlers(svc, dealRouter)

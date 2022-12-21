@@ -27,6 +27,7 @@ type Service interface {
 	IPFS() *ipfs.IPFS
 	BroadcastTx(...sdk.Msg) (int64, string, error)
 	StartSubscriptions(...event.Event) error
+	GetQueryHeight() (int64, error)
 	Close() error
 }
 
@@ -170,4 +171,12 @@ func (s *service) BroadcastTx(msg ...sdk.Msg) (int64, string, error) {
 
 func (s *service) IPFS() *ipfs.IPFS {
 	return s.ipfs
+}
+
+func (s *service) GetQueryHeight() (int64, error) {
+	lastHeight, err := s.queryClient.GetLastBlockHeight()
+	if err != nil {
+		return 0, err
+	}
+	return lastHeight - 1, nil
 }

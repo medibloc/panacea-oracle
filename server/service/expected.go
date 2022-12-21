@@ -16,4 +16,5 @@ type Service interface {
 	Config() *config.Config
 	QueryClient() panacea.QueryClient
 	IPFS() *ipfs.IPFS
+	GetQueryHeight() (int64, error)
 }

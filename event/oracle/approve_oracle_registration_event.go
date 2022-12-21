@@ -1,7 +1,6 @@
 package oracle
 
 import (
-	"context"
 	"fmt"
 
 	oracletypes "github.com/medibloc/panacea-core/v2/x/oracle/types"
@@ -37,7 +36,12 @@ func (e ApproveOracleRegistrationEvent) GetEventQuery() string {
 	)
 }
 
-func (e ApproveOracleRegistrationEvent) EventHandler(ctx context.Context, _ ctypes.ResultEvent) error {
-	e.doneChan <- key.GetAndStoreOraclePrivKey(ctx, e.service)
+func (e ApproveOracleRegistrationEvent) EventHandler(resultEvent ctypes.ResultEvent) error {
+	height, err := event.GetQueryHeight(e.service.QueryClient(), resultEvent)
+	if err != nil {
+		e.doneChan <- err
+	} else {
+		e.doneChan <- key.GetAndStoreOraclePrivKey(height, e.service)
+	}
 	return nil
 }

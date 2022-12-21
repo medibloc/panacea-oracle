@@ -1,8 +1,6 @@
 package cmd
 
 import (
-	"context"
-
 	"github.com/medibloc/panacea-oracle/key"
 	"github.com/medibloc/panacea-oracle/service"
 	"github.com/spf13/cobra"
@@ -23,7 +21,11 @@ func getOracleKeyCmd() *cobra.Command {
 				return err
 			}
 
-			return key.GetAndStoreOraclePrivKey(context.Background(), svc)
+			height, err := svc.QueryClient().GetLastBlockHeight()
+			if err != nil {
+				return err
+			}
+			return key.GetAndStoreOraclePrivKey(height-1, svc)
 		},
 	}
 

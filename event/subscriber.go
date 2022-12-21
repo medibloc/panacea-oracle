@@ -2,10 +2,8 @@ package event
 
 import (
 	"context"
-	"strconv"
 	"time"
 
-	"github.com/medibloc/panacea-oracle/panacea"
 	log "github.com/sirupsen/logrus"
 	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
 )
@@ -57,16 +55,8 @@ func (s *PanaceaSubscriber) subscribe(event Event) error {
 
 	go func(e Event) {
 		for tx := range txs {
-			ctx := context.Background()
-
-			height, err := strconv.ParseInt(tx.Events["tx.height"][0], 10, 64)
-			// If an error occurs, the context does not set the height.
-			if err == nil {
-				log.Debugf("Set height to %v", height)
-				ctx = panacea.SetQueryBlockHeightToContext(ctx, height)
-			}
 			log.Infof("received event a %s", e.Name())
-			if err := e.EventHandler(ctx, tx); err != nil {
+			if err := e.EventHandler(tx); err != nil {
 				log.Errorf("failed to handle event '%s': %v", query, err)
 			}
 		}

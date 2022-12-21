@@ -1,7 +1,6 @@
 package oracle
 
 import (
-	"context"
 	"crypto/sha256"
 	"fmt"
 
@@ -15,7 +14,7 @@ import (
 var _ event.Event = (*RegisterOracleEvent)(nil)
 
 type RegisterOracleEvent struct {
-	reactor event.Service
+	service event.Service
 }
 
 func NewRegisterOracleEvent(s event.Service) RegisterOracleEvent {
@@ -30,11 +29,16 @@ func (e RegisterOracleEvent) GetEventQuery() string {
 	return "message.action = 'RegisterOracle'"
 }
 
-func (e RegisterOracleEvent) EventHandler(ctx context.Context, event ctypes.ResultEvent) error {
-	uniqueID := event.Events[oracletypes.EventTypeRegistration+"."+oracletypes.AttributeKeyUniqueID][0]
-	targetAddress := event.Events[oracletypes.EventTypeRegistration+"."+oracletypes.AttributeKeyOracleAddress][0]
+func (e RegisterOracleEvent) EventHandler(resultEvent ctypes.ResultEvent) error {
+	height, err := event.GetQueryHeight(e.service.QueryClient(), resultEvent)
+	if err != nil {
+		return err
+	}
 
-	msgApproveOracleRegistration, err := e.verifyAndGetMsgApproveOracleRegistration(ctx, uniqueID, targetAddress)
+	uniqueID := resultEvent.Events[oracletypes.EventTypeRegistration+"."+oracletypes.AttributeKeyUniqueID][0]
+	targetAddress := resultEvent.Events[oracletypes.EventTypeRegistration+"."+oracletypes.AttributeKeyOracleAddress][0]
+
+	msgApproveOracleRegistration, err := e.verifyAndGetMsgApproveOracleRegistration(height, uniqueID, targetAddress)
 	if err != nil {
 		return err
 	}
@@ -45,7 +49,7 @@ func (e RegisterOracleEvent) EventHandler(ctx context.Context, event ctypes.Resu
 		msgApproveOracleRegistration.ApproveOracleRegistration.TargetOracleAddress,
 	)
 
-	txHeight, txHash, err := e.reactor.BroadcastTx(msgApproveOracleRegistration)
+	txHeight, txHash, err := e.service.BroadcastTx(msgApproveOracleRegistration)
 	if err != nil {
 		return fmt.Errorf("failed to ApproveOracleRegistration transaction for new oracle registration: %v", err)
 	}
@@ -55,29 +59,29 @@ func (e RegisterOracleEvent) EventHandler(ctx context.Context, event ctypes.Resu
 	return nil
 }
 
-func (e RegisterOracleEvent) verifyAndGetMsgApproveOracleRegistration(ctx context.Context, uniqueID, targetAddress string) (*oracletypes.MsgApproveOracleRegistration, error) {
-	queryClient := e.reactor.QueryClient()
-	approverAddress := e.reactor.OracleAcc().GetAddress()
-	oraclePrivKeyBz := e.reactor.OraclePrivKey().Serialize()
-	approverUniqueID := e.reactor.EnclaveInfo().UniqueIDHex()
+func (e RegisterOracleEvent) verifyAndGetMsgApproveOracleRegistration(height int64, uniqueID, targetAddress string) (*oracletypes.MsgApproveOracleRegistration, error) {
+	queryClient := e.service.QueryClient()
+	approverAddress := e.service.OracleAcc().GetAddress()
+	oraclePrivKeyBz := e.service.OraclePrivKey().Serialize()
+	approverUniqueID := e.service.EnclaveInfo().UniqueIDHex()
 
 	if uniqueID != approverUniqueID {
 		return nil, fmt.Errorf("oracle's uniqueID does not match the requested uniqueID. expected(%s) got(%s)", approverUniqueID, uniqueID)
 	} else {
-		oracleRegistration, err := queryClient.GetOracleRegistration(ctx, uniqueID, targetAddress)
+		oracleRegistration, err := queryClient.GetOracleRegistration(height, uniqueID, targetAddress)
 		if err != nil {
 			log.Errorf("err while get oracleRegistration: %v", err)
 			return nil, err
 		}
 
-		if err := verifyTrustedBlockInfo(e.reactor.QueryClient(), oracleRegistration.TrustedBlockHeight, oracleRegistration.TrustedBlockHash); err != nil {
+		if err := verifyTrustedBlockInfo(e.service.QueryClient(), oracleRegistration.TrustedBlockHeight, oracleRegistration.TrustedBlockHash); err != nil {
 			log.Errorf("failed to verify trusted block. height(%d), hash(%s), err(%v)", oracleRegistration.TrustedBlockHeight, oracleRegistration.TrustedBlockHash, err)
 			return nil, err
 		}
 
 		nodePubKeyHash := sha256.Sum256(oracleRegistration.NodePubKey)
 
-		if err := sgx.VerifyRemoteReport(oracleRegistration.NodePubKeyRemoteReport, nodePubKeyHash[:], *e.reactor.EnclaveInfo()); err != nil {
+		if err := sgx.VerifyRemoteReport(oracleRegistration.NodePubKeyRemoteReport, nodePubKeyHash[:], *e.service.EnclaveInfo()); err != nil {
 			log.Errorf("failed to verification report. uniqueID(%s), address(%s), err(%v)", oracleRegistration.UniqueId, oracleRegistration.OracleAddress, err)
 			return nil, err
 		}

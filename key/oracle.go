@@ -1,7 +1,6 @@
 package key
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/medibloc/panacea-oracle/crypto"
@@ -10,8 +9,8 @@ import (
 	"github.com/tendermint/tendermint/libs/os"
 )
 
-func GetAndStoreOraclePrivKey(ctx context.Context, svc service.Service) error {
-	oraclePrivKeyBz, err := getOraclePrivKey(ctx, svc)
+func GetAndStoreOraclePrivKey(height int64, svc service.Service) error {
+	oraclePrivKeyBz, err := getOraclePrivKey(height, svc)
 	if err != nil {
 		return err
 	}
@@ -23,18 +22,18 @@ func GetAndStoreOraclePrivKey(ctx context.Context, svc service.Service) error {
 	return nil
 }
 
-func getOraclePrivKey(ctx context.Context, svc service.Service) ([]byte, error) {
+func getOraclePrivKey(height int64, svc service.Service) ([]byte, error) {
 	oraclePrivKeyPath := svc.Config().AbsOraclePrivKeyPath()
 	if os.FileExists(oraclePrivKeyPath) {
 		return nil, fmt.Errorf("the oracle private key already exists")
 	}
 
-	shareKeyBz, err := deriveSharedKey(ctx, svc)
+	shareKeyBz, err := deriveSharedKey(height, svc)
 	if err != nil {
 		return nil, err
 	}
 
-	encryptedOraclePrivKeyBz, err := getEncryptedOraclePrivKey(ctx, svc)
+	encryptedOraclePrivKeyBz, err := getEncryptedOraclePrivKey(height, svc)
 	if err != nil {
 		return nil, err
 	}
@@ -42,7 +41,7 @@ func getOraclePrivKey(ctx context.Context, svc service.Service) ([]byte, error) 
 	return crypto.Decrypt(shareKeyBz, nil, encryptedOraclePrivKeyBz)
 }
 
-func deriveSharedKey(ctx context.Context, svc service.Service) ([]byte, error) {
+func deriveSharedKey(height int64, svc service.Service) ([]byte, error) {
 	nodePrivKeyPath := svc.Config().AbsNodePrivKeyPath()
 	if !os.FileExists(nodePrivKeyPath) {
 		return nil, fmt.Errorf("the node private key is not exists")
@@ -53,7 +52,7 @@ func deriveSharedKey(ctx context.Context, svc service.Service) ([]byte, error) {
 	}
 	nodePrivKey, _ := crypto.PrivKeyFromBytes(nodePrivKeyBz)
 
-	oraclePublicKey, err := svc.QueryClient().GetOracleParamsPublicKey(ctx)
+	oraclePublicKey, err := svc.QueryClient().GetOracleParamsPublicKey(height)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get oraclePublicKey. %w", err)
 	}
@@ -62,10 +61,10 @@ func deriveSharedKey(ctx context.Context, svc service.Service) ([]byte, error) {
 	return shareKeyBz, nil
 }
 
-func getEncryptedOraclePrivKey(ctx context.Context, svc service.Service) ([]byte, error) {
+func getEncryptedOraclePrivKey(height int64, svc service.Service) ([]byte, error) {
 	uniqueID := svc.EnclaveInfo().UniqueIDHex()
 	oracleAddress := svc.OracleAcc().GetAddress()
-	oracleRegistration, err := svc.QueryClient().GetOracleRegistration(ctx, uniqueID, oracleAddress)
+	oracleRegistration, err := svc.QueryClient().GetOracleRegistration(height, uniqueID, oracleAddress)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get oracleRegistration. %w", err)
 	}
