@@ -36,7 +36,7 @@ func (svc *combinedKeyService) GetSecretKey(w http.ResponseWriter, r *http.Reque
 
 	// Check the address of the requested consumer
 	accAddr := r.Context().Value(middleware.ContextKeyAuthenticatedAccountAddress{}).(string)
-	deal, err := queryClient.GetDeal(dealID)
+	deal, err := queryClient.GetDeal(r.Context(), dealID)
 	if err != nil {
 		log.Errorf("failed to get deal(%d): %s", dealID, err.Error())
 		http.Error(w, "failed to get deal", http.StatusNotFound)
@@ -50,7 +50,7 @@ func (svc *combinedKeyService) GetSecretKey(w http.ResponseWriter, r *http.Reque
 	}
 
 	// Check if the certificate of data has been submitted
-	_, err = queryClient.GetCertificate(dealID, dataHashStr)
+	_, err = queryClient.GetCertificate(r.Context(), dealID, dataHashStr)
 	if err != nil {
 		log.Errorf("failed to get certificate(dealID: %d, dataHash %s): %s", dealID, dataHashStr, err.Error())
 		http.Error(w, "failed to get certificate", http.StatusNotFound)
@@ -58,7 +58,7 @@ func (svc *combinedKeyService) GetSecretKey(w http.ResponseWriter, r *http.Reque
 	}
 
 	// make encrypted secret key using consumer public key
-	consumerAcc, err := queryClient.GetAccount(deal.ConsumerAddress)
+	consumerAcc, err := queryClient.GetAccount(r.Context(), deal.ConsumerAddress)
 	if err != nil {
 		log.Errorf("failed to get consumer account: %s", err.Error())
 		http.Error(w, "failed to get consumer account", http.StatusNotFound)

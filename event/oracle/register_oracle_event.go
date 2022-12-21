@@ -1,6 +1,7 @@
 package oracle
 
 import (
+	"context"
 	"crypto/sha256"
 	"fmt"
 
@@ -29,11 +30,11 @@ func (e RegisterOracleEvent) GetEventQuery() string {
 	return "message.action = 'RegisterOracle'"
 }
 
-func (e RegisterOracleEvent) EventHandler(event ctypes.ResultEvent) error {
+func (e RegisterOracleEvent) EventHandler(ctx context.Context, event ctypes.ResultEvent) error {
 	uniqueID := event.Events[oracletypes.EventTypeRegistration+"."+oracletypes.AttributeKeyUniqueID][0]
 	targetAddress := event.Events[oracletypes.EventTypeRegistration+"."+oracletypes.AttributeKeyOracleAddress][0]
 
-	msgApproveOracleRegistration, err := e.verifyAndGetMsgApproveOracleRegistration(uniqueID, targetAddress)
+	msgApproveOracleRegistration, err := e.verifyAndGetMsgApproveOracleRegistration(ctx, uniqueID, targetAddress)
 	if err != nil {
 		return err
 	}
@@ -54,7 +55,7 @@ func (e RegisterOracleEvent) EventHandler(event ctypes.ResultEvent) error {
 	return nil
 }
 
-func (e RegisterOracleEvent) verifyAndGetMsgApproveOracleRegistration(uniqueID, targetAddress string) (*oracletypes.MsgApproveOracleRegistration, error) {
+func (e RegisterOracleEvent) verifyAndGetMsgApproveOracleRegistration(ctx context.Context, uniqueID, targetAddress string) (*oracletypes.MsgApproveOracleRegistration, error) {
 	queryClient := e.reactor.QueryClient()
 	approverAddress := e.reactor.OracleAcc().GetAddress()
 	oraclePrivKeyBz := e.reactor.OraclePrivKey().Serialize()
@@ -63,7 +64,7 @@ func (e RegisterOracleEvent) verifyAndGetMsgApproveOracleRegistration(uniqueID, 
 	if uniqueID != approverUniqueID {
 		return nil, fmt.Errorf("oracle's uniqueID does not match the requested uniqueID. expected(%s) got(%s)", approverUniqueID, uniqueID)
 	} else {
-		oracleRegistration, err := queryClient.GetOracleRegistration(uniqueID, targetAddress)
+		oracleRegistration, err := queryClient.GetOracleRegistration(ctx, uniqueID, targetAddress)
 		if err != nil {
 			log.Errorf("err while get oracleRegistration: %v", err)
 			return nil, err
