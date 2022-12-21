@@ -91,6 +91,8 @@ func genOracleKeyCmd() *cobra.Command {
 			return nil
 		},
 	}
+
+	// The reason why this trust block info is required is explained in the oracle.proto
 	cmd.Flags().Int64(flags.FlagTrustedBlockHeight, 0, "Trusted block height")
 	cmd.Flags().String(flags.FlagTrustedBlockHash, "", "Trusted block hash")
 	_ = cmd.MarkFlagRequired(flags.FlagTrustedBlockHeight)
