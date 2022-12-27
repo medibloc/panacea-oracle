@@ -190,6 +190,10 @@ func (c *mockQueryClient) GetAccount(_ context.Context, address string) (authtyp
 	return c.account, nil
 }
 
+func (c *mockQueryClient) GetOracleUpgrade(_ context.Context, _, _ string) (*oracletypes.OracleUpgrade, error) {
+	return nil, nil
+}
+
 // TODO: implement mock GetDeal for test
 func (c *mockQueryClient) GetDeal(_ context.Context, _ uint64) (*datadealtypes.Deal, error) {
 	return nil, nil

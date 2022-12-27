@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/medibloc/panacea-oracle/key"
 	"github.com/medibloc/panacea-oracle/service"
@@ -23,7 +24,20 @@ func getOracleKeyCmd() *cobra.Command {
 				return err
 			}
 
-			return key.GetAndStoreOraclePrivKey(context.Background(), svc)
+			ctx := context.Background()
+
+			uniqueID := svc.EnclaveInfo().UniqueIDHex()
+			oracleAddress := svc.OracleAcc().GetAddress()
+			oracleRegistration, err := svc.QueryClient().GetOracleRegistration(ctx, uniqueID, oracleAddress)
+			if err != nil {
+				return fmt.Errorf("failed to get oracle registration: %w", err)
+			}
+
+			if len(oracleRegistration.EncryptedOraclePrivKey) == 0 {
+				return fmt.Errorf("the encrypted oracle private key has not set yet. please try again later")
+			}
+
+			return key.RetrieveAndStoreOraclePrivKey(ctx, svc, oracleRegistration.EncryptedOraclePrivKey)
 		},
 	}
 

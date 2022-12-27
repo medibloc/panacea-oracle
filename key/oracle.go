@@ -10,8 +10,8 @@ import (
 	"github.com/tendermint/tendermint/libs/os"
 )
 
-func GetAndStoreOraclePrivKey(ctx context.Context, svc service.Service) error {
-	oraclePrivKeyBz, err := getOraclePrivKey(ctx, svc)
+func RetrieveAndStoreOraclePrivKey(ctx context.Context, svc service.Service, encryptedOraclePrivKey []byte) error {
+	oraclePrivKeyBz, err := retrieveOraclePrivKey(ctx, svc, encryptedOraclePrivKey)
 	if err != nil {
 		return err
 	}
@@ -23,7 +23,7 @@ func GetAndStoreOraclePrivKey(ctx context.Context, svc service.Service) error {
 	return nil
 }
 
-func getOraclePrivKey(ctx context.Context, svc service.Service) ([]byte, error) {
+func retrieveOraclePrivKey(ctx context.Context, svc service.Service, encryptedOraclePrivKey []byte) ([]byte, error) {
 	oraclePrivKeyPath := svc.Config().AbsOraclePrivKeyPath()
 	if os.FileExists(oraclePrivKeyPath) {
 		return nil, fmt.Errorf("the oracle private key already exists")
@@ -34,12 +34,7 @@ func getOraclePrivKey(ctx context.Context, svc service.Service) ([]byte, error) 
 		return nil, err
 	}
 
-	encryptedOraclePrivKeyBz, err := getEncryptedOraclePrivKey(ctx, svc)
-	if err != nil {
-		return nil, err
-	}
-
-	return crypto.Decrypt(shareKeyBz, nil, encryptedOraclePrivKeyBz)
+	return crypto.Decrypt(shareKeyBz, nil, encryptedOraclePrivKey)
 }
 
 func deriveSharedKey(ctx context.Context, svc service.Service) ([]byte, error) {
@@ -60,15 +55,4 @@ func deriveSharedKey(ctx context.Context, svc service.Service) ([]byte, error) {
 
 	shareKeyBz := crypto.DeriveSharedKey(nodePrivKey, oraclePublicKey, crypto.KDFSHA256)
 	return shareKeyBz, nil
-}
-
-func getEncryptedOraclePrivKey(ctx context.Context, svc service.Service) ([]byte, error) {
-	uniqueID := svc.EnclaveInfo().UniqueIDHex()
-	oracleAddress := svc.OracleAcc().GetAddress()
-	oracleRegistration, err := svc.QueryClient().GetOracleRegistration(ctx, uniqueID, oracleAddress)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get oracleRegistration. %w", err)
-	}
-
-	return oracleRegistration.EncryptedOraclePrivKey, nil
 }

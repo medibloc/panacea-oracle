@@ -46,6 +46,7 @@ type QueryClient interface {
 	GetDeal(context.Context, uint64) (*datadealtypes.Deal, error)
 	GetCertificate(context.Context, uint64, string) (*datadealtypes.Certificate, error)
 	GetLastBlockHeight(context.Context) (int64, error)
+	GetOracleUpgrade(context.Context, string, string) (*oracletypes.OracleUpgrade, error)
 }
 
 const (
@@ -433,6 +434,28 @@ func (q verifiedQueryClient) GetOracleParamsPublicKey(ctx context.Context) (*btc
 	}
 
 	return btcec.ParsePubKey(pubKeyBz, btcec.S256())
+}
+
+func (q verifiedQueryClient) GetOracleUpgrade(ctx context.Context, uniqueID, oracleAddr string) (*oracletypes.OracleUpgrade, error) {
+	acc, err := GetAccAddressFromBech32(oracleAddr)
+	if err != nil {
+		return nil, fmt.Errorf("failed to convert Bech32 address: %w", err)
+	}
+
+	key := oracletypes.GetOracleUpgradeKey(uniqueID, acc)
+
+	bz, err := q.GetStoreData(ctx, oracletypes.StoreKey, key)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get data from panacea: %w", err)
+	}
+
+	var oracleUpgrade oracletypes.OracleUpgrade
+	err = q.cdc.UnmarshalLengthPrefixed(bz, &oracleUpgrade)
+	if err != nil {
+		return nil, fmt.Errorf("failed to unmarshal data: %w", err)
+	}
+
+	return &oracleUpgrade, nil
 }
 
 func (q verifiedQueryClient) GetLastBlockHeight(ctx context.Context) (int64, error) {

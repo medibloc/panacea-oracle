@@ -6,12 +6,15 @@ import (
 	"encoding/hex"
 	"fmt"
 	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/cosmos/cosmos-sdk/client/input"
 	"github.com/edgelesssys/ego/enclave"
 	oracletypes "github.com/medibloc/panacea-core/v2/x/oracle/types"
 	"github.com/medibloc/panacea-oracle/client/flags"
 	"github.com/medibloc/panacea-oracle/config"
+	oracleevent "github.com/medibloc/panacea-oracle/event/oracle"
 	"github.com/medibloc/panacea-oracle/panacea"
 	"github.com/medibloc/panacea-oracle/service"
 	log "github.com/sirupsen/logrus"
@@ -49,6 +52,10 @@ func upgradeOracle() *cobra.Command {
 
 			if err := sendTxUpgradeOracle(conf, svc, trustedBlockInfo); err != nil {
 				return fmt.Errorf("failed to send tx UpgradeOracle: %w", err)
+			}
+
+			if err := subscribeApproveOracleUpgradeEvent(svc); err != nil {
+				return err
 			}
 
 			return nil
@@ -116,4 +123,31 @@ func generateMsgUpgradeOracle(conf *config.Config, oracleAccount *panacea.Oracle
 	}
 
 	return msgRegisterOracle, nil
+}
+
+func subscribeApproveOracleUpgradeEvent(svc service.Service) error {
+	doneChan := make(chan error, 1)
+	sigChan := make(chan os.Signal, 1)
+
+	err := svc.StartSubscriptions(
+		oracleevent.NewApproveOracleUpgradeEvent(svc, doneChan),
+	)
+	if err != nil {
+		return fmt.Errorf("failed to start event subscription: %w", err)
+	}
+
+	signal.Notify(sigChan, syscall.SIGTERM, syscall.SIGINT)
+
+	select {
+	case err := <-doneChan:
+		if err != nil {
+			log.Errorf("failed to retrieve oracle private key: %s", err.Error())
+		} else {
+			log.Infof("oracle private key is retrieved successfully")
+		}
+	case <-sigChan:
+		log.Infof("signal detected")
+	}
+
+	return nil
 }
