@@ -1,8 +1,10 @@
 package panacea
 
 import (
+	"bytes"
 	"context"
 	"encoding/base64"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"net/url"
@@ -47,6 +49,9 @@ type QueryClient interface {
 	GetCertificate(context.Context, uint64, string) (*datadealtypes.Certificate, error)
 	GetLastBlockHeight(context.Context) (int64, error)
 	GetOracleUpgrade(context.Context, string, string) (*oracletypes.OracleUpgrade, error)
+	GetOracleUpgradeInfo(context.Context) (*oracletypes.OracleUpgradeInfo, error)
+	GetOracle(context.Context, string) (*oracletypes.Oracle, error)
+	VerifyTrustedBlockInfo(int64, []byte) error
 }
 
 const (
@@ -411,6 +416,25 @@ func (q verifiedQueryClient) GetOracleRegistration(ctx context.Context, uniqueID
 	return &oracleRegistration, nil
 }
 
+func (q verifiedQueryClient) GetOracle(ctx context.Context, oracleAddr string) (*oracletypes.Oracle, error) {
+	acc, err := GetAccAddressFromBech32(oracleAddr)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get AccAddr from Bech32 address(%s): %w", oracleAddr, err)
+	}
+
+	bz, err := q.GetStoreData(ctx, oracletypes.StoreKey, oracletypes.GetOracleKey(acc))
+	if err != nil {
+		return nil, fmt.Errorf("failed to get oracle from data: %w", err)
+	}
+
+	var oracle oracletypes.Oracle
+	if err := q.cdc.UnmarshalLengthPrefixed(bz, &oracle); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal oracle data: %w", err)
+	}
+
+	return &oracle, nil
+}
+
 func (q verifiedQueryClient) GetOracleParamsPublicKey(ctx context.Context) (*btcec.PublicKey, error) {
 	pubKeyBase64Bz, err := q.GetStoreData(ctx, paramstypes.StoreKey, append(append([]byte(oracletypes.StoreKey), '/'), oracletypes.KeyOraclePublicKey...))
 	if err != nil {
@@ -450,12 +474,25 @@ func (q verifiedQueryClient) GetOracleUpgrade(ctx context.Context, uniqueID, ora
 	}
 
 	var oracleUpgrade oracletypes.OracleUpgrade
-	err = q.cdc.UnmarshalLengthPrefixed(bz, &oracleUpgrade)
-	if err != nil {
+	if err := q.cdc.UnmarshalLengthPrefixed(bz, &oracleUpgrade); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal data: %w", err)
 	}
 
 	return &oracleUpgrade, nil
+}
+
+func (q verifiedQueryClient) GetOracleUpgradeInfo(ctx context.Context) (*oracletypes.OracleUpgradeInfo, error) {
+	bz, err := q.GetStoreData(ctx, oracletypes.StoreKey, oracletypes.OracleUpgradeInfoKey)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get oracle upgrade info from panacea: %w", err)
+	}
+
+	var oracleUpgradeInfo oracletypes.OracleUpgradeInfo
+	if err := q.cdc.UnmarshalLengthPrefixed(bz, &oracleUpgradeInfo); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal data: %w", err)
+	}
+
+	return &oracleUpgradeInfo, nil
 }
 
 func (q verifiedQueryClient) GetLastBlockHeight(ctx context.Context) (int64, error) {
@@ -471,6 +508,28 @@ func (q verifiedQueryClient) GetLastBlockHeight(ctx context.Context) (int64, err
 	}
 
 	return trustedBlock.Height, nil
+}
+
+func (q verifiedQueryClient) VerifyTrustedBlockInfo(height int64, blockHash []byte) error {
+	block, err := q.GetLightBlock(height)
+	if err != nil {
+		switch err {
+		case provider.ErrLightBlockNotFound, provider.ErrHeightTooHigh:
+			return fmt.Errorf("not found light block. %w", err)
+		default:
+			return err
+		}
+	}
+
+	if !bytes.Equal(block.Hash().Bytes(), blockHash) {
+		return fmt.Errorf("failed to verify trusted block information. height(%v), expected block hash(%s), got block hash(%s)",
+			height,
+			hex.EncodeToString(block.Hash().Bytes()),
+			hex.EncodeToString(blockHash),
+		)
+	}
+
+	return nil
 }
 
 func SetQueryBlockHeightToContext(ctx context.Context, height int64) context.Context {
