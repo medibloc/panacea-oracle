@@ -38,6 +38,14 @@ func (e ApproveOracleRegistrationEvent) GetEventQuery() string {
 }
 
 func (e ApproveOracleRegistrationEvent) EventHandler(ctx context.Context, _ ctypes.ResultEvent) error {
-	e.doneChan <- key.GetAndStoreOraclePrivKey(ctx, e.service)
+	uniqueID := e.service.EnclaveInfo().UniqueIDHex()
+	oracleAddress := e.service.OracleAcc().GetAddress()
+	oracleRegistration, err := e.service.QueryClient().GetOracleRegistration(ctx, uniqueID, oracleAddress)
+	if err != nil {
+		e.doneChan <- fmt.Errorf("failed to get oracle registration: %w", err)
+	}
+
+	e.doneChan <- key.RetrieveAndStoreOraclePrivKey(ctx, e.service, oracleRegistration.EncryptedOraclePrivKey)
+
 	return nil
 }
