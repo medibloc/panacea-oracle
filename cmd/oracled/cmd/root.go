@@ -41,6 +41,7 @@ func init() {
 		updateOracleInfoCmd(),
 		startCmd(),
 		verifyReportCmd(),
+		upgradeOracle(),
 	)
 }
 
