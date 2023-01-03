@@ -34,54 +34,84 @@ func (e RegisterOracleEvent) EventHandler(ctx context.Context, event ctypes.Resu
 	uniqueID := event.Events[oracletypes.EventTypeRegistration+"."+oracletypes.AttributeKeyUniqueID][0]
 	targetAddress := event.Events[oracletypes.EventTypeRegistration+"."+oracletypes.AttributeKeyOracleAddress][0]
 
-	msgApproveOracleRegistration, err := e.verifyAndGetMsgApproveOracleRegistration(ctx, uniqueID, targetAddress)
+	// get oracle registration
+	oracleRegistration, err := e.reactor.QueryClient().GetOracleRegistration(ctx, uniqueID, targetAddress)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get oracle registration. unique ID(%s), target address(%s): %w", uniqueID, targetAddress, err)
 	}
 
-	log.Infof("new oracle registration approval info. uniqueID(%s), approverAddress(%s), targetAddress(%s)",
-		msgApproveOracleRegistration.ApproveOracleRegistration.UniqueId,
-		msgApproveOracleRegistration.ApproveOracleRegistration.ApproverOracleAddress,
-		msgApproveOracleRegistration.ApproveOracleRegistration.TargetOracleAddress,
+	// verify oracle registration
+	if err := e.verifyOracleRegistration(oracleRegistration, uniqueID); err != nil {
+		return fmt.Errorf("failed to verify oracle registration. unique ID(%s), target address(%s): %w", uniqueID, targetAddress, err)
+	}
+
+	// generate Msg/ApproveOracleRegistration
+	msgApproveOracleRegistration, err := e.generateApproveOracleRegistrationMsg(oracleRegistration, targetAddress)
+	if err != nil {
+		return fmt.Errorf("failed to generate MsgApproveOracleRegistration: %w", err)
+	}
+
+	log.Infof("new oracle registration approval info. unique ID(%s), approver address(%s), target address(%s)",
+		msgApproveOracleRegistration.ApprovalSharingOracleKey.UniqueId,
+		msgApproveOracleRegistration.ApprovalSharingOracleKey.ApproverOracleAddress,
+		msgApproveOracleRegistration.ApprovalSharingOracleKey.TargetOracleAddress,
 	)
 
 	txHeight, txHash, err := e.reactor.BroadcastTx(msgApproveOracleRegistration)
 	if err != nil {
-		return fmt.Errorf("failed to ApproveOracleRegistration transaction for new oracle registration: %v", err)
+		return fmt.Errorf("failed to ApproveOracleRegistration transaction for new oracle registration: %w", err)
 	}
 
-	log.Infof("succeeded to ApproveOracleRegistration transaction for new oracle registration. height(%v), hash(%s)", txHeight, txHash)
+	log.Infof("succeeded to ApproveOracleRegistration transaction for new oracle registration. height(%d), hash(%s)", txHeight, txHash)
 
 	return nil
 }
 
-func (e RegisterOracleEvent) verifyAndGetMsgApproveOracleRegistration(ctx context.Context, uniqueID, targetAddress string) (*oracletypes.MsgApproveOracleRegistration, error) {
+func (e RegisterOracleEvent) verifyOracleRegistration(oracleRegistration *oracletypes.OracleRegistration, uniqueID string) error {
 	queryClient := e.reactor.QueryClient()
+	approverUniqueID := e.reactor.EnclaveInfo().UniqueIDHex()
+
+	if uniqueID != approverUniqueID {
+		return fmt.Errorf("requester's unique ID is different from this binary's unique ID. expected(%s) got(%s)", approverUniqueID, uniqueID)
+	}
+
+	if err := queryClient.VerifyTrustedBlockInfo(oracleRegistration.TrustedBlockHeight, oracleRegistration.TrustedBlockHash); err != nil {
+		return fmt.Errorf("failed to verify trusted block information. height(%d), hash(%s): %w", oracleRegistration.TrustedBlockHeight, oracleRegistration.TrustedBlockHash, err)
+	}
+
+	nodePubKeyHash := sha256.Sum256(oracleRegistration.NodePubKey)
+
+	if err := sgx.VerifyRemoteReport(oracleRegistration.NodePubKeyRemoteReport, nodePubKeyHash[:], e.reactor.EnclaveInfo().UniqueID); err != nil {
+		return fmt.Errorf("failed to verify remote report: %w", err)
+	}
+
+	return nil
+}
+
+func (e RegisterOracleEvent) generateApproveOracleRegistrationMsg(oracleRegistration *oracletypes.OracleRegistration, targetAddress string) (*oracletypes.MsgApproveOracleRegistration, error) {
 	approverAddress := e.reactor.OracleAcc().GetAddress()
 	oraclePrivKeyBz := e.reactor.OraclePrivKey().Serialize()
 	approverUniqueID := e.reactor.EnclaveInfo().UniqueIDHex()
 
-	if uniqueID != approverUniqueID {
-		return nil, fmt.Errorf("oracle's uniqueID does not match the requested uniqueID. expected(%s) got(%s)", approverUniqueID, uniqueID)
-	} else {
-		oracleRegistration, err := queryClient.GetOracleRegistration(ctx, uniqueID, targetAddress)
-		if err != nil {
-			log.Errorf("err while get oracleRegistration: %v", err)
-			return nil, err
-		}
-
-		if err := verifyTrustedBlockInfo(e.reactor.QueryClient(), oracleRegistration.TrustedBlockHeight, oracleRegistration.TrustedBlockHash); err != nil {
-			log.Errorf("failed to verify trusted block. height(%d), hash(%s), err(%v)", oracleRegistration.TrustedBlockHeight, oracleRegistration.TrustedBlockHash, err)
-			return nil, err
-		}
-
-		nodePubKeyHash := sha256.Sum256(oracleRegistration.NodePubKey)
-
-		if err := sgx.VerifyRemoteReport(oracleRegistration.NodePubKeyRemoteReport, nodePubKeyHash[:], *e.reactor.EnclaveInfo()); err != nil {
-			log.Errorf("failed to verification report. uniqueID(%s), address(%s), err(%v)", oracleRegistration.UniqueId, oracleRegistration.OracleAddress, err)
-			return nil, err
-		}
-
-		return makeMsgApproveOracleRegistration(approverUniqueID, approverAddress, targetAddress, oraclePrivKeyBz, oracleRegistration.NodePubKey)
+	encryptedOraclePrivKey, err := encryptOraclePrivKey(oraclePrivKeyBz, oracleRegistration.NodePubKey)
+	if err != nil {
+		return nil, fmt.Errorf("failed to encrypt oracle private key: %w", err)
 	}
+
+	approvalMsg := &oracletypes.ApprovalSharingOracleKey{
+		UniqueId:               approverUniqueID,
+		ApproverOracleAddress:  approverAddress,
+		TargetOracleAddress:    targetAddress,
+		EncryptedOraclePrivKey: encryptedOraclePrivKey,
+	}
+
+	sig, err := signApprovalMsg(approvalMsg, oraclePrivKeyBz)
+	if err != nil {
+		return nil, fmt.Errorf("failed to sign for approval of oracle registration: %w", err)
+	}
+
+	return &oracletypes.MsgApproveOracleRegistration{
+		ApprovalSharingOracleKey: approvalMsg,
+		Signature:                sig,
+	}, nil
 }

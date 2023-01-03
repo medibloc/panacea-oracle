@@ -194,9 +194,20 @@ func (c *mockQueryClient) GetOracleUpgrade(_ context.Context, _, _ string) (*ora
 	return nil, nil
 }
 
-// TODO: implement mock GetDeal for test
 func (c *mockQueryClient) GetDeal(_ context.Context, _ uint64) (*datadealtypes.Deal, error) {
 	return nil, nil
+}
+
+func (c *mockQueryClient) GetOracleUpgradeInfo(_ context.Context) (*oracletypes.OracleUpgradeInfo, error) {
+	return nil, nil
+}
+
+func (c *mockQueryClient) GetOracle(_ context.Context, _ string) (*oracletypes.Oracle, error) {
+	return nil, nil
+}
+
+func (c *mockQueryClient) VerifyTrustedBlockInfo(_ int64, _ []byte) error {
+	return nil
 }
 
 type mockAccount struct{}

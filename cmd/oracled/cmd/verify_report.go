@@ -79,7 +79,7 @@ func verifyPubKeyRemoteReport(pubKeyInfo OraclePubKeyInfo) error {
 	}
 
 	// verify remote report
-	if err := sgx.VerifyRemoteReport(targetReport, pubKey, *selfEnclaveInfo); err != nil {
+	if err := sgx.VerifyRemoteReport(targetReport, pubKey, selfEnclaveInfo.UniqueID); err != nil {
 		return fmt.Errorf("failed to verify report: %w", err)
 	}
 

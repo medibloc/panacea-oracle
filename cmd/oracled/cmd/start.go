@@ -4,16 +4,17 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	oracleevent "github.com/medibloc/panacea-oracle/event/oracle"
-	"github.com/medibloc/panacea-oracle/server"
-	"github.com/medibloc/panacea-oracle/service"
-	log "github.com/sirupsen/logrus"
-	"github.com/spf13/cobra"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
+
+	oracleevent "github.com/medibloc/panacea-oracle/event/oracle"
+	"github.com/medibloc/panacea-oracle/server"
+	"github.com/medibloc/panacea-oracle/service"
+	log "github.com/sirupsen/logrus"
+	"github.com/spf13/cobra"
 )
 
 func startCmd() *cobra.Command {
@@ -34,6 +35,7 @@ func startCmd() *cobra.Command {
 
 			err = svc.StartSubscriptions(
 				oracleevent.NewRegisterOracleEvent(svc),
+				oracleevent.NewUpgradeOracleEvent(svc),
 			)
 			if err != nil {
 				return fmt.Errorf("failed to start event subscription: %w", err)
