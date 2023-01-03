@@ -1382,14 +1382,6 @@ github.com/maxbrunsfeld/counterfeiter/v6 v6.2.2/go.mod h1:eD9eIE7cdwcMi9rYluz88J
 github.com/mbilski/exhaustivestruct v1.2.0/go.mod h1:OeTBVxQWoEmB2J2JCHmXWPJ0aksxSUOUy+nvtVEfzXc=
 github.com/medibloc/cosmos-sdk v0.45.9-panacea.1 h1:JTprXN6z/+6UjkjQU4OfDz7z+sUpzev1s9DywmWA2Sk=
 github.com/medibloc/cosmos-sdk v0.45.9-panacea.1/go.mod h1:Z5M4TX7PsHNHlF/1XanI2DIpORQ+Q/st7oaeufEjnvU=
-github.com/medibloc/panacea-core/v2 v2.0.6-0.20221215072001-b57b998128c9 h1:A9HLqIkArmL82etQIUwSaFxfBYbWq6r20a7CaPzcP5Y=
-github.com/medibloc/panacea-core/v2 v2.0.6-0.20221215072001-b57b998128c9/go.mod h1:jDmkCB2vXq/Daq/XvdzF5ELGH9eT20WpCLdTB7zhMBY=
-github.com/medibloc/panacea-core/v2 v2.0.6-0.20221226084030-69bc58b8d972 h1:bpEcXkTMRRMwodYfRXy4ZcaMcpN+vitPeK3f8pXbqFc=
-github.com/medibloc/panacea-core/v2 v2.0.6-0.20221226084030-69bc58b8d972/go.mod h1:YCYoLlbegqIP8fbrpvrvkK5LsQojDxukneKczbZ7hic=
-github.com/medibloc/panacea-core/v2 v2.0.6-0.20221227012303-909c3d8fe0e2 h1:n18E8umi4y69sjL30HnIbNXLhrxU5VrwzMKBZmwNCA4=
-github.com/medibloc/panacea-core/v2 v2.0.6-0.20221227012303-909c3d8fe0e2/go.mod h1:YCYoLlbegqIP8fbrpvrvkK5LsQojDxukneKczbZ7hic=
-github.com/medibloc/panacea-core/v2 v2.0.6-0.20221227234110-c66ff61d2404 h1:qmTO8XFXArmL5jF30uI4n5Lbs1NwmGI0rnzWMZr4LP8=
-github.com/medibloc/panacea-core/v2 v2.0.6-0.20221227234110-c66ff61d2404/go.mod h1:YCYoLlbegqIP8fbrpvrvkK5LsQojDxukneKczbZ7hic=
 github.com/medibloc/panacea-core/v2 v2.0.6-0.20221228073329-db97922517cf h1:4AMPidYCSHzrV6avd1hxUQMnXva5/UJXLw2F/m/wdf8=
 github.com/medibloc/panacea-core/v2 v2.0.6-0.20221228073329-db97922517cf/go.mod h1:YCYoLlbegqIP8fbrpvrvkK5LsQojDxukneKczbZ7hic=
 github.com/mgechev/dots v0.0.0-20210922191527-e955255bf517/go.mod h1:KQ7+USdGKfpPjXk4Ga+5XxQM4Lm4e3gAogrreFAYpOg=
