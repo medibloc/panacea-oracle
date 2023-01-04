@@ -47,13 +47,13 @@ func (e UpgradeOracleEvent) EventHandler(ctx context.Context, event ctypes.Resul
 	}
 
 	// generate Msg/ApproveOracleUpgrade
-	msgApproveOracleUpgrade, err := e.generateApproveOracleUpgradeMsg(oracleUpgrade, targetAddress)
+	msgApproveOracleUpgrade, err := e.generateApproveOracleUpgradeMsg(oracleUpgrade, uniqueID, targetAddress)
 	if err != nil {
 		return fmt.Errorf("failed to generate MsgApproveOracleUpgrade: %w", err)
 	}
 
 	log.Infof("oracle upgrade approval info. unique ID(%s), approver address(%s), target address(%s)",
-		msgApproveOracleUpgrade.ApprovalSharingOracleKey.UniqueId,
+		msgApproveOracleUpgrade.ApprovalSharingOracleKey.ApproverUniqueId,
 		msgApproveOracleUpgrade.ApprovalSharingOracleKey.ApproverOracleAddress,
 		msgApproveOracleUpgrade.ApprovalSharingOracleKey.TargetOracleAddress,
 	)
@@ -106,7 +106,7 @@ func (e UpgradeOracleEvent) verifyOracleUpgrade(ctx context.Context, oracleUpgra
 	return nil
 }
 
-func (e UpgradeOracleEvent) generateApproveOracleUpgradeMsg(oracleUpgrade *oracletypes.OracleUpgrade, targetAddress string) (*oracletypes.MsgApproveOracleUpgrade, error) {
+func (e UpgradeOracleEvent) generateApproveOracleUpgradeMsg(oracleUpgrade *oracletypes.OracleUpgrade, targetUniqueID, targetAddress string) (*oracletypes.MsgApproveOracleUpgrade, error) {
 	approverAddress := e.reactor.OracleAcc().GetAddress()
 	oraclePrivKeyBz := e.reactor.OraclePrivKey().Serialize()
 	approverUniqueID := e.reactor.EnclaveInfo().UniqueIDHex()
@@ -118,8 +118,9 @@ func (e UpgradeOracleEvent) generateApproveOracleUpgradeMsg(oracleUpgrade *oracl
 	}
 
 	approvalMsg := &oracletypes.ApprovalSharingOracleKey{
-		UniqueId:               approverUniqueID,
+		ApproverUniqueId:       approverUniqueID,
 		ApproverOracleAddress:  approverAddress,
+		TargetUniqueId:         targetUniqueID,
 		TargetOracleAddress:    targetAddress,
 		EncryptedOraclePrivKey: encryptedOraclePrivKey,
 	}
