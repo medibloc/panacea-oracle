@@ -46,13 +46,13 @@ func (e RegisterOracleEvent) EventHandler(ctx context.Context, event ctypes.Resu
 	}
 
 	// generate Msg/ApproveOracleRegistration
-	msgApproveOracleRegistration, err := e.generateApproveOracleRegistrationMsg(oracleRegistration, targetAddress)
+	msgApproveOracleRegistration, err := e.generateApproveOracleRegistrationMsg(oracleRegistration, uniqueID, targetAddress)
 	if err != nil {
 		return fmt.Errorf("failed to generate MsgApproveOracleRegistration: %w", err)
 	}
 
 	log.Infof("new oracle registration approval info. unique ID(%s), approver address(%s), target address(%s)",
-		msgApproveOracleRegistration.ApprovalSharingOracleKey.UniqueId,
+		msgApproveOracleRegistration.ApprovalSharingOracleKey.ApproverUniqueId,
 		msgApproveOracleRegistration.ApprovalSharingOracleKey.ApproverOracleAddress,
 		msgApproveOracleRegistration.ApprovalSharingOracleKey.TargetOracleAddress,
 	)
@@ -88,7 +88,7 @@ func (e RegisterOracleEvent) verifyOracleRegistration(oracleRegistration *oracle
 	return nil
 }
 
-func (e RegisterOracleEvent) generateApproveOracleRegistrationMsg(oracleRegistration *oracletypes.OracleRegistration, targetAddress string) (*oracletypes.MsgApproveOracleRegistration, error) {
+func (e RegisterOracleEvent) generateApproveOracleRegistrationMsg(oracleRegistration *oracletypes.OracleRegistration, targetUniqueID, targetAddress string) (*oracletypes.MsgApproveOracleRegistration, error) {
 	approverAddress := e.reactor.OracleAcc().GetAddress()
 	oraclePrivKeyBz := e.reactor.OraclePrivKey().Serialize()
 	approverUniqueID := e.reactor.EnclaveInfo().UniqueIDHex()
@@ -99,8 +99,9 @@ func (e RegisterOracleEvent) generateApproveOracleRegistrationMsg(oracleRegistra
 	}
 
 	approvalMsg := &oracletypes.ApprovalSharingOracleKey{
-		UniqueId:               approverUniqueID,
+		ApproverUniqueId:       approverUniqueID,
 		ApproverOracleAddress:  approverAddress,
+		TargetUniqueId:         targetUniqueID,
 		TargetOracleAddress:    targetAddress,
 		EncryptedOraclePrivKey: encryptedOraclePrivKey,
 	}
