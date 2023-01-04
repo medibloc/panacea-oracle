@@ -13,7 +13,7 @@ require (
 	github.com/gorilla/mux v1.8.0
 	github.com/ipfs/go-ipfs-api v0.3.0
 	github.com/lestrrat-go/jwx/v2 v2.0.8
-	github.com/medibloc/panacea-core/v2 v2.0.6-0.20230103085823-a830d8a19295
+	github.com/medibloc/panacea-core/v2 v2.0.6-0.20230104081432-e5cc1c5514cd
 	github.com/sirupsen/logrus v1.9.0
 	github.com/spf13/cobra v1.6.1
 	github.com/spf13/viper v1.13.0
