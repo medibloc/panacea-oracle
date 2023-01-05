@@ -159,7 +159,7 @@ type mockQueryClient struct {
 	account authtypes.AccountI
 }
 
-func (c *mockQueryClient) GetConsent(_ context.Context, _ uint64, _ string) (*datadealtypes.Certificate, error) {
+func (c *mockQueryClient) GetConsent(_ context.Context, _ uint64, _ string) (*datadealtypes.Consent, error) {
 	return nil, nil
 }
 
