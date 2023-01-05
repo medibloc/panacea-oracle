@@ -46,7 +46,7 @@ type QueryClient interface {
 	GetLightBlock(height int64) (*tmtypes.LightBlock, error)
 	GetOracleParamsPublicKey(context.Context) (*btcec.PublicKey, error)
 	GetDeal(context.Context, uint64) (*datadealtypes.Deal, error)
-	GetConsent(context.Context, uint64, string) (*datadealtypes.Certificate, error)
+	GetConsent(context.Context, uint64, string) (*datadealtypes.Consent, error)
 	GetLastBlockHeight(context.Context) (int64, error)
 	GetOracleUpgrade(context.Context, string, string) (*oracletypes.OracleUpgrade, error)
 	GetOracleUpgradeInfo(context.Context) (*oracletypes.OracleUpgradeInfo, error)
@@ -376,7 +376,7 @@ func (q verifiedQueryClient) GetDeal(ctx context.Context, dealID uint64) (*datad
 	return &deal, nil
 }
 
-func (q verifiedQueryClient) GetConsent(ctx context.Context, dealID uint64, dataHash string) (*datadealtypes.Certificate, error) {
+func (q verifiedQueryClient) GetConsent(ctx context.Context, dealID uint64, dataHash string) (*datadealtypes.Consent, error) {
 
 	key := datadealtypes.GetConsentKey(dealID, dataHash)
 
@@ -385,13 +385,13 @@ func (q verifiedQueryClient) GetConsent(ctx context.Context, dealID uint64, data
 		return nil, err
 	}
 
-	var certificate datadealtypes.Certificate
-	err = q.cdc.UnmarshalLengthPrefixed(bz, &certificate)
+	var consent datadealtypes.Consent
+	err = q.cdc.UnmarshalLengthPrefixed(bz, &consent)
 	if err != nil {
 		return nil, err
 	}
 
-	return &certificate, nil
+	return &consent, nil
 }
 
 func (q verifiedQueryClient) GetOracleRegistration(ctx context.Context, uniqueID, oracleAddr string) (*oracletypes.OracleRegistration, error) {
