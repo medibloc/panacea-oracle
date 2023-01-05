@@ -164,11 +164,7 @@ func (s *dataDealService) ValidateData(w http.ResponseWriter, r *http.Request) {
 		Signature:           sig.Serialize(),
 	}
 
-	payload := datadealtypes.Consent{
-		Certificate: certificate,
-	}
-
-	marshaledPayload, err := json.Marshal(payload)
+	marshaledCertificate, err := json.Marshal(certificate)
 	if err != nil {
 		log.Errorf("failed to marshal payload: %s", err.Error())
 		http.Error(w, "failed to marshal payload", http.StatusInternalServerError)
@@ -177,7 +173,7 @@ func (s *dataDealService) ValidateData(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	if _, err = w.Write(marshaledPayload); err != nil {
+	if _, err = w.Write(marshaledCertificate); err != nil {
 		log.Errorf("failed to write response payload: %s", err.Error())
 		return
 	}
