@@ -49,11 +49,11 @@ func (svc *combinedKeyService) GetSecretKey(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	// Check if the certificate of data has been submitted
-	_, err = queryClient.GetCertificate(r.Context(), dealID, dataHashStr)
+	// Check if the consent has been submitted
+	_, err = queryClient.GetConsent(r.Context(), dealID, dataHashStr)
 	if err != nil {
-		log.Errorf("failed to get certificate(dealID: %d, dataHash %s): %s", dealID, dataHashStr, err.Error())
-		http.Error(w, "failed to get certificate", http.StatusNotFound)
+		log.Errorf("failed to get consent(dealID: %d, dataHash %s): %s", dealID, dataHashStr, err.Error())
+		http.Error(w, "failed to get consent", http.StatusNotFound)
 		return
 	}
 
