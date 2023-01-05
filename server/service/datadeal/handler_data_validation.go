@@ -12,6 +12,7 @@ import (
 	"github.com/gorilla/mux"
 	datadealtypes "github.com/medibloc/panacea-core/v2/x/datadeal/types"
 	"github.com/medibloc/panacea-oracle/crypto"
+	"github.com/medibloc/panacea-oracle/server/middleware"
 	"github.com/medibloc/panacea-oracle/server/service/key"
 	"github.com/medibloc/panacea-oracle/validation"
 	log "github.com/sirupsen/logrus"
@@ -42,6 +43,14 @@ func (s *dataDealService) ValidateData(w http.ResponseWriter, r *http.Request) {
 	if err := reqBody.ValidateBasic(); err != nil {
 		log.Errorf("invalid request body: %s", err.Error())
 		http.Error(w, "invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	// Check the address of the requested provider
+	requesterAddress := r.Context().Value(middleware.ContextKeyAuthenticatedAccountAddress{}).(string)
+	if requesterAddress != reqBody.ProviderAddress {
+		log.Errorf("data provider and token issuer do not matched. provider: %s, jwt issuer: %s", reqBody.ProviderAddress, requesterAddress)
+		http.Error(w, "data provider and token issuer do not matched", http.StatusForbidden)
 		return
 	}
 
