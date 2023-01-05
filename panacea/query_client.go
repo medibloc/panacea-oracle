@@ -46,7 +46,7 @@ type QueryClient interface {
 	GetLightBlock(height int64) (*tmtypes.LightBlock, error)
 	GetOracleParamsPublicKey(context.Context) (*btcec.PublicKey, error)
 	GetDeal(context.Context, uint64) (*datadealtypes.Deal, error)
-	GetCertificate(context.Context, uint64, string) (*datadealtypes.Certificate, error)
+	GetConsent(context.Context, uint64, string) (*datadealtypes.Certificate, error)
 	GetLastBlockHeight(context.Context) (int64, error)
 	GetOracleUpgrade(context.Context, string, string) (*oracletypes.OracleUpgrade, error)
 	GetOracleUpgradeInfo(context.Context) (*oracletypes.OracleUpgradeInfo, error)
@@ -376,9 +376,9 @@ func (q verifiedQueryClient) GetDeal(ctx context.Context, dealID uint64) (*datad
 	return &deal, nil
 }
 
-func (q verifiedQueryClient) GetCertificate(ctx context.Context, dealID uint64, dataHash string) (*datadealtypes.Certificate, error) {
+func (q verifiedQueryClient) GetConsent(ctx context.Context, dealID uint64, dataHash string) (*datadealtypes.Certificate, error) {
 
-	key := datadealtypes.GetCertificateKey(dealID, dataHash)
+	key := datadealtypes.GetConsentKey(dealID, dataHash)
 
 	bz, err := q.GetStoreData(ctx, datadealtypes.StoreKey, key)
 	if err != nil {

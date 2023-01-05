@@ -150,9 +150,13 @@ func (s *dataDealService) ValidateData(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	payload := datadealtypes.Certificate{
+	certificate := &datadealtypes.Certificate{
 		UnsignedCertificate: unsignedDataCert,
 		Signature:           sig.Serialize(),
+	}
+
+	payload := datadealtypes.Consent{
+		Certificate: certificate,
 	}
 
 	marshaledPayload, err := json.Marshal(payload)
