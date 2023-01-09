@@ -60,7 +60,7 @@ func NewWithQueryClient(conf *config.Config, queryClient panacea.QueryClient) (S
 	}
 
 	var oraclePrivKey *btcec.PrivateKey
-	if os.FileExists(conf.AbsOraclePubKeyPath()) {
+	if os.FileExists(conf.AbsOraclePrivKeyPath()) {
 		oraclePrivKeyBz, err := sgx.UnsealFromFile(conf.AbsOraclePrivKeyPath())
 		if err != nil {
 			return nil, fmt.Errorf("failed to unseal oracle_priv_key.sealed file: %w", err)
