@@ -62,7 +62,7 @@ func getOracleKeyCmd() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().String(flags.FlagFromOracleRegistrationOrUpgrade, "upgrade", "where to get the key from (default \"upgrade\"")
+	cmd.Flags().String(flags.FlagFromOracleRegistrationOrUpgrade, "upgrade", "where to get the key from")
 
 	return cmd
 }
