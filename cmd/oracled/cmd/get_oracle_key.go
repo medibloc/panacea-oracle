@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/medibloc/panacea-oracle/client/flags"
 	"github.com/medibloc/panacea-oracle/key"
 	"github.com/medibloc/panacea-oracle/service"
 	"github.com/spf13/cobra"
@@ -28,18 +29,40 @@ func getOracleKeyCmd() *cobra.Command {
 
 			uniqueID := svc.EnclaveInfo().UniqueIDHex()
 			oracleAddress := svc.OracleAcc().GetAddress()
-			oracleRegistration, err := svc.QueryClient().GetOracleRegistration(ctx, uniqueID, oracleAddress)
+
+			from, err := cmd.Flags().GetString(flags.FlagFromOracleRegistrationOrUpgrade)
 			if err != nil {
-				return fmt.Errorf("failed to get oracle registration: %w", err)
+				return err
 			}
 
-			if len(oracleRegistration.EncryptedOraclePrivKey) == 0 {
-				return fmt.Errorf("the encrypted oracle private key has not set yet. please try again later")
+			if from == "registration" {
+				oracleRegistration, err := svc.QueryClient().GetOracleRegistration(ctx, uniqueID, oracleAddress)
+				if err != nil {
+					return fmt.Errorf("failed to get oracle registration: %w", err)
+				}
+
+				if len(oracleRegistration.EncryptedOraclePrivKey) == 0 {
+					return fmt.Errorf("the encrypted oracle private key has not set yet. please try again later")
+				}
+				return key.RetrieveAndStoreOraclePrivKey(ctx, svc, oracleRegistration.EncryptedOraclePrivKey)
+
+			} else if from == "upgrade" {
+				oracleUpgrade, err := svc.QueryClient().GetOracleUpgrade(ctx, uniqueID, oracleAddress)
+				if err != nil {
+					return fmt.Errorf("failed to get oracle upgrade: %w", err)
+				}
+				if len(oracleUpgrade.EncryptedOraclePrivKey) == 0 {
+					return fmt.Errorf("the encrypted oracle private key has not set yet. please try again later")
+				}
+				return key.RetrieveAndStoreOraclePrivKey(ctx, svc, oracleUpgrade.EncryptedOraclePrivKey)
+			} else {
+				return fmt.Errorf("invalid --from flag input. please put \"registration\" or \"upgrade\"")
 			}
 
-			return key.RetrieveAndStoreOraclePrivKey(ctx, svc, oracleRegistration.EncryptedOraclePrivKey)
 		},
 	}
+
+	cmd.Flags().String(flags.FlagFromOracleRegistrationOrUpgrade, "upgrade", "where to get the key from (default \"upgrade\"")
 
 	return cmd
 }
