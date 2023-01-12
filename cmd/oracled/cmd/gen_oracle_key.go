@@ -3,6 +3,7 @@ package cmd
 import (
 	"bufio"
 	"context"
+	"crypto/sha256"
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
@@ -69,7 +70,8 @@ func genOracleKeyCmd() *cobra.Command {
 
 			// generate oracle key remote report
 			oraclePubKey := oraclePrivKey.PubKey().SerializeCompressed()
-			oracleKeyRemoteReport, err := sgx.GenerateRemoteReport(oraclePubKey)
+			oraclePubKeyHash := sha256.Sum256(oraclePubKey)
+			oracleKeyRemoteReport, err := sgx.GenerateRemoteReport(oraclePubKeyHash[:])
 			if err != nil {
 				log.Errorf("failed to generate remote report of oracle key: %v", err)
 				return err

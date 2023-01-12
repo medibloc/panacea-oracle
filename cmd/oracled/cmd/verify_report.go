@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"crypto/sha256"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
@@ -67,6 +68,7 @@ func verifyPubKeyRemoteReport(pubKeyInfo OraclePubKeyInfo) error {
 	if err != nil {
 		return fmt.Errorf("failed to decode oracle public key: %w", err)
 	}
+	pubKeyHash := sha256.Sum256(pubKey)
 
 	targetReport, err := base64.StdEncoding.DecodeString(pubKeyInfo.RemoteReportBase64)
 	if err != nil {
@@ -79,7 +81,7 @@ func verifyPubKeyRemoteReport(pubKeyInfo OraclePubKeyInfo) error {
 	}
 
 	// verify remote report
-	if err := sgx.VerifyRemoteReport(targetReport, pubKey, selfEnclaveInfo.UniqueID); err != nil {
+	if err := sgx.VerifyRemoteReport(targetReport, pubKeyHash[:], selfEnclaveInfo.UniqueID); err != nil {
 		return fmt.Errorf("failed to verify report: %w", err)
 	}
 
