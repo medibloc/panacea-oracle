@@ -1386,6 +1386,8 @@ github.com/medibloc/panacea-core/v2 v2.0.6-0.20230104081432-e5cc1c5514cd h1:cljJ
 github.com/medibloc/panacea-core/v2 v2.0.6-0.20230104081432-e5cc1c5514cd/go.mod h1:YCYoLlbegqIP8fbrpvrvkK5LsQojDxukneKczbZ7hic=
 github.com/medibloc/panacea-core/v2 v2.0.6-0.20230105013527-4f854a29b04d h1:s2+xmKkrJ7k9fKz5wJkpnbeCiuh7MVg5LFaFo4UoxE0=
 github.com/medibloc/panacea-core/v2 v2.0.6-0.20230105013527-4f854a29b04d/go.mod h1:YCYoLlbegqIP8fbrpvrvkK5LsQojDxukneKczbZ7hic=
+github.com/medibloc/panacea-core/v2 v2.0.6-0.20230113040800-7e7a4728ab82 h1:tDGbin19dGF0EmBNPrd1UYcTYKe5jKWV4kiQJ/wbl+I=
+github.com/medibloc/panacea-core/v2 v2.0.6-0.20230113040800-7e7a4728ab82/go.mod h1:YCYoLlbegqIP8fbrpvrvkK5LsQojDxukneKczbZ7hic=
 github.com/mgechev/dots v0.0.0-20210922191527-e955255bf517/go.mod h1:KQ7+USdGKfpPjXk4Ga+5XxQM4Lm4e3gAogrreFAYpOg=
 github.com/mgechev/revive v1.2.1/go.mod h1:+Ro3wqY4vakcYNtkBWdZC7dBg1xSB6sp054wWwmeFm0=
 github.com/mgutz/ansi v0.0.0-20170206155736-9520e82c474b/go.mod h1:01TrycV0kFyexm33Z7vhZRXopbI8J3TDReVlkTgMUxE=
