@@ -10,6 +10,11 @@ import (
 	"github.com/spf13/cobra"
 )
 
+const (
+	fromRegistration = "registration"
+	fromUpgrade      = "upgrade"
+)
+
 func getOracleKeyCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "get-oracle-key",
@@ -35,7 +40,8 @@ func getOracleKeyCmd() *cobra.Command {
 				return err
 			}
 
-			if from == "registration" {
+			switch from {
+			case fromRegistration:
 				oracleRegistration, err := svc.QueryClient().GetOracleRegistration(ctx, uniqueID, oracleAddress)
 				if err != nil {
 					return fmt.Errorf("failed to get oracle registration: %w", err)
@@ -46,7 +52,7 @@ func getOracleKeyCmd() *cobra.Command {
 				}
 				return key.RetrieveAndStoreOraclePrivKey(ctx, svc, oracleRegistration.EncryptedOraclePrivKey)
 
-			} else if from == "upgrade" {
+			case fromUpgrade:
 				oracleUpgrade, err := svc.QueryClient().GetOracleUpgrade(ctx, uniqueID, oracleAddress)
 				if err != nil {
 					return fmt.Errorf("failed to get oracle upgrade: %w", err)
@@ -55,10 +61,10 @@ func getOracleKeyCmd() *cobra.Command {
 					return fmt.Errorf("the encrypted oracle private key has not set yet. please try again later")
 				}
 				return key.RetrieveAndStoreOraclePrivKey(ctx, svc, oracleUpgrade.EncryptedOraclePrivKey)
-			} else {
+
+			default:
 				return fmt.Errorf("invalid --from flag input. please put \"registration\" or \"upgrade\"")
 			}
-
 		},
 	}
 
