@@ -1384,6 +1384,8 @@ github.com/medibloc/cosmos-sdk v0.45.9-panacea.1 h1:JTprXN6z/+6UjkjQU4OfDz7z+sUp
 github.com/medibloc/cosmos-sdk v0.45.9-panacea.1/go.mod h1:Z5M4TX7PsHNHlF/1XanI2DIpORQ+Q/st7oaeufEjnvU=
 github.com/medibloc/panacea-core/v2 v2.0.6-0.20230113040800-7e7a4728ab82 h1:tDGbin19dGF0EmBNPrd1UYcTYKe5jKWV4kiQJ/wbl+I=
 github.com/medibloc/panacea-core/v2 v2.0.6-0.20230113040800-7e7a4728ab82/go.mod h1:YCYoLlbegqIP8fbrpvrvkK5LsQojDxukneKczbZ7hic=
+github.com/medibloc/vc-sdk v0.0.3-0.20230126093837-702fb669001e h1:cnLiSe2Pm/SJMlIxLhgBZAtWXSwWIM2qZz3pS2pvoAM=
+github.com/medibloc/vc-sdk v0.0.3-0.20230126093837-702fb669001e/go.mod h1:g3/kehB4B+D/YeaKufvdbr91d1pHG7FuebrnBEudQMw=
 github.com/mgechev/dots v0.0.0-20210922191527-e955255bf517/go.mod h1:KQ7+USdGKfpPjXk4Ga+5XxQM4Lm4e3gAogrreFAYpOg=
 github.com/mgechev/revive v1.2.1/go.mod h1:+Ro3wqY4vakcYNtkBWdZC7dBg1xSB6sp054wWwmeFm0=
 github.com/mgutz/ansi v0.0.0-20170206155736-9520e82c474b/go.mod h1:01TrycV0kFyexm33Z7vhZRXopbI8J3TDReVlkTgMUxE=
