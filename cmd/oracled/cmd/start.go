@@ -15,7 +15,7 @@ func startCmd() *cobra.Command {
 		Use:   "start",
 		Short: "Start oracle daemon",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			_, err := loadConfigFromHome(cmd)
+			cfg, err := loadConfigFromHome(cmd)
 			if err != nil {
 				return err
 			}
@@ -50,7 +50,7 @@ func startCmd() *cobra.Command {
 			}()
 			*/
 
-			if err := rpc.Serve(9090, 8080, errChan); err != nil {
+			if err := rpc.Serve(cfg, errChan); err != nil {
 				errChan <- err
 			}
 

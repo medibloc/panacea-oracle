@@ -62,11 +62,23 @@ light-client-log-level = "{{ .Panacea.LightClientLogLevel }}"
 ipfs-node-addr = "{{ .IPFS.IPFSNodeAddr }}"
 
 ###############################################################################
+###                         GRPC Configuration                           ###
+###############################################################################
+
+[grpc]
+enabled = "{{ .GRPC.Enabled }}"
+listen-addr = "{{ .GRPC.ListenAddr }}"
+connection-timeout = "{{ .GRPC.ConnectionTimeout }}"
+write-timeout = "{{ .GRPC.WriteTimeout }}"
+read-timeout = "{{ .GRPC.ReadTimeout }}"
+
+###############################################################################
 ###                         API Configuration                           ###
 ###############################################################################
 
 [api]
 
+enabled = "{{ .API.Enabled }}"
 listen-addr = "{{ .API.ListenAddr }}"
 write-timeout = "{{ .API.WriteTimeout }}"
 read-timeout = "{{ .API.ReadTimeout }}"

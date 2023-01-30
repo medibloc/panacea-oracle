@@ -1,7 +1,6 @@
 package status
 
 import (
-	"encoding/base64"
 	"encoding/json"
 	"net/http"
 
@@ -15,8 +14,8 @@ func (s *statusService) GetStatus(w http.ResponseWriter, _ *http.Request) {
 			ListenAddr: s.Config().API.ListenAddr,
 		},
 		EnclaveInfo: statusEnclaveInfo{
-			ProductIDBase64: base64.StdEncoding.EncodeToString(s.EnclaveInfo().ProductID),
-			UniqueIDBase64:  base64.StdEncoding.EncodeToString(s.EnclaveInfo().UniqueID),
+			//ProductIDBase64: base64.StdEncoding.EncodeToString(s.EnclaveInfo().ProductID),
+			//UniqueIDBase64:  base64.StdEncoding.EncodeToString(s.EnclaveInfo().UniqueID),
 		},
 	}
 

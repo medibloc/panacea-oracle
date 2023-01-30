@@ -5,38 +5,43 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"net/url"
 
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
-	v0 "github.com/medibloc/panacea-oracle/pb/status/v0"
 	"github.com/medibloc/panacea-oracle/server/service/status"
+	"github.com/medibloc/panacea-oracle/service"
 	log "github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 )
 
-func Serve(rpcPort, restPort int, errCh chan error) error {
-	err := serverGRPC(rpcPort, errCh)
-	if err != nil {
+func Serve(svc service.Service, errCh chan error) error {
+	if err := serverGRPC(svc, errCh); err != nil {
 		return fmt.Errorf("failed to serve gRPC server: %w", err)
 	}
 
-	if err := serverREST(restPort, rpcPort, errCh); err != nil {
+	if err := serverREST(svc, errCh); err != nil {
 		return fmt.Errorf("failed to serve REST server: %w", err)
 	}
 
-	return err
+	return nil
 }
 
-func serverGRPC(port int, errCh chan error) error {
+func serverGRPC(svc service.Service, errCh chan error) error {
+	grpcListenURL, err := url.Parse(svc.Config().GRPC.ListenAddr)
+	if err != nil {
+		return err
+	}
+
 	svr := grpc.NewServer()
 	status.RegisterService(svr)
 
-	lis, err := net.Listen("tcp", fmt.Sprintf("0.0.0.0:%d", port))
+	lis, err := net.Listen(grpcListenURL.Scheme, grpcListenURL.Host)
 	if err != nil {
 		return fmt.Errorf("failed to listen port for RPC: %w", err)
 	}
 
 	go func() {
-		log.Infof("gRPC server listening at %d...", port)
+		log.Infof("gRPC server listening at %s...", grpcListenURL.Host)
 		if err := svr.Serve(lis); err != nil {
 			errCh <- err
 			return
@@ -46,10 +51,22 @@ func serverGRPC(port int, errCh chan error) error {
 	return nil
 }
 
-func serverREST(port, rpcPort int, errCh chan error) error {
+func serverREST(svc service.Service, errCh chan error) error {
+	cfg := svc.Config()
+	grpcListenURL, err := url.Parse(cfg.GRPC.ListenAddr)
+	if err != nil {
+		return err
+	}
+
+	restListenURL, err := url.Parse(cfg.API.ListenAddr)
+	if err != nil {
+		return err
+	}
+	restListenAddr := restListenURL.Host
+
 	ctx := context.Background()
 
-	rpcEndpoint := fmt.Sprintf("127.0.0.1:%d", rpcPort)
+	grpcEndpoint := fmt.Sprintf("127.0.0.1:%s", grpcListenURL.Port())
 
 	// Register gRPC server endpoint
 	// Note: Make sure the gRPC server is running properly and accessible
@@ -57,7 +74,7 @@ func serverREST(port, rpcPort int, errCh chan error) error {
 
 	conn, err := grpc.DialContext(
 		ctx,
-		rpcEndpoint,
+		grpcEndpoint,
 		grpc.WithBlock(),
 		grpc.WithInsecure(),
 	)
@@ -66,13 +83,13 @@ func serverREST(port, rpcPort int, errCh chan error) error {
 		return err
 	}
 
-	if err := v0.RegisterStatusServiceHandler(ctx, mux, conn); err != nil {
+	if err := status.RegisterHandler(ctx, mux, conn); err != nil {
 		return err
 	}
 
 	go func() {
-		log.Infof("REST  server listening at %d...", port)
-		if err := http.ListenAndServe("0.0.0.0:8080", mux); err != nil {
+		log.Infof("REST  server listening at %s...", restListenAddr)
+		if err := http.ListenAndServe(restListenAddr, mux); err != nil {
 			errCh <- err
 			return
 		}
