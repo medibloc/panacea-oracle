@@ -28,10 +28,10 @@ func (ic *queryInterceptor) StreamServerInterceptor() grpc.StreamServerIntercept
 	return func(srv interface{}, stream grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
 		ctx := stream.Context()
 
-		setHeightInContext(ctx, ic.panaceaQueryClient)
+		newCtx := setHeightInContext(ctx, ic.panaceaQueryClient)
 
 		wrapped := grpc_middleware.WrapServerStream(stream)
-		wrapped.WrappedContext = ctx
+		wrapped.WrappedContext = newCtx
 
 		return handler(srv, wrapped)
 	}
