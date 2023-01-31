@@ -10,4 +10,6 @@ const (
 	FlagOracleCommissionRate          = "oracle-commission-rate"
 	FlagOracleCommissionMaxRate       = "oracle-commission-max-rate"
 	FlagOracleCommissionMaxChangeRate = "oracle-commission-max-change-rate"
+
+	FlagFromOracleRegistrationOrUpgrade = "from"
 )
