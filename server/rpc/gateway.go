@@ -50,8 +50,9 @@ func (s *gatewayServer) generateAndSetGrpcConnection() error {
 	}
 	port := grpcListenURL.Port()
 
-	log.Info("Dial to gRPC server")
 	grpcEndpoint := fmt.Sprintf("127.0.0.1:%s", port)
+
+	log.Infof("Dial gateway to gRPC server > %s", grpcEndpoint)
 
 	conn, err := grpc.DialContext(
 		context.Background(),
