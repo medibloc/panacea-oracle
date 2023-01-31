@@ -18,23 +18,23 @@ message GetStatusRequest {
 }
 
 message GetStatusResponse {
-  string oracle_account_address = 1;
+  string oracle_account_address = 1 [json_name = "oracle_account_address"];
   StatusAPI api = 2;
   StatusGRPC grpc = 3;
-  StatusEnclaveInfo enclave_info = 4;
+  StatusEnclaveInfo enclave_info = 4 [json_name = "enclave_info"];
 }
 
 message StatusAPI {
   bool enabled = 1;
-  string listen_addr = 2;
+  string listen_addr = 2 [json_name = "listen_addr"];
 }
 
 message StatusGRPC {
   bool enabled = 1;
-  string listen_addr = 2;
+  string listen_addr = 2 [json_name = "listen_addr"];
 }
 
 message StatusEnclaveInfo {
-  bytes product_id = 1;
-  string unique_id = 2;
+  bytes product_id = 1 [json_name = "product_id"];
+  string unique_id = 2 [json_name = "unique_id"];
 }
