@@ -1,0 +1,42 @@
+syntax = "proto3";
+package panacea.datadeal.v0;
+
+option go_package = "github.com/medibloc/panacea-oracle/pb/datadeal/v0";
+
+import "google/api/annotations.proto";
+
+service DataDealService {
+  rpc ValidateData(ValidateDataRequest) returns (ValidateDataResponse) {
+    option (google.api.http) = {
+      post: "/v0/data-deal/deals/{deal_id}/data"
+      body: "*"
+    };
+  }
+}
+
+message ValidateDataRequest {
+  uint64 deal_id = 1;
+  string provider_address = 2;
+  bytes encrypted_data = 3;
+  bytes data_hash = 4;
+}
+
+message ValidateDataResponse {
+  Certificate certificate = 1;
+}
+
+// Certificate defines a certificate signed by an oracle who issued the certificate.
+message Certificate {
+  UnsignedCertificate unsigned_certificate = 1;
+  bytes signature = 2;
+}
+
+// UnsignedCertificate defines a certificate issued by an oracle as a result of data validation.
+message UnsignedCertificate {
+  string cid = 1;
+  string unique_id = 2;
+  string oracle_address = 3;
+  uint64 deal_id = 4;
+  string provider_address = 5;
+  bytes data_hash = 6;
+}

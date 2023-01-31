@@ -1,0 +1,40 @@
+syntax = "proto3";
+package panacea.oracle.status.v0;
+
+option go_package = "github.com/medibloc/panacea-oracle/pb/status/v0";
+
+import "google/api/annotations.proto";
+
+service StatusService {
+  rpc GetStatus(GetStatusRequest) returns (GetStatusResponse) {
+    option (google.api.http) = {
+      get: "/v0/status"
+    };
+  }
+}
+
+message GetStatusRequest {
+
+}
+
+message GetStatusResponse {
+  string oracle_account_address = 1;
+  StatusAPI api = 2;
+  StatusGRPC grpc = 3;
+  StatusEnclaveInfo enclave_info = 4;
+}
+
+message StatusAPI {
+  bool enabled = 1;
+  string listen_addr = 2;
+}
+
+message StatusGRPC {
+  bool enabled = 1;
+  string listen_addr = 2;
+}
+
+message StatusEnclaveInfo {
+  bytes product_id = 1;
+  string unique_id = 2;
+}

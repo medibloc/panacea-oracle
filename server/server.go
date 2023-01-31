@@ -1,50 +1,43 @@
 package server
 
 import (
-	"net/http"
-	"time"
-
-	"github.com/gorilla/mux"
-	"github.com/medibloc/panacea-oracle/server/middleware"
-	"github.com/medibloc/panacea-oracle/server/service/datadeal"
-	"github.com/medibloc/panacea-oracle/server/service/key"
-	"github.com/medibloc/panacea-oracle/server/service/status"
+	"github.com/medibloc/panacea-oracle/server/rpc"
 	"github.com/medibloc/panacea-oracle/service"
 	log "github.com/sirupsen/logrus"
 )
 
-type Server struct {
-	*http.Server
+type Server interface {
+	Run() error
+
+	Close() error
 }
 
-func New(svc service.Service) *Server {
-	router := mux.NewRouter()
+func Serve(svc service.Service) chan error {
+	cfg := svc.Config()
 
-	jwtAuthMiddleware := middleware.NewJWTAuthMiddleware(svc.QueryClient())
-	queryMiddleware := middleware.NewQueryMiddleWare(svc.QueryClient())
-
-	dealRouter := router.PathPrefix("/v0/data-deal").Subrouter()
-	dealRouter.Use(
-		queryMiddleware.Middleware,
-		jwtAuthMiddleware.Middleware,
-	)
-
-	datadeal.RegisterHandlers(svc, dealRouter)
-	key.RegisterHandlers(svc, dealRouter)
-
-	status.RegisterHandlers(svc, router)
-
-	return &Server{
-		&http.Server{
-			Handler:      router,
-			Addr:         svc.Config().API.ListenAddr,
-			WriteTimeout: time.Duration(svc.Config().API.WriteTimeout) * time.Second,
-			ReadTimeout:  time.Duration(svc.Config().API.ReadTimeout) * time.Second,
-		},
+	errCh := make(chan error)
+	log.Infof("gRPC enabled: %v", cfg.GRPC.Enabled)
+	if cfg.GRPC.Enabled {
+		runServer(rpc.NewGrpcServer(svc), errCh)
 	}
+
+	log.Infof("API enabled: %v", cfg.API.Enabled)
+	if cfg.API.Enabled {
+		if !cfg.GRPC.Enabled {
+			log.Warnf("gRPC server is not running. The API server needs to run a gRPC server.")
+		} else {
+			runServer(rpc.NewGatewayServer(svc), errCh)
+		}
+	}
+
+	return errCh
 }
 
-func (srv *Server) Run() error {
-	log.Infof("HTTP server is started: %s", srv.Addr)
-	return srv.ListenAndServe()
+func runServer(svr Server, errCh chan error) {
+	go func() {
+		if err := svr.Run(); err != nil {
+			errCh <- err
+		}
+		defer svr.Close()
+	}()
 }

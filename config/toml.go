@@ -62,13 +62,38 @@ light-client-log-level = "{{ .Panacea.LightClientLogLevel }}"
 ipfs-node-addr = "{{ .IPFS.IPFSNodeAddr }}"
 
 ###############################################################################
+###                         GRPC Configuration                           ###
+###############################################################################
+
+[grpc]
+# It is whether to use gRPC.
+enabled = "{{ .GRPC.Enabled }}"
+
+# It is address of the gRPC server. 
+listen-addr = "{{ .GRPC.ListenAddr }}"
+
+# It is a set the timeout for connection establishment for all new connections.
+connection-timeout = "{{ .GRPC.ConnectionTimeout }}"
+
+###############################################################################
 ###                         API Configuration                           ###
 ###############################################################################
 
 [api]
 
+# It is only available if grpc server is enabled.
+enabled = "{{ .API.Enabled }}"
+
+# It is the address of the API server.
 listen-addr = "{{ .API.ListenAddr }}"
+
+# It is the connection timeout setting of the client used for proxy with grpc.
+grpc-connection-timeout = "{{ .API.GrpcConnectionTimeout }}"
+
+# It is the maximum duration before timing out writes of the response.
 write-timeout = "{{ .API.WriteTimeout }}"
+
+# It is the maximum duration for reading the entire request, including the body.
 read-timeout = "{{ .API.ReadTimeout }}"
 `
 
