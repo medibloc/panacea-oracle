@@ -10,6 +10,7 @@ import (
 	"github.com/lestrrat-go/jwx/v2/jwa"
 	"github.com/lestrrat-go/jwx/v2/jwt"
 	"github.com/medibloc/panacea-oracle/panacea"
+	log "github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 )
 
@@ -33,11 +34,16 @@ func (ic *jwtAuthInterceptor) StreamServerInterceptor() grpc.StreamServerInterce
 // A service that uses this should respond with an error when there is no authenticated user.
 // The token is normally included in the header, but responds with an error if validation fails.
 func (ic *jwtAuthInterceptor) Interceptor(ctx context.Context) (context.Context, error) {
+	log.Debug("Call jwt interceptor")
+
 	jwtTokenStr, err := grpc_auth.AuthFromMD(ctx, "bearer")
 
 	if err != nil {
+		log.Debugf("failed to jwt token from header. %v", err.Error())
 		return ctx, nil
 	}
+
+	log.Debugf("jwt token: %s", jwtTokenStr)
 
 	jwtBz := []byte(jwtTokenStr)
 

@@ -22,6 +22,7 @@ func (s *dataDealServiceServer) ValidateData(ctx context.Context, req *datadeal.
 	oraclePrivKey := s.OraclePrivKey()
 	dealID := req.DealId
 
+	log.Infof("ValidateDataRequest: %v", req)
 	if err := req.ValidateBasic(); err != nil {
 		log.Errorf("invalid request body: %s", err.Error())
 		return nil, err
