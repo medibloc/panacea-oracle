@@ -75,6 +75,12 @@ listen-addr = "{{ .GRPC.ListenAddr }}"
 # It is a set the timeout for connection establishment for all new connections.
 connection-timeout = "{{ .GRPC.ConnectionTimeout }}"
 
+# It is a set the maximum number of connections that can be processed simultaneously.
+# If the maximum number of connections is exceeded, the client waits for 'keep-alive-timeout' time and receives a failure response.
+max-connection-size = "{{ .GRPC.MaxConnectionSize }}"
+
+keep-alive-timeout = "{{ .GRPC.KeepAliveTimeout }}"
+
 ###############################################################################
 ###                         API Configuration                           ###
 ###############################################################################

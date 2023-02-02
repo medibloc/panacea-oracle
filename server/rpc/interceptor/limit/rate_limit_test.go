@@ -1,47 +1,135 @@
-package limit_test
+package limit
 
 import (
-	"context"
-	"fmt"
+	"sort"
 	"sync"
 	"testing"
 	"time"
 
-	"github.com/medibloc/panacea-oracle/server/rpc/interceptor/limit"
-	"google.golang.org/grpc"
+	"github.com/medibloc/panacea-oracle/config"
+	log "github.com/sirupsen/logrus"
+	"github.com/stretchr/testify/require"
 )
 
-func handler(ctx context.Context, req interface{}) (interface{}, error) {
-	// wait 2 sec
-	time.Sleep(time.Second * 2)
+type results struct {
+	sync.Mutex
+	sync.WaitGroup
+	results []result
+}
 
-	return fmt.Sprintf("res.%v", req), nil
+func (r *results) waitAndPrint() {
+	r.Wait()
+	
+	sort.SliceStable(r.results, func(i, j int) bool {
+		return r.results[i].idx < r.results[j].idx
+	})
+
+	for _, res := range r.results {
+		log.Infof("idx(%d), req(%s), res(%s), err(%v)",
+			res.idx,
+			res.req,
+			res.res,
+			res.err,
+		)
+	}
+
+}
+
+type result struct {
+	idx int
+	req string
+	res string
+	err error
 }
 
 func TestRateLimitInterceptorSameRequestAndLimit(t *testing.T) {
 	reqCnt := 10
 	limitCnt := 10
+	waitTimeout := 1
 
-	limitInterceptor := limit.NewRateLimitInterceptor(limitCnt)
-	fn := limitInterceptor.UnaryServerInterceptor()
+	results := handling(reqCnt, limitCnt, waitTimeout)
+	results.waitAndPrint()
 
-	ctx := context.Background()
-	info := &grpc.UnaryServerInfo{}
+	for _, res := range results.results {
+		require.NoError(t, res.err)
+	}
+}
 
-	wg := sync.WaitGroup{}
-	results := make(map[int]error)
+func TestRateLimitInterceptorMoreRequestsThanLimit(t *testing.T) {
+	reqCnt := 30
+	limitCnt := 10
+	waitTimeout := 1
+
+	results := handling(reqCnt, limitCnt, waitTimeout)
+	results.waitAndPrint()
+
+	errCnt := 0
+	for _, res := range results.results {
+		if res.err != nil {
+			errCnt++
+		}
+	}
+
+	// 30 request
+	// 10 handling, 20 wait
+	// after 1 sec, 10 handling, 10 wait and timeout
+	// In the end, 20 successes and 10 failures
+	require.Equal(t, 10, errCnt)
+}
+
+func TestRateLimitInterceptorRequestPerSecondSameTheLimit(t *testing.T) {
+	reqCnt := 10
+	limitCnt := 10
+	waitTimeout := 1
+
+	results := handling(reqCnt, limitCnt, waitTimeout)
+
+	time.Sleep(time.Second + time.Millisecond*100)
+
+	results2 := handling(reqCnt, limitCnt, waitTimeout)
+
+	results.waitAndPrint()
+	results2.waitAndPrint()
+
+	for _, res := range results.results {
+		require.NoError(t, res.err)
+	}
+
+	for _, res := range results2.results {
+		require.NoError(t, res.err)
+	}
+}
+
+func handling(reqCnt, maxConnSize, waitTimeout int) *results {
+	cfg := config.GRPCConfig{
+		Enabled:           true,
+		MaxConnectionSize: maxConnSize,
+		KeepAliveTimeout:  int64(waitTimeout),
+	}
+	limitInterceptor := NewRateLimitInterceptor(cfg)
+
+	results := &results{results: []result{}}
 	for i := 0; i < reqCnt; i++ {
-		wg.Add(1)
+		results.Add(1)
 		go func(i int) {
-			defer wg.Done()
-			res, err := fn(ctx, i, info, handler)
-			fmt.Println(fmt.Printf("req: %d, res: %s, err: %v", i, res, err))
-			results[i] = err
+			defer results.Done()
+
+			reqTime := time.Now()
+			err := limitInterceptor.Interceptor()
+			resTime := time.Now()
+
+			res := result{
+				idx: i,
+				req: reqTime.Format(time.RFC3339),
+				res: resTime.Format(time.RFC3339),
+				err: err,
+			}
+
+			results.Lock()
+			defer results.Unlock()
+			results.results = append(results.results, res)
 		}(i)
 	}
 
-	fmt.Println("wait when finish go routine")
-	wg.Wait()
-	fmt.Print(results)
-
+	return results
 }

@@ -3,7 +3,7 @@ package query
 import (
 	"context"
 
-	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"server/rpc/interceptor/query/query.go
+	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	"github.com/medibloc/panacea-oracle/panacea"
 	log "github.com/sirupsen/logrus"
 	"google.golang.org/grpc"

@@ -61,6 +61,8 @@ type GRPCConfig struct {
 	Enabled           bool   `mapstructure:"enabled"`
 	ListenAddr        string `mapstructure:"listen-addr"`
 	ConnectionTimeout int64  `mapstructure:"connection-timeout"`
+	MaxConnectionSize int    `mapstructure:"max-connection-size"`
+	KeepAliveTimeout  int64  `mapstructure:"keep-alive-timeout"`
 }
 
 func DefaultConfig() *Config {
@@ -94,6 +96,8 @@ func DefaultConfig() *Config {
 			Enabled:           true,
 			ListenAddr:        "tcp://127.0.0.1:9090",
 			ConnectionTimeout: 120,
+			MaxConnectionSize: 300,
+			KeepAliveTimeout:  5,
 		},
 		API: APIConfig{
 			Enabled:               true,
