@@ -17,7 +17,7 @@ type rateLimitInterceptor struct {
 }
 
 func NewRateLimitInterceptor(cfg config.GRPCConfig) *rateLimitInterceptor {
-	maxConnectionSize := cfg.MaxConnectionSize
+	maxConnectionSize := cfg.RateLimitPerSecond
 	return &rateLimitInterceptor{
 		config:  cfg,
 		limiter: rate.NewLimiter(per(maxConnectionSize, time.Second), maxConnectionSize),
@@ -48,7 +48,7 @@ func (ic *rateLimitInterceptor) StreamServerInterceptor() grpc.StreamServerInter
 
 func (ic *rateLimitInterceptor) Interceptor() error {
 	grpcCfg := ic.config
-	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(grpcCfg.KeepAliveTimeout)*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(grpcCfg.WaitTimeout)*time.Second)
 	defer cancel()
 
 	if err := ic.limiter.Wait(ctx); err != nil {

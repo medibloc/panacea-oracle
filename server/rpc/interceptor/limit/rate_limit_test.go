@@ -19,7 +19,7 @@ type results struct {
 
 func (r *results) waitAndPrint() {
 	r.Wait()
-	
+
 	sort.SliceStable(r.results, func(i, j int) bool {
 		return r.results[i].idx < r.results[j].idx
 	})
@@ -102,9 +102,9 @@ func TestRateLimitInterceptorRequestPerSecondSameTheLimit(t *testing.T) {
 
 func handling(reqCnt, maxConnSize, waitTimeout int) *results {
 	cfg := config.GRPCConfig{
-		Enabled:           true,
-		MaxConnectionSize: maxConnSize,
-		KeepAliveTimeout:  int64(waitTimeout),
+		Enabled:            true,
+		RateLimitPerSecond: maxConnSize,
+		WaitTimeout:        int64(waitTimeout),
 	}
 	limitInterceptor := NewRateLimitInterceptor(cfg)
 

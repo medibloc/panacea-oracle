@@ -58,11 +58,11 @@ type APIConfig struct {
 }
 
 type GRPCConfig struct {
-	Enabled           bool   `mapstructure:"enabled"`
-	ListenAddr        string `mapstructure:"listen-addr"`
-	ConnectionTimeout int64  `mapstructure:"connection-timeout"`
-	MaxConnectionSize int    `mapstructure:"max-connection-size"`
-	KeepAliveTimeout  int64  `mapstructure:"keep-alive-timeout"`
+	Enabled            bool   `mapstructure:"enabled"`
+	ListenAddr         string `mapstructure:"listen-addr"`
+	ConnectionTimeout  int64  `mapstructure:"connection-timeout"`
+	RateLimitPerSecond int    `mapstructure:"rate-limit-per-second"`
+	WaitTimeout        int64  `mapstructure:"wait-timeout"`
 }
 
 func DefaultConfig() *Config {
@@ -93,11 +93,11 @@ func DefaultConfig() *Config {
 			IPFSNodeAddr: "127.0.0.1:5001",
 		},
 		GRPC: GRPCConfig{
-			Enabled:           true,
-			ListenAddr:        "tcp://127.0.0.1:9090",
-			ConnectionTimeout: 120,
-			MaxConnectionSize: 300,
-			KeepAliveTimeout:  5,
+			Enabled:            true,
+			ListenAddr:         "tcp://127.0.0.1:9090",
+			ConnectionTimeout:  120,
+			RateLimitPerSecond: 300,
+			WaitTimeout:        5,
 		},
 		API: APIConfig{
 			Enabled:               true,
