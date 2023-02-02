@@ -1,14 +1,18 @@
 package validation
 
 import (
-	"encoding/json"
+	"fmt"
 
-	"github.com/hyperledger/aries-framework-go/pkg/doc/verifiable"
 	"github.com/medibloc/vc-sdk/pkg/vc"
 )
 
-func ValidateVerifiablePresentation(vpBytes []byte) error {
+func ValidateVerifiablePresentation(vpBytes, pubKey []byte) error {
 	framework, err := vc.NewFrameWork()
+	if err != nil {
+		return err
+	}
+
+	err = framework.VerifyPresentation(vpBytes, pubKey, "EcdsaSecp256k1VerificationKey2019")
 	if err != nil {
 		return err
 	}
@@ -18,30 +22,38 @@ func ValidateVerifiablePresentation(vpBytes []byte) error {
 		return err
 	}
 
-	var vp verifiable.Presentation
-
-	err = json.Unmarshal(vpBytes, &vp)
+	err = validateVPProofs(proofs)
 	if err != nil {
 		return err
 	}
 
-	vc.ProofOptions{}
-
-	err = validatePresentationProofs(proofs, )
-	if err != nil {
-		return err
-	}
-
-	framework.VerifyPresentation()
+	// TODO: validate VP with the PresentationDefinition
 
 	return nil
 }
 
-func validatePresentationProofs(proofs *vc.ProofIterator, vp *verifiable.Proof) error {
-	for !proofs.HasNext() {
+func validateVPProofs(proofs *vc.ProofIterator) error {
+	for proofs.HasNext() {
 		proof := proofs.Next()
-
-		if proof.VerificationMethod !=
+		if proof.VerificationMethod == "" {
+			return fmt.Errorf("verification method is empty")
+		}
+		if proof.Type == "" {
+			return fmt.Errorf("proof type is empty")
+		}
+		if proof.ProofPurpose == "" {
+			return fmt.Errorf("proof purpose is empty")
+		}
+		if proof.Domain == "" {
+			return fmt.Errorf("proof domain is empty")
+		}
+		if proof.Challenge == "" {
+			return fmt.Errorf("proof challenge is empty")
+		}
+		if proof.Created == "" {
+			return fmt.Errorf("proof created date is empty")
+		}
 	}
+
 	return nil
 }
