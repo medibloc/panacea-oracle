@@ -2,7 +2,7 @@
 // versions:
 // - protoc-gen-go-grpc v1.2.0
 // - protoc             v3.21.12
-// source: panacea/key/v0/key.proto
+// source: panacea_oracle/key/v0/key.proto
 
 package v0
 
@@ -101,5 +101,5 @@ var KeyService_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "panacea/key/v0/key.proto",
+	Metadata: "panacea_oracle/key/v0/key.proto",
 }
