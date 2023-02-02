@@ -1,0 +1,100 @@
+syntax = "proto3";
+package panacea.oracle.v2;
+
+option go_package = "github.com/medibloc/panacea-core/x/oracle/types";
+
+import "gogoproto/gogo.proto";
+import "google/protobuf/timestamp.proto";
+import "cosmos/base/query/v1beta1/pagination.proto";
+import "google/api/annotations.proto";
+import "panacea/oracle/v2/oracle.proto";
+import "panacea/oracle/v2/genesis.proto";
+
+// Msg defines the Msg service.
+service Msg {
+  // RegisterOracle defines a method for registration of oracle.
+  rpc RegisterOracle(MsgRegisterOracle) returns (MsgRegisterOracleResponse);
+
+  // ApproveOracleRegistration defines a method to approve oracle registration
+  rpc ApproveOracleRegistration(MsgApproveOracleRegistration) returns (MsgApproveOracleRegistrationResponse);
+
+  // UpgradeOracleInfo defines a method to update oracle info
+  rpc UpdateOracleInfo(MsgUpdateOracleInfo) returns (MsgUpdateOracleInfoResponse);
+
+  // UpgradeOracle defines a method for upgrade of oracle
+  rpc UpgradeOracle(MsgUpgradeOracle) returns (MsgUpgradeOracleResponse);
+
+  // ApproveOracleUpgrade defines a method for approval of oracle upgrade
+  rpc ApproveOracleUpgrade(MsgApproveOracleUpgrade) returns (MsgApproveOracleUpgradeResponse);
+}
+
+// MsgRegisterOracle defines the Msg/RegisterOracle request type.
+message MsgRegisterOracle {
+  string unique_id = 1;
+  string oracle_address = 2;  // panacea1.. account address
+  bytes node_pub_key = 3;
+  bytes node_pub_key_remote_report = 4;
+  int64 trusted_block_height = 5;
+  bytes trusted_block_hash = 6;
+  string endpoint = 7;
+  string oracle_commission_rate = 8 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+  string oracle_commission_max_rate = 9 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+  string oracle_commission_max_change_rate = 10 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+}
+
+// MsgRegisterOracleResponse defines the Msg/RegisterOracle response type.
+message MsgRegisterOracleResponse {
+}
+
+// MsgApproveOracleRegistration defines the Msg/ApproveOracleRegistration
+message MsgApproveOracleRegistration {
+  ApprovalSharingOracleKey approval_sharing_oracle_key = 1;
+  bytes signature = 2;
+}
+
+// ApprovalSharingOracleKey defines approval for sharing oracle key encrypted with target oracle's node public key
+message ApprovalSharingOracleKey {
+  // approver's unique ID
+  string approver_unique_id = 1;
+  string approver_oracle_address = 2;
+  string target_unique_id = 3;
+  string target_oracle_address = 4;
+  bytes encrypted_oracle_priv_key = 5;
+}
+
+// MsgApproveOracleRegistrationResponse defines the Msg/ApproveOracleRegistration
+message MsgApproveOracleRegistrationResponse {
+}
+
+// MsgUpdateOracleInfo defines the Msg/UpdateOracleInfo
+message MsgUpdateOracleInfo {
+  string oracle_address = 1;  // panacea1.. account address
+  string endpoint = 2;
+  string oracle_commission_rate = 3 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = true];
+}
+
+// MsgUpdateOracleInfoResponse defines the Msg/UpdateOracleInfo
+message MsgUpdateOracleInfoResponse {
+}
+
+// MsgUpgradeOracle defines the Msg/UpgradeOracle
+message MsgUpgradeOracle {
+  string unique_id = 1;
+  string oracle_address = 2;  // panacea1.. account address
+  bytes node_pub_key = 3;
+  bytes node_pub_key_remote_report = 4;
+  int64 trusted_block_height = 5;
+  bytes trusted_block_hash = 6;
+}
+
+// MsgUpgradeOracleResponse defines the response of Msg/UpgradeOracle
+message MsgUpgradeOracleResponse {}
+
+// MsgApproveOracleUpgrade defines the Msg/ApproveOracleUpgrade
+message MsgApproveOracleUpgrade {
+  ApprovalSharingOracleKey approval_sharing_oracle_key = 1;
+  bytes signature = 2;
+}
+
+// MsgApproveOracleUpgradeResponse defines the response of Msg/ApproveOracleUpgrade
+message MsgApproveOracleUpgradeResponse {}

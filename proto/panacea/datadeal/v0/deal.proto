@@ -4,6 +4,7 @@ package panacea_oracle.datadeal.v0;
 option go_package = "github.com/medibloc/panacea-oracle/pb/datadeal/v0";
 
 import "google/api/annotations.proto";
+import "panacea/datadeal/v2/consent.proto";
 
 service DataDealService {
   rpc ValidateData(ValidateDataRequest) returns (ValidateDataResponse) {
@@ -22,21 +23,5 @@ message ValidateDataRequest {
 }
 
 message ValidateDataResponse {
-  Certificate certificate = 1;
-}
-
-// Certificate defines a certificate signed by an oracle who issued the certificate.
-message Certificate {
-  UnsignedCertificate unsigned_certificate = 1 [json_name = "unsigned_certificate"];
-  bytes signature = 2;
-}
-
-// UnsignedCertificate defines a certificate issued by an oracle as a result of data validation.
-message UnsignedCertificate {
-  string cid = 1;
-  string unique_id = 2 [json_name = "unique_id"];
-  string oracle_address = 3 [json_name = "oracle_address"];
-  uint64 deal_id = 4 [json_name = "deal_id"];
-  string provider_address = 5 [json_name = "provider_address"];
-  bytes data_hash = 6 [json_name = "data_hash"];
+  panacea.datadeal.v2.Certificate certificate = 1;
 }

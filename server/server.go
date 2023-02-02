@@ -12,13 +12,17 @@ type Server interface {
 	Close() error
 }
 
-func Serve(svc service.Service) chan error {
+func Serve(svc service.Service) ([]Server, chan error) {
 	cfg := svc.Config()
+
+	var servers []Server
 
 	errCh := make(chan error)
 	log.Infof("gRPC enabled: %v", cfg.GRPC.Enabled)
 	if cfg.GRPC.Enabled {
-		runServer(rpc.NewGrpcServer(svc), errCh)
+		svr := rpc.NewGrpcServer(svc)
+		servers = append(servers, svr)
+		runServer(svr, errCh)
 	}
 
 	log.Infof("API enabled: %v", cfg.API.Enabled)
@@ -26,11 +30,17 @@ func Serve(svc service.Service) chan error {
 		if !cfg.GRPC.Enabled {
 			log.Warnf("gRPC server is not running. The API server needs to run a gRPC server.")
 		} else {
-			runServer(rpc.NewGatewayServer(svc), errCh)
+			svr, err := rpc.NewGatewayServer(cfg)
+			if err != nil {
+				errCh <- err
+			} else {
+				servers = append(servers, svr)
+				runServer(svr, errCh)
+			}
 		}
 	}
 
-	return errCh
+	return servers, errCh
 }
 
 func runServer(svr Server, errCh chan error) {
