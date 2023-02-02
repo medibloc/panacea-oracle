@@ -35,7 +35,7 @@ func NewStatusServiceClient(cc grpc.ClientConnInterface) StatusServiceClient {
 
 func (c *statusServiceClient) GetStatus(ctx context.Context, in *GetStatusRequest, opts ...grpc.CallOption) (*GetStatusResponse, error) {
 	out := new(GetStatusResponse)
-	err := c.cc.Invoke(ctx, "/panacea.oracle.status.v0.StatusService/GetStatus", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/panacea_oracle.status.v0.StatusService/GetStatus", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -80,7 +80,7 @@ func _StatusService_GetStatus_Handler(srv interface{}, ctx context.Context, dec 
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/panacea.oracle.status.v0.StatusService/GetStatus",
+		FullMethod: "/panacea_oracle.status.v0.StatusService/GetStatus",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(StatusServiceServer).GetStatus(ctx, req.(*GetStatusRequest))
@@ -92,7 +92,7 @@ func _StatusService_GetStatus_Handler(srv interface{}, ctx context.Context, dec 
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var StatusService_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "panacea.oracle.status.v0.StatusService",
+	ServiceName: "panacea_oracle.status.v0.StatusService",
 	HandlerType: (*StatusServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{

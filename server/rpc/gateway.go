@@ -19,6 +19,7 @@ import (
 
 type gatewayServer struct {
 	grpcConn *grpc.ClientConn
+	svr      *http.Server
 	service  service.Service
 }
 
@@ -31,7 +32,7 @@ func NewGatewayServer(svc service.Service) *gatewayServer {
 func (s *gatewayServer) Run() error {
 	log.Info("Running the API server")
 
-	if err := s.generateAndSetGrpcConnection(); err != nil {
+	if err := s.createAndSetGrpcConnection(); err != nil {
 		return err
 	}
 
@@ -43,7 +44,7 @@ func (s *gatewayServer) Run() error {
 	return s.listenAndServe(mux)
 }
 
-func (s *gatewayServer) generateAndSetGrpcConnection() error {
+func (s *gatewayServer) createAndSetGrpcConnection() error {
 	grpcListenURL, err := url.Parse(s.service.Config().GRPC.ListenAddr)
 	if err != nil {
 		return fmt.Errorf("failed to parsing rest URL: %w", err)
@@ -107,13 +108,21 @@ func (s *gatewayServer) listenAndServe(mux *runtime.ServeMux) error {
 		WriteTimeout: time.Duration(cfg.API.WriteTimeout) * time.Second,
 		ReadTimeout:  time.Duration(cfg.API.ReadTimeout) * time.Second,
 	}
+	s.svr = svr
+
 	return svr.ListenAndServe()
 }
 
 func (s *gatewayServer) Close() error {
 	log.Info("Close API server")
+	if err := s.svr.Close(); err != nil {
+		log.Warnf("faled to close gateway http server. %v", err)
+	}
+
 	if s.grpcConn != nil {
-		return s.grpcConn.Close()
+		if err := s.grpcConn.Close(); err != nil {
+			log.Warnf("faled to close gateway grpc connection. %v", err)
+		}
 	}
 
 	return nil

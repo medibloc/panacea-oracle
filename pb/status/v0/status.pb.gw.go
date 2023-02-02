@@ -63,7 +63,7 @@ func RegisterStatusServiceHandlerServer(ctx context.Context, mux *runtime.ServeM
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/panacea.oracle.status.v0.StatusService/GetStatus", runtime.WithHTTPPathPattern("/v0/status"))
+		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/panacea_oracle.status.v0.StatusService/GetStatus", runtime.WithHTTPPathPattern("/v0/status"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -127,7 +127,7 @@ func RegisterStatusServiceHandlerClient(ctx context.Context, mux *runtime.ServeM
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/panacea.oracle.status.v0.StatusService/GetStatus", runtime.WithHTTPPathPattern("/v0/status"))
+		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/panacea_oracle.status.v0.StatusService/GetStatus", runtime.WithHTTPPathPattern("/v0/status"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return

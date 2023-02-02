@@ -35,7 +35,7 @@ func NewKeyServiceClient(cc grpc.ClientConnInterface) KeyServiceClient {
 
 func (c *keyServiceClient) GetSecretKey(ctx context.Context, in *GetSecretKeyRequest, opts ...grpc.CallOption) (*GetSecretKeyResponse, error) {
 	out := new(GetSecretKeyResponse)
-	err := c.cc.Invoke(ctx, "/panacea.oracle.key.v0.KeyService/GetSecretKey", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/panacea_oracle.key.v0.KeyService/GetSecretKey", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -80,7 +80,7 @@ func _KeyService_GetSecretKey_Handler(srv interface{}, ctx context.Context, dec 
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/panacea.oracle.key.v0.KeyService/GetSecretKey",
+		FullMethod: "/panacea_oracle.key.v0.KeyService/GetSecretKey",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(KeyServiceServer).GetSecretKey(ctx, req.(*GetSecretKeyRequest))
@@ -92,7 +92,7 @@ func _KeyService_GetSecretKey_Handler(srv interface{}, ctx context.Context, dec 
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var KeyService_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "panacea.oracle.key.v0.KeyService",
+	ServiceName: "panacea_oracle.key.v0.KeyService",
 	HandlerType: (*KeyServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{

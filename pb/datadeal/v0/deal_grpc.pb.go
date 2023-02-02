@@ -35,7 +35,7 @@ func NewDataDealServiceClient(cc grpc.ClientConnInterface) DataDealServiceClient
 
 func (c *dataDealServiceClient) ValidateData(ctx context.Context, in *ValidateDataRequest, opts ...grpc.CallOption) (*ValidateDataResponse, error) {
 	out := new(ValidateDataResponse)
-	err := c.cc.Invoke(ctx, "/panacea.datadeal.v0.DataDealService/ValidateData", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/panacea_oracle.datadeal.v0.DataDealService/ValidateData", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -80,7 +80,7 @@ func _DataDealService_ValidateData_Handler(srv interface{}, ctx context.Context,
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/panacea.datadeal.v0.DataDealService/ValidateData",
+		FullMethod: "/panacea_oracle.datadeal.v0.DataDealService/ValidateData",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(DataDealServiceServer).ValidateData(ctx, req.(*ValidateDataRequest))
@@ -92,7 +92,7 @@ func _DataDealService_ValidateData_Handler(srv interface{}, ctx context.Context,
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var DataDealService_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "panacea.datadeal.v0.DataDealService",
+	ServiceName: "panacea_oracle.datadeal.v0.DataDealService",
 	HandlerType: (*DataDealServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{

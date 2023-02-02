@@ -113,7 +113,7 @@ func RegisterDataDealServiceHandlerServer(ctx context.Context, mux *runtime.Serv
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/panacea.datadeal.v0.DataDealService/ValidateData", runtime.WithHTTPPathPattern("/v0/data-deal/deals/{deal_id}/data"))
+		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/panacea_oracle.datadeal.v0.DataDealService/ValidateData", runtime.WithHTTPPathPattern("/v0/data-deal/deals/{deal_id}/data"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -177,7 +177,7 @@ func RegisterDataDealServiceHandlerClient(ctx context.Context, mux *runtime.Serv
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/panacea.datadeal.v0.DataDealService/ValidateData", runtime.WithHTTPPathPattern("/v0/data-deal/deals/{deal_id}/data"))
+		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/panacea_oracle.datadeal.v0.DataDealService/ValidateData", runtime.WithHTTPPathPattern("/v0/data-deal/deals/{deal_id}/data"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return

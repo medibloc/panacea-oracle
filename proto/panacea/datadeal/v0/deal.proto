@@ -1,5 +1,5 @@
 syntax = "proto3";
-package panacea.datadeal.v0;
+package panacea_oracle.datadeal.v0;
 
 option go_package = "github.com/medibloc/panacea-oracle/pb/datadeal/v0";
 
