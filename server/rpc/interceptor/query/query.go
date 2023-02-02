@@ -44,11 +44,11 @@ func (ic *queryInterceptor) Interceptor(ctx context.Context) context.Context {
 
 func setHeightInContext(ctx context.Context, queryClient panacea.QueryClient) context.Context {
 	height, err := queryClient.GetLastBlockHeight(ctx)
-	if err == nil {
-		log.Debugf("Set the previous height of the last block height. LastHeight: %v, SetHeight: %v", height, height-1)
-		return panacea.SetQueryBlockHeightToContext(ctx, height-1)
+	if err != nil {
+		log.Warnf("failed to get last block height. %v", err)
+		return ctx
 	}
 
-	log.Warnf("failed to get last block height. %v", err)
-	return ctx
+	log.Debugf("Set the previous height of the last block height. LastHeight: %v, SetHeight: %v", height, height-1)
+	return panacea.SetQueryBlockHeightToContext(ctx, height-1)
 }
