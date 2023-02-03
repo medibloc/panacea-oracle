@@ -2,7 +2,7 @@
 // versions:
 // - protoc-gen-go-grpc v1.2.0
 // - protoc             v3.21.12
-// source: panacea/status/v0/status.proto
+// source: panacea_oracle/status/v0/status.proto
 
 package v0
 
@@ -101,5 +101,5 @@ var StatusService_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "panacea/status/v0/status.proto",
+	Metadata: "panacea_oracle/status/v0/status.proto",
 }

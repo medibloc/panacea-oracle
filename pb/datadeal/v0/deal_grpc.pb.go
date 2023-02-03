@@ -2,7 +2,7 @@
 // versions:
 // - protoc-gen-go-grpc v1.2.0
 // - protoc             v3.21.12
-// source: panacea/datadeal/v0/deal.proto
+// source: panacea_oracle/datadeal/v0/deal.proto
 
 package v0
 
@@ -101,5 +101,5 @@ var DataDealService_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "panacea/datadeal/v0/deal.proto",
+	Metadata: "panacea_oracle/datadeal/v0/deal.proto",
 }
