@@ -26,7 +26,7 @@ func TestValidateVerifiablePresentation(t *testing.T) {
       "UniversityDegreeCredential"
     ]}`
 
-	frameWork, err := vc.NewFrameWork()
+	frameWork, err := vc.NewFramework()
 	require.NoError(t, err)
 
 	privKey, err := btcec.NewPrivateKey(btcec.S256())
