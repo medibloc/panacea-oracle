@@ -11,10 +11,9 @@ require (
 	github.com/edgelesssys/ego v1.0.1
 	github.com/gogo/protobuf v1.3.3
 	github.com/gorilla/mux v1.8.0
-	github.com/hyperledger/aries-framework-go v0.1.8
 	github.com/ipfs/go-ipfs-api v0.3.0
 	github.com/lestrrat-go/jwx/v2 v2.0.8
-	github.com/medibloc/panacea-core/v2 v2.0.6-0.20230113040800-7e7a4728ab82
+	github.com/medibloc/panacea-core/v2 v2.1.0-alpha.3
 	github.com/medibloc/vc-sdk v0.0.3-0.20230203041044-1ef9fed0a4bf
 	github.com/sirupsen/logrus v1.9.0
 	github.com/spf13/cobra v1.6.1
@@ -75,6 +74,7 @@ require (
 	github.com/hashicorp/golang-lru v0.5.4 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/hdevalence/ed25519consensus v0.0.0-20210204194344-59a8610d2b87 // indirect
+	github.com/hyperledger/aries-framework-go v0.1.8 // indirect
 	github.com/hyperledger/aries-framework-go/component/storageutil v0.0.0-20220322085443-50e8f9bd208b // indirect
 	github.com/hyperledger/aries-framework-go/spi v0.0.0-20220322085443-50e8f9bd208b // indirect
 	github.com/inconshreveable/mousetrap v1.0.1 // indirect

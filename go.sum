@@ -1418,10 +1418,8 @@ github.com/maxbrunsfeld/counterfeiter/v6 v6.2.2/go.mod h1:eD9eIE7cdwcMi9rYluz88J
 github.com/mbilski/exhaustivestruct v1.2.0/go.mod h1:OeTBVxQWoEmB2J2JCHmXWPJ0aksxSUOUy+nvtVEfzXc=
 github.com/medibloc/cosmos-sdk v0.45.9-panacea.1 h1:JTprXN6z/+6UjkjQU4OfDz7z+sUpzev1s9DywmWA2Sk=
 github.com/medibloc/cosmos-sdk v0.45.9-panacea.1/go.mod h1:Z5M4TX7PsHNHlF/1XanI2DIpORQ+Q/st7oaeufEjnvU=
-github.com/medibloc/panacea-core/v2 v2.0.6-0.20230113040800-7e7a4728ab82 h1:tDGbin19dGF0EmBNPrd1UYcTYKe5jKWV4kiQJ/wbl+I=
-github.com/medibloc/panacea-core/v2 v2.0.6-0.20230113040800-7e7a4728ab82/go.mod h1:YCYoLlbegqIP8fbrpvrvkK5LsQojDxukneKczbZ7hic=
-github.com/medibloc/vc-sdk v0.0.3-0.20230126093837-702fb669001e h1:cnLiSe2Pm/SJMlIxLhgBZAtWXSwWIM2qZz3pS2pvoAM=
-github.com/medibloc/vc-sdk v0.0.3-0.20230126093837-702fb669001e/go.mod h1:g3/kehB4B+D/YeaKufvdbr91d1pHG7FuebrnBEudQMw=
+github.com/medibloc/panacea-core/v2 v2.1.0-alpha.3 h1:aAHLRXBQEe9w6/O5Mfu+eX26e6sMzLckZhMOpCoAaes=
+github.com/medibloc/panacea-core/v2 v2.1.0-alpha.3/go.mod h1:YCYoLlbegqIP8fbrpvrvkK5LsQojDxukneKczbZ7hic=
 github.com/medibloc/vc-sdk v0.0.3-0.20230203041044-1ef9fed0a4bf h1:GMfwI3UZGLYmXaAPGGTJKNpNbRpEsBOw/aE+ovq5WRs=
 github.com/medibloc/vc-sdk v0.0.3-0.20230203041044-1ef9fed0a4bf/go.mod h1:g3/kehB4B+D/YeaKufvdbr91d1pHG7FuebrnBEudQMw=
 github.com/mgechev/dots v0.0.0-20210922191527-e955255bf517/go.mod h1:KQ7+USdGKfpPjXk4Ga+5XxQM4Lm4e3gAogrreFAYpOg=
