@@ -1,0 +1,11 @@
+version: v1
+name: buf.build/medibloc/panacea-oracle
+deps:
+  - buf.build/googleapis/googleapis
+  - buf.build/medibloc/panacea-core
+breaking:
+  use:
+    - FILE
+lint:
+  use:
+    - DEFAULT
