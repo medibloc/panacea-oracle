@@ -50,4 +50,4 @@ proto-gen:
 			--grpc-gateway_opt logtostderr=true \
 			--grpc-gateway_opt=paths=import \
 			--grpc-gateway_opt=module=$(MODULE) \
-		$(PROTO_DIR)/panacea/*/*/*.proto
+		$(PROTO_DIR)/panacea_oracle/*/*/*.proto
