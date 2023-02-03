@@ -7,7 +7,7 @@ import (
 )
 
 func ValidateVerifiablePresentation(vpBytes, pubKey []byte) error {
-	framework, err := vc.NewFrameWork()
+	framework, err := vc.NewFramework()
 	if err != nil {
 		return err
 	}
