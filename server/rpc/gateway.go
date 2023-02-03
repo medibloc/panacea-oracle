@@ -30,13 +30,15 @@ func NewGatewayServer(cfg *config.Config) (*gatewayServer, error) {
 		return nil, err
 	}
 
-	registerServiceHandlers(
+	if err := registerServiceHandlers(
 		mux,
 		conn,
 		datadeal.RegisterServiceHandler,
 		key.RegisterServiceHandler,
 		status.RegisterServiceHandler,
-	)
+	); err != nil {
+		return nil, fmt.Errorf("failed to register service handlers: %w", err)
+	}
 
 	restListenURL, err := url.Parse(cfg.API.ListenAddr)
 	if err != nil {
