@@ -1,5 +1,5 @@
 syntax = "proto3";
-package panacea.oracle.key.v0;
+package panacea_oracle.key.v0;
 
 option go_package = "github.com/medibloc/panacea-oracle/pb/key/v0";
 

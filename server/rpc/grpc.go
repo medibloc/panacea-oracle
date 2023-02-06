@@ -23,7 +23,7 @@ type grpcServer struct {
 }
 
 func NewGrpcServer(svc service.Service) *grpcServer {
-	unaryInterceptor, streamInterceptor := generateInterceptors(svc)
+	unaryInterceptor, streamInterceptor := createInterceptors(svc)
 
 	grpcSvr := grpc.NewServer(
 		unaryInterceptor,
@@ -37,7 +37,7 @@ func NewGrpcServer(svc service.Service) *grpcServer {
 	}
 }
 
-func generateInterceptors(svc service.Service) (grpc.ServerOption, grpc.ServerOption) {
+func createInterceptors(svc service.Service) (grpc.ServerOption, grpc.ServerOption) {
 	jwtAuthInterceptor := auth.NewJWTAuthInterceptor(svc.QueryClient())
 	queryInterceptor := query.NewQueryInterceptor(svc.QueryClient())
 

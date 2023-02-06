@@ -4,12 +4,14 @@ import (
 	"bytes"
 	"context"
 	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
 
 	"github.com/btcsuite/btcd/btcec"
 	"github.com/gogo/protobuf/proto"
 	datadealtypes "github.com/medibloc/panacea-core/v2/x/datadeal/types"
 	"github.com/medibloc/panacea-oracle/crypto"
+	"github.com/medibloc/panacea-oracle/panacea"
 	datadeal "github.com/medibloc/panacea-oracle/pb/datadeal/v0"
 	"github.com/medibloc/panacea-oracle/server/rpc/interceptor/auth"
 	"github.com/medibloc/panacea-oracle/server/service/key"
@@ -23,7 +25,7 @@ func (s *dataDealServiceServer) ValidateData(ctx context.Context, req *datadeal.
 	dealID := req.DealId
 
 	log.Infof("ValidateDataRequest: %v", req)
-	if err := req.ValidateBasic(); err != nil {
+	if err := validateRequest(req); err != nil {
 		log.Errorf("invalid request body: %s", err.Error())
 		return nil, err
 	}
@@ -110,13 +112,13 @@ func (s *dataDealServiceServer) ValidateData(ctx context.Context, req *datadeal.
 	}
 
 	// Issue a certificate to the client
-	unsignedDataCert := &datadeal.UnsignedCertificate{
+	unsignedDataCert := &datadealtypes.UnsignedCertificate{
 		Cid:             cid,
 		UniqueId:        s.EnclaveInfo().UniqueIDHex(),
 		OracleAddress:   s.OracleAcc().GetAddress(),
 		DealId:          dealID,
 		ProviderAddress: req.ProviderAddress,
-		DataHash:        req.DataHash,
+		DataHash:        hex.EncodeToString(dataHash[:]),
 	}
 	key, _ := btcec.PrivKeyFromBytes(btcec.S256(), oraclePrivKey.Serialize())
 
@@ -132,7 +134,7 @@ func (s *dataDealServiceServer) ValidateData(ctx context.Context, req *datadeal.
 		return nil, fmt.Errorf("failed to create signature of data certificate")
 	}
 
-	certificate := &datadeal.Certificate{
+	certificate := &datadealtypes.Certificate{
 		UnsignedCertificate: unsignedDataCert,
 		Signature:           sig.Serialize(),
 	}
@@ -140,4 +142,20 @@ func (s *dataDealServiceServer) ValidateData(ctx context.Context, req *datadeal.
 	return &datadeal.ValidateDataResponse{
 		Certificate: certificate,
 	}, nil
+}
+
+func validateRequest(req *datadeal.ValidateDataRequest) error {
+	if _, err := panacea.GetAccAddressFromBech32(req.ProviderAddress); err != nil {
+		return fmt.Errorf("invalid provider address: %w", err)
+	}
+
+	if len(req.EncryptedData) == 0 {
+		return fmt.Errorf("encrypted data is empty in request")
+	}
+
+	if len(req.DataHash) == 0 {
+		return fmt.Errorf("data hash is empty in request")
+	}
+
+	return nil
 }

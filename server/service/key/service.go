@@ -25,9 +25,3 @@ func RegisterService(svc serverservice.Service, svr *grpc.Server) {
 func RegisterServiceHandler(ctx context.Context, mux *runtime.ServeMux, conn *grpc.ClientConn) error {
 	return key.RegisterKeyServiceHandler(ctx, mux, conn)
 }
-
-/*func RegisterHandlers(svc serverservice.Service, router *mux.Router) {
-	s := &combinedKeyService{svc}
-
-	router.HandleFunc("/secret-key", s.GetSecretKey).Methods(http.MethodGet)
-}*/

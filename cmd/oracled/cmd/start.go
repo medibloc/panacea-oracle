@@ -37,7 +37,7 @@ func startCmd() *cobra.Command {
 				return fmt.Errorf("failed to start event subscription: %w", err)
 			}
 
-			errChan := server.Serve(svc)
+			servers, errChan := server.Serve(svc)
 
 			sigChan := make(chan os.Signal, 1)
 			signal.Notify(sigChan, syscall.SIGTERM, syscall.SIGINT)
@@ -49,6 +49,12 @@ func startCmd() *cobra.Command {
 				}
 			case <-sigChan:
 				log.Info("signal detected")
+			}
+
+			for _, svr := range servers {
+				if err := svr.Close(); err != nil {
+					log.Warnf("error occurs while server close: %v", err)
+				}
 			}
 
 			return nil
