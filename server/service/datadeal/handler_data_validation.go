@@ -110,15 +110,9 @@ func (s *dataDealService) ValidateData(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//if err := validation.ValidateJSONSchemata(decryptedData, deal.DataSchema); err != nil {
-	//	log.Errorf("failed to validate data: %s", err.Error())
-	//	http.Error(w, "failed to validate data", http.StatusBadRequest)
-	//	return
-	//}
-
 	if err := validation.ValidateVerifiablePresentation(decryptedData, providerPubKeyBytes); err != nil {
-		log.Errorf("failed to validate data: %s", err.Error())
-		http.Error(w, "failed to validate data", http.StatusBadRequest)
+		log.Errorf("failed to validate verifiable presentation: %s", err.Error())
+		http.Error(w, "failed to validate verifiable presentation", http.StatusBadRequest)
 		return
 	}
 

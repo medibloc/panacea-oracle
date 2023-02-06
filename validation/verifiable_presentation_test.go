@@ -37,7 +37,6 @@ func TestValidateVerifiablePresentation(t *testing.T) {
 		SignatureType:      "EcdsaSecp256k1Signature2019",
 	})
 	require.NoError(t, err)
-	fmt.Println(string(vcBytes))
 
 	proofs, err := frameWork.GetCredentialProofs(vcBytes)
 	require.NoError(t, err)
