@@ -22,7 +22,7 @@ func Serve(svc service.Service) ([]Server, chan error) {
 	if cfg.GRPC.Enabled {
 		svr := rpc.NewGrpcServer(svc)
 		servers = append(servers, svr)
-		runServer(svr, errCh)
+		go runServer(svr, errCh)
 	}
 
 	log.Infof("API enabled: %v", cfg.API.Enabled)
@@ -35,7 +35,7 @@ func Serve(svc service.Service) ([]Server, chan error) {
 				errCh <- err
 			} else {
 				servers = append(servers, svr)
-				runServer(svr, errCh)
+				go runServer(svr, errCh)
 			}
 		}
 	}
@@ -44,10 +44,8 @@ func Serve(svc service.Service) ([]Server, chan error) {
 }
 
 func runServer(svr Server, errCh chan error) {
-	go func() {
-		if err := svr.Run(); err != nil {
-			errCh <- err
-		}
-		defer svr.Close()
-	}()
+	if err := svr.Run(); err != nil {
+		errCh <- err
+	}
+	defer svr.Close()
 }
