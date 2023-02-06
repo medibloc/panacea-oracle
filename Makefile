@@ -39,5 +39,3 @@ clean:
 
 proto-gen:
 	cd $(PROTO_DIR) && buf generate; cd -
-	cp -R github.com/medibloc/panacea-oracle/pb ./
-	rm -rf github.com

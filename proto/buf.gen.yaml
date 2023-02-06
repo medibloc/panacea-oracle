@@ -2,8 +2,12 @@ version: v1
 plugins:
   - name: go
     out: ..
+    opt: module=github.com/medibloc/panacea-oracle
   - name: go-grpc
     out: ..
+    opt: module=github.com/medibloc/panacea-oracle
   - name: grpc-gateway
     out: ..
-    opt: logtostderr=true
+    opt:
+      - logtostderr=true
+      - module=github.com/medibloc/panacea-oracle
