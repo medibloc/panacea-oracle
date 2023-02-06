@@ -38,4 +38,4 @@ clean:
 	rm -rf $(OUT_DIR)
 
 proto-gen:
-	cd $(PROTO_DIR) && buf generate; cd -
+	cd $(PROTO_DIR) && buf mod update && buf build && buf generate; cd -
