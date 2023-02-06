@@ -38,16 +38,4 @@ clean:
 	rm -rf $(OUT_DIR)
 
 proto-gen:
-	protoc --proto_path=$(PROTO_DIR) \
-		--proto_path=third_party/proto \
-		--go_out=$(PROTO_OUT_DIR) \
-			--go_opt=paths=import \
-			--go_opt=module=$(MODULE) \
-		--go-grpc_out=$(PROTO_OUT_DIR) \
-			--go-grpc_opt=paths=import \
-			--go-grpc_opt=module=$(MODULE) \
-		--grpc-gateway_out=$(PROTO_OUT_DIR) \
-			--grpc-gateway_opt logtostderr=true \
-			--grpc-gateway_opt=paths=import \
-			--grpc-gateway_opt=module=$(MODULE) \
-		$(PROTO_DIR)/panacea_oracle/*/*/*.proto
+	cd $(PROTO_DIR) && buf mod update && buf build && buf generate; cd -
