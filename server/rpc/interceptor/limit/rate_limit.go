@@ -19,7 +19,7 @@ type rateLimitInterceptor struct {
 func NewRateLimitInterceptor(cfg config.GRPCConfig) *rateLimitInterceptor {
 	maxConnectionSize := cfg.RateLimitPerSecond
 	return &rateLimitInterceptor{
-		waitTimeout: cfg.WaitTimeout,
+		waitTimeout: cfg.RateLimitWaitTimeout,
 		limiter:     rate.NewLimiter(per(maxConnectionSize, time.Second), maxConnectionSize),
 	}
 }

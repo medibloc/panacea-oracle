@@ -103,9 +103,9 @@ func TestRateLimitInterceptorRequestPerSecondSameTheLimit(t *testing.T) {
 
 func handling(reqCnt, maxConnSize, waitTimeout int) *results {
 	cfg := config.GRPCConfig{
-		Enabled:            true,
-		RateLimitPerSecond: maxConnSize,
-		WaitTimeout:        int64(waitTimeout),
+		Enabled:              true,
+		RateLimitPerSecond:   maxConnSize,
+		RateLimitWaitTimeout: int64(waitTimeout),
 	}
 	limitInterceptor := NewRateLimitInterceptor(cfg)
 

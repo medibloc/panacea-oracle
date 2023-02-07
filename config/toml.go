@@ -80,7 +80,7 @@ connection-timeout = "{{ .GRPC.ConnectionTimeout }}"
 rate-limit-per-second = "{{ .GRPC.RateLimitPerSecond }}"
 
 # It is a set the waiting time when the throughput per second is exceeded (in seconds).
-wait-timeout = "{{ .GRPC.WaitTimeout }}"
+rate-limit-wait-timeout = "{{ .GRPC.RateLimitWaitTimeout }}"
 
 ###############################################################################
 ###                         API Configuration                           ###
