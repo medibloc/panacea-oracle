@@ -14,6 +14,7 @@ import (
 	"github.com/medibloc/panacea-oracle/server/service/status"
 	"github.com/medibloc/panacea-oracle/service"
 	log "github.com/sirupsen/logrus"
+	"golang.org/x/net/netutil"
 	"google.golang.org/grpc"
 )
 
@@ -89,6 +90,8 @@ func (s *GrpcServer) listenAndServe() error {
 	if err != nil {
 		return fmt.Errorf("failed to listen port for RPC: %w", err)
 	}
+
+	lis = netutil.LimitListener(lis, 100)
 
 	return s.grpcServer.Serve(lis)
 }
