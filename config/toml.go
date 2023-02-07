@@ -76,7 +76,7 @@ connection-timeout = "{{ .GRPC.ConnectionTimeout }}"
 max-connection-size = "{{ .GRPC.MaxConnectionSize }}"
 
 # It is a set the throughput per second.
-# If the throughput per second is exceeded, the client waits for 'wait-timeout' time and receives a failure response.
+# If the throughput per second is exceeded, the client waits for 'rate-limit-wait-timeout' time and receives a failure response.
 rate-limit-per-second = "{{ .GRPC.RateLimitPerSecond }}"
 
 # It is a set the waiting time when the throughput per second is exceeded (in seconds).
