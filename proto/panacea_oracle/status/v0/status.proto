@@ -30,8 +30,7 @@ message StatusAPI {
 }
 
 message StatusGRPC {
-  bool enabled = 1;
-  string listen_addr = 2 [json_name = "listen_addr"];
+  string listen_addr = 1 [json_name = "listen_addr"];
 }
 
 message StatusEnclaveInfo {
