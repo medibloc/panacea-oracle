@@ -97,6 +97,5 @@ func (s *grpcServer) listenAndServe() error {
 		return fmt.Errorf("failed to listen port for RPC: %w", err)
 	}
 
-	limitListener := netutil.LimitListener(lis, cfg.MaxConnectionSize)
-	return s.grpcServer.Serve(limitListener)
+	return s.grpcServer.Serve(netutil.LimitListener(lis, cfg.MaxConnectionSize))
 }
