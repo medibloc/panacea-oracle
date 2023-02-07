@@ -17,12 +17,12 @@ import (
 	"google.golang.org/grpc"
 )
 
-type grpcServer struct {
+type GrpcServer struct {
 	grpcServer *grpc.Server
 	svc        service.Service
 }
 
-func NewGrpcServer(svc service.Service) *grpcServer {
+func NewGrpcServer(svc service.Service) *GrpcServer {
 	unaryInterceptor, streamInterceptor := createInterceptors(svc)
 
 	grpcSvr := grpc.NewServer(
@@ -31,7 +31,7 @@ func NewGrpcServer(svc service.Service) *grpcServer {
 		grpc.ConnectionTimeout(time.Duration(svc.Config().GRPC.ConnectionTimeout)*time.Second),
 	)
 
-	return &grpcServer{
+	return &GrpcServer{
 		grpcSvr,
 		svc,
 	}
@@ -52,7 +52,7 @@ func createInterceptors(svc service.Service) (grpc.ServerOption, grpc.ServerOpti
 
 }
 
-func (s *grpcServer) Run() error {
+func (s *GrpcServer) Run() error {
 	log.Info("Running the gRPC server")
 
 	s.registerServices(
@@ -64,21 +64,21 @@ func (s *grpcServer) Run() error {
 	return s.listenAndServe()
 }
 
-func (s *grpcServer) Close() error {
+func (s *GrpcServer) Close() error {
 	log.Info("Close gRPC server")
 	s.grpcServer.GracefulStop()
 
 	return nil
 }
 
-func (s *grpcServer) registerServices(registerServices ...func(serverservice.Service, *grpc.Server)) {
+func (s *GrpcServer) registerServices(registerServices ...func(serverservice.Service, *grpc.Server)) {
 	log.Info("Register grpc services")
 	for _, registerService := range registerServices {
 		registerService(s.svc, s.grpcServer)
 	}
 }
 
-func (s *grpcServer) listenAndServe() error {
+func (s *GrpcServer) listenAndServe() error {
 	grpcListenURL, err := url.Parse(s.svc.Config().GRPC.ListenAddr)
 	if err != nil {
 		return fmt.Errorf("failed to parsing rest URL: %w", err)

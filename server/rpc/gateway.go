@@ -17,12 +17,12 @@ import (
 	"google.golang.org/grpc/backoff"
 )
 
-type gatewayServer struct {
+type GatewayServer struct {
 	*http.Server
 	grpcConn *grpc.ClientConn
 }
 
-func NewGatewayServer(cfg *config.Config) (*gatewayServer, error) {
+func NewGatewayServer(cfg *config.Config) (*GatewayServer, error) {
 	mux := runtime.NewServeMux()
 
 	conn, err := createGrpcConnection(cfg)
@@ -45,7 +45,7 @@ func NewGatewayServer(cfg *config.Config) (*gatewayServer, error) {
 		return nil, fmt.Errorf("failed to parsing rest URL: %w", err)
 	}
 
-	return &gatewayServer{
+	return &GatewayServer{
 		Server: &http.Server{
 			Handler:      mux,
 			Addr:         restListenURL.Host,
@@ -56,7 +56,7 @@ func NewGatewayServer(cfg *config.Config) (*gatewayServer, error) {
 	}, nil
 }
 
-func (s *gatewayServer) Run() error {
+func (s *GatewayServer) Run() error {
 	log.Infof("API server is started: %s", s.Addr)
 
 	return s.ListenAndServe()
@@ -67,15 +67,12 @@ func createGrpcConnection(cfg *config.Config) (*grpc.ClientConn, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to parsing rest URL: %w", err)
 	}
-	port := grpcListenURL.Port()
 
-	grpcEndpoint := fmt.Sprintf("127.0.0.1:%s", port)
-
-	log.Infof("Dial gateway to gRPC server > %s", grpcEndpoint)
+	log.Infof("Dial gateway to gRPC server > %s", grpcListenURL.Host)
 
 	return grpc.DialContext(
 		context.Background(),
-		grpcEndpoint,
+		grpcListenURL.Host,
 		grpc.WithConnectParams(grpc.ConnectParams{
 			Backoff:           backoff.DefaultConfig,
 			MinConnectTimeout: time.Duration(cfg.API.GrpcConnectionTimeout) * time.Second,
@@ -96,7 +93,7 @@ func registerServiceHandlers(mux *runtime.ServeMux, conn *grpc.ClientConn, handl
 	return nil
 }
 
-func (s *gatewayServer) Close() error {
+func (s *GatewayServer) Close() error {
 	log.Info("Close API server")
 
 	ctxTimeout, cancel := context.WithTimeout(context.Background(), time.Second*10)
