@@ -45,14 +45,14 @@ func createInterceptors(svc service.Service) (grpc.ServerOption, grpc.ServerOpti
 	rateLimitInterceptor := limit.NewRateLimitInterceptor(svc.Config().GRPC)
 
 	return grpc.ChainUnaryInterceptor(
+			rateLimitInterceptor.UnaryServerInterceptor(),
 			jwtAuthInterceptor.UnaryServerInterceptor(),
 			queryInterceptor.UnaryServerInterceptor(),
-			rateLimitInterceptor.UnaryServerInterceptor(),
 		),
 		grpc.ChainStreamInterceptor(
+			rateLimitInterceptor.StreamServerInterceptor(),
 			jwtAuthInterceptor.StreamServerInterceptor(),
 			queryInterceptor.StreamServerInterceptor(),
-			rateLimitInterceptor.StreamServerInterceptor(),
 		)
 
 }
