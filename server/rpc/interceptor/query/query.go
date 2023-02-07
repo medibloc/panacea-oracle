@@ -37,11 +37,6 @@ func (ic *queryInterceptor) StreamServerInterceptor() grpc.StreamServerIntercept
 	}
 }
 
-func (ic *queryInterceptor) Interceptor(ctx context.Context) context.Context {
-	log.Debug("Call query interceptor")
-	return setHeightInContext(ctx, ic.panaceaQueryClient)
-}
-
 func setHeightInContext(ctx context.Context, queryClient panacea.QueryClient) context.Context {
 	height, err := queryClient.GetLastBlockHeight(ctx)
 	if err != nil {

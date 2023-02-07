@@ -66,9 +66,6 @@ ipfs-node-addr = "{{ .IPFS.IPFSNodeAddr }}"
 ###############################################################################
 
 [grpc]
-# It is whether to use gRPC.
-enabled = "{{ .GRPC.Enabled }}"
-
 # It is address of the gRPC server. 
 listen-addr = "{{ .GRPC.ListenAddr }}"
 
