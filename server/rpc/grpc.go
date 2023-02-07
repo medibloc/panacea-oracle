@@ -15,6 +15,7 @@ import (
 	"github.com/medibloc/panacea-oracle/server/service/status"
 	"github.com/medibloc/panacea-oracle/service"
 	log "github.com/sirupsen/logrus"
+	"golang.org/x/net/netutil"
 	"google.golang.org/grpc"
 )
 
@@ -83,16 +84,19 @@ func (s *grpcServer) registerServices(registerServices ...func(serverservice.Ser
 }
 
 func (s *grpcServer) listenAndServe() error {
-	grpcListenURL, err := url.Parse(s.svc.Config().GRPC.ListenAddr)
+	cfg := s.svc.Config().GRPC
+	grpcListenURL, err := url.Parse(cfg.ListenAddr)
 	if err != nil {
 		return fmt.Errorf("failed to parsing rest URL: %w", err)
 	}
 
 	log.Infof("gRPC server is started: %s", grpcListenURL.Host)
+
 	lis, err := net.Listen(grpcListenURL.Scheme, grpcListenURL.Host)
 	if err != nil {
 		return fmt.Errorf("failed to listen port for RPC: %w", err)
 	}
 
-	return s.grpcServer.Serve(lis)
+	limitListener := netutil.LimitListener(lis, cfg.MaxConnectionSize)
+	return s.grpcServer.Serve(limitListener)
 }
