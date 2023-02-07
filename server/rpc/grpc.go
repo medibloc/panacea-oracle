@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/medibloc/panacea-oracle/server/rpc/interceptor/auth"
+	"github.com/medibloc/panacea-oracle/server/rpc/interceptor/limit"
 	"github.com/medibloc/panacea-oracle/server/rpc/interceptor/query"
 	serverservice "github.com/medibloc/panacea-oracle/server/service"
 	"github.com/medibloc/panacea-oracle/server/service/datadeal"
@@ -40,14 +41,17 @@ func NewGrpcServer(svc service.Service) *grpcServer {
 func createInterceptors(svc service.Service) (grpc.ServerOption, grpc.ServerOption) {
 	jwtAuthInterceptor := auth.NewJWTAuthInterceptor(svc.QueryClient())
 	queryInterceptor := query.NewQueryInterceptor(svc.QueryClient())
+	rateLimitInterceptor := limit.NewRateLimitInterceptor(svc.Config().GRPC)
 
 	return grpc.ChainUnaryInterceptor(
 			jwtAuthInterceptor.UnaryServerInterceptor(),
 			queryInterceptor.UnaryServerInterceptor(),
+			rateLimitInterceptor.UnaryServerInterceptor(),
 		),
 		grpc.ChainStreamInterceptor(
 			jwtAuthInterceptor.StreamServerInterceptor(),
 			queryInterceptor.StreamServerInterceptor(),
+			rateLimitInterceptor.StreamServerInterceptor(),
 		)
 
 }
