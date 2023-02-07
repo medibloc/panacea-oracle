@@ -51,7 +51,7 @@ func (ic *rateLimitInterceptor) Interceptor() error {
 	defer cancel()
 
 	if err := ic.limiter.Wait(ctx); err != nil {
-		return status.Errorf(codes.ResourceExhausted, "The maximum number of allowable connections has been exceeded. please retry later. %v", err)
+		return status.Errorf(codes.ResourceExhausted, "failed with timeout while waiting for rate limiting. please retry later. %v", err)
 	}
 
 	return nil

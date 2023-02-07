@@ -67,6 +67,7 @@ func TestRateLimitInterceptorMoreRequestsThanLimit(t *testing.T) {
 	for _, res := range results.results {
 		if res.err != nil {
 			errCnt++
+			require.ErrorContains(t, res.err, "failed with timeout while waiting for rate limiting. please retry later.")
 		}
 	}
 
