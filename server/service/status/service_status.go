@@ -14,7 +14,6 @@ func (s *statusService) GetStatus(ctx context.Context, req *status.GetStatusRequ
 			ListenAddr: s.Config().API.ListenAddr,
 		},
 		Grpc: &status.StatusGRPC{
-			Enabled:    s.Config().GRPC.Enabled,
 			ListenAddr: s.Config().GRPC.ListenAddr,
 		},
 		EnclaveInfo: &status.StatusEnclaveInfo{

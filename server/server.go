@@ -18,25 +18,18 @@ func Serve(svc service.Service) ([]Server, chan error) {
 	var servers []Server
 
 	errCh := make(chan error)
-	log.Infof("gRPC enabled: %v", cfg.GRPC.Enabled)
-	if cfg.GRPC.Enabled {
-		svr := rpc.NewGrpcServer(svc)
-		servers = append(servers, svr)
-		go runServer(svr, errCh)
-	}
+	svr := rpc.NewGrpcServer(svc)
+	servers = append(servers, svr)
+	go runServer(svr, errCh)
 
 	log.Infof("API enabled: %v", cfg.API.Enabled)
 	if cfg.API.Enabled {
-		if !cfg.GRPC.Enabled {
-			log.Warnf("gRPC server is not running. The API server needs to run a gRPC server.")
+		svr, err := rpc.NewGatewayServer(cfg)
+		if err != nil {
+			errCh <- err
 		} else {
-			svr, err := rpc.NewGatewayServer(cfg)
-			if err != nil {
-				errCh <- err
-			} else {
-				servers = append(servers, svr)
-				go runServer(svr, errCh)
-			}
+			servers = append(servers, svr)
+			go runServer(svr, errCh)
 		}
 	}
 
