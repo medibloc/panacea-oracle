@@ -3,6 +3,7 @@ package config
 import (
 	"errors"
 	"path/filepath"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -50,19 +51,25 @@ type IPFSConfig struct {
 }
 
 type APIConfig struct {
-	Enabled            bool   `mapstructure:"enabled"`
-	ListenAddr         string `mapstructure:"listen-addr"`
-	GrpcConnectTimeout int64  `mapstructure:"grpc-connect-timeout"`
-	WriteTimeout       int64  `mapstructure:"write-timeout"`
-	ReadTimeout        int64  `mapstructure:"read-timeout"`
+	Enabled            bool          `mapstructure:"enabled"`
+	ListenAddr         string        `mapstructure:"listen-addr"`
+	GrpcConnectTimeout time.Duration `mapstructure:"grpc-connect-timeout"`
+	WriteTimeout       time.Duration `mapstructure:"write-timeout"`
+	ReadTimeout        time.Duration `mapstructure:"read-timeout"`
 }
 
 type GRPCConfig struct {
-	ListenAddr           string `mapstructure:"listen-addr"`
-	ConnectionTimeout    int64  `mapstructure:"connection-timeout"`
-	MaxConnectionSize    int    `mapstructure:"max-connection-size"`
-	RateLimitPerSecond   int    `mapstructure:"rate-limit-per-second"`
-	RateLimitWaitTimeout int64  `mapstructure:"rate-limit-wait-timeout"`
+	ListenAddr                     string        `mapstructure:"listen-addr"`
+	ConnectionTimeout              time.Duration `mapstructure:"connection-timeout"`
+	MaxConnections                 int           `mapstructure:"max-connections"`
+	MaxConcurrentStreams           int           `mapstructure:"max-concurrent-streams"`
+	KeepaliveMaxConnectionIdle     time.Duration `mapstructure:"keepalive-max-connection-idle"`
+	KeepaliveMaxConnectionAge      time.Duration `mapstructure:"keepalive-max-connection-age"`
+	KeepaliveMaxConnectionAgeGrace time.Duration `mapstructure:"keepalive-max-connection-age-grace"`
+	KeepaliveTime                  time.Duration `mapstructure:"keepalive-time"`
+	KeepaliveTimeout               time.Duration `mapstructure:"keepalive-timeout"`
+	RateLimits                     int           `mapstructure:"rate-limits"`
+	RateLimitWaitTimeout           time.Duration `mapstructure:"rate-limit-wait-timeout"`
 }
 
 func DefaultConfig() *Config {
@@ -93,18 +100,23 @@ func DefaultConfig() *Config {
 			IPFSNodeAddr: "127.0.0.1:5001",
 		},
 		GRPC: GRPCConfig{
-			ListenAddr:           "tcp://127.0.0.1:9090",
-			ConnectionTimeout:    120,
-			MaxConnectionSize:    50,
-			RateLimitPerSecond:   100,
-			RateLimitWaitTimeout: 5,
+			ListenAddr:                     "tcp://127.0.0.1:9090",
+			ConnectionTimeout:              time.Minute * 2,
+			MaxConnections:                 50,
+			KeepaliveMaxConnectionIdle:     time.Hour * 3,
+			KeepaliveMaxConnectionAge:      0,
+			KeepaliveMaxConnectionAgeGrace: 0,
+			KeepaliveTime:                  time.Hour * 2,
+			KeepaliveTimeout:               time.Second * 20,
+			RateLimits:                     100,
+			RateLimitWaitTimeout:           time.Second * 5,
 		},
 		API: APIConfig{
 			Enabled:            true,
 			ListenAddr:         "http://127.0.0.1:8080",
-			GrpcConnectTimeout: 10,
-			WriteTimeout:       60,
-			ReadTimeout:        15,
+			GrpcConnectTimeout: time.Second * 10,
+			WriteTimeout:       time.Second * 60,
+			ReadTimeout:        time.Second * 15,
 		},
 	}
 }

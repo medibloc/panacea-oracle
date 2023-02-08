@@ -73,11 +73,23 @@ listen-addr = "{{ .GRPC.ListenAddr }}"
 connection-timeout = "{{ .GRPC.ConnectionTimeout }}"
 
 # It is the maximum number of connections to the server.
-max-connection-size = "{{ .GRPC.MaxConnectionSize }}"
+max-connections = "{{ .GRPC.MaxConnections }}"
+
+max-concurrent-streams = "{{ .GRPC.MaxConcurrentStreams }}"
+
+keepalive-max-connection-idle = "{{ .GRPC.KeepaliveMaxConnectionIdle }}"
+
+keepalive-max-connection-age = "{{ .GRPC.KeepaliveMaxConnectionAge }}"
+
+keepalive-max-connection-age-grace = "{{ .GRPC.KeepaliveMaxConnectionAgeGrace }}"
+
+keepalive-time = "{{ .GRPC.KeepaliveTime }}"
+
+keepalive-timeout = "{{ .GRPC.KeepaliveTimeout }}"
 
 # It is a set the throughput per second.
 # If the throughput per second is exceeded, the client waits for 'rate-limit-wait-timeout' time and receives a failure response.
-rate-limit-per-second = "{{ .GRPC.RateLimitPerSecond }}"
+rate-limits = "{{ .GRPC.RateLimits }}"
 
 # It is a set the waiting time when the throughput per second is exceeded (in seconds).
 rate-limit-wait-timeout = "{{ .GRPC.RateLimitWaitTimeout }}"
@@ -95,7 +107,7 @@ enabled = "{{ .API.Enabled }}"
 listen-addr = "{{ .API.ListenAddr }}"
 
 # It is the connection timeout setting of the client used for proxy with grpc.
-grpc-connection-timeout = "{{ .API.GrpcConnectionTimeout }}"
+grpc-connect-timeout = "{{ .API.GrpcConnectTimeout }}"
 
 # It is the maximum duration before timing out writes of the response.
 write-timeout = "{{ .API.WriteTimeout }}"

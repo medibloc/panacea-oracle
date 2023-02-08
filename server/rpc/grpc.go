@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"net"
 	"net/url"
-	"time"
 
 	"github.com/medibloc/panacea-oracle/server/rpc/interceptor/auth"
 	"github.com/medibloc/panacea-oracle/server/rpc/interceptor/limit"
@@ -17,6 +16,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/net/netutil"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/keepalive"
 )
 
 type GrpcServer struct {
@@ -25,12 +25,22 @@ type GrpcServer struct {
 }
 
 func NewGrpcServer(svc service.Service) *GrpcServer {
+	cfg := svc.Config().GRPC
+
 	unaryInterceptor, streamInterceptor := createInterceptors(svc)
 
 	grpcSvr := grpc.NewServer(
 		unaryInterceptor,
 		streamInterceptor,
-		grpc.ConnectionTimeout(time.Duration(svc.Config().GRPC.ConnectionTimeout)*time.Second),
+		grpc.ConnectionTimeout(cfg.ConnectionTimeout),
+		grpc.MaxConcurrentStreams(uint32(cfg.MaxConcurrentStreams)),
+		grpc.KeepaliveParams(keepalive.ServerParameters{
+			MaxConnectionIdle:     cfg.KeepaliveMaxConnectionIdle,
+			MaxConnectionAge:      cfg.KeepaliveMaxConnectionAge,
+			MaxConnectionAgeGrace: cfg.KeepaliveMaxConnectionAgeGrace,
+			Time:                  cfg.KeepaliveTime,
+			Timeout:               cfg.KeepaliveTimeout,
+		}),
 	)
 
 	return &GrpcServer{
@@ -97,5 +107,5 @@ func (s *GrpcServer) listenAndServe() error {
 		return fmt.Errorf("failed to listen port for RPC: %w", err)
 	}
 
-	return s.grpcServer.Serve(netutil.LimitListener(lis, cfg.MaxConnectionSize))
+	return s.grpcServer.Serve(netutil.LimitListener(lis, cfg.MaxConnections))
 }
