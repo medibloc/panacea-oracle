@@ -50,11 +50,11 @@ type IPFSConfig struct {
 }
 
 type APIConfig struct {
-	Enabled               bool   `mapstructure:"enabled"`
-	ListenAddr            string `mapstructure:"listen-addr"`
-	GrpcConnectionTimeout int64  `mapstructure:"grpc-connection-timeout"`
-	WriteTimeout          int64  `mapstructure:"write-timeout"`
-	ReadTimeout           int64  `mapstructure:"read-timeout"`
+	Enabled            bool   `mapstructure:"enabled"`
+	ListenAddr         string `mapstructure:"listen-addr"`
+	GrpcConnectTimeout int64  `mapstructure:"grpc-connect-timeout"`
+	WriteTimeout       int64  `mapstructure:"write-timeout"`
+	ReadTimeout        int64  `mapstructure:"read-timeout"`
 }
 
 type GRPCConfig struct {
@@ -100,11 +100,11 @@ func DefaultConfig() *Config {
 			RateLimitWaitTimeout: 5,
 		},
 		API: APIConfig{
-			Enabled:               true,
-			ListenAddr:            "http://127.0.0.1:8080",
-			GrpcConnectionTimeout: 10,
-			WriteTimeout:          60,
-			ReadTimeout:           15,
+			Enabled:            true,
+			ListenAddr:         "http://127.0.0.1:8080",
+			GrpcConnectTimeout: 10,
+			WriteTimeout:       60,
+			ReadTimeout:        15,
 		},
 	}
 }

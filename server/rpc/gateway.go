@@ -75,7 +75,7 @@ func createGrpcConnection(cfg *config.Config) (*grpc.ClientConn, error) {
 		grpcListenURL.Host,
 		grpc.WithConnectParams(grpc.ConnectParams{
 			Backoff:           backoff.DefaultConfig,
-			MinConnectTimeout: time.Duration(cfg.API.GrpcConnectionTimeout) * time.Second,
+			MinConnectTimeout: time.Duration(cfg.API.GrpcConnectTimeout) * time.Second,
 		}),
 		grpc.WithInsecure(),
 	)
