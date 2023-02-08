@@ -75,16 +75,23 @@ connection-timeout = "{{ .GRPC.ConnectionTimeout }}"
 # It is the maximum number of connections to the server.
 max-connections = "{{ .GRPC.MaxConnections }}"
 
+# It will be apply a limit on the number of concurrent streams to each ServerTransport.
 max-concurrent-streams = "{{ .GRPC.MaxConcurrentStreams }}"
 
+# It is a duration for the amount of time after which an idle connection would be closed by sending a GoAway
+# Idleness duration is defined since the most recent time the number of outstanding RPCs became zero or the connection establishment.
 keepalive-max-connection-idle = "{{ .GRPC.KeepaliveMaxConnectionIdle }}"
 
+# It is a duration for the maximum amount of time a connection may exist before it will be closed by sending a GoAway.
 keepalive-max-connection-age = "{{ .GRPC.KeepaliveMaxConnectionAge }}"
 
+# It is an additive period after keepalive-max-connection-age after which the connection will be forcibly closed.
 keepalive-max-connection-age-grace = "{{ .GRPC.KeepaliveMaxConnectionAgeGrace }}"
 
+# After a duration of this time if the server doesn't see any activity it pings the client to see if the transport is still alive.
 keepalive-time = "{{ .GRPC.KeepaliveTime }}"
 
+# After having pinged for keepalive check, the server waits for a duration of Timeout and if no activity is seen even after that the connection is closed.
 keepalive-timeout = "{{ .GRPC.KeepaliveTimeout }}"
 
 # It is a set the throughput per second.
