@@ -10,7 +10,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/require"
 )
-
+a -m
 type results struct {
 	sync.Mutex
 	sync.WaitGroup
@@ -45,7 +45,7 @@ type result struct {
 func TestRateLimitInterceptorSameRequestAndLimit(t *testing.T) {
 	reqCnt := 10
 	limitCnt := 10
-	waitTimeout := 1
+	waitTimeout := time.Second * 1
 
 	results := handling(reqCnt, limitCnt, waitTimeout)
 	results.waitAndPrint()
@@ -58,7 +58,7 @@ func TestRateLimitInterceptorSameRequestAndLimit(t *testing.T) {
 func TestRateLimitInterceptorMoreRequestsThanLimit(t *testing.T) {
 	reqCnt := 30
 	limitCnt := 10
-	waitTimeout := 1
+	waitTimeout := time.Second * 1
 
 	results := handling(reqCnt, limitCnt, waitTimeout)
 	results.waitAndPrint()
@@ -81,7 +81,7 @@ func TestRateLimitInterceptorMoreRequestsThanLimit(t *testing.T) {
 func TestRateLimitInterceptorRequestPerSecondSameTheLimit(t *testing.T) {
 	reqCnt := 10
 	limitCnt := 10
-	waitTimeout := 1
+	waitTimeout := time.Second * 1
 
 	results := handling(reqCnt, limitCnt, waitTimeout)
 
@@ -101,10 +101,10 @@ func TestRateLimitInterceptorRequestPerSecondSameTheLimit(t *testing.T) {
 	}
 }
 
-func handling(reqCnt, maxConnSize, waitTimeout int) *results {
+func handling(reqCnt, maxConnSize int, waitTimeout time.Duration) *results {
 	cfg := config.GRPCConfig{
-		RateLimitPerSecond:   maxConnSize,
-		RateLimitWaitTimeout: int64(waitTimeout),
+		RateLimits:           maxConnSize,
+		RateLimitWaitTimeout: waitTimeout,
 	}
 	limitInterceptor := NewRateLimitInterceptor(cfg)
 
