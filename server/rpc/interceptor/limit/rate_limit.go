@@ -49,7 +49,6 @@ func (ic *rateLimitInterceptor) StreamServerInterceptor() grpc.StreamServerInter
 func (ic *rateLimitInterceptor) Interceptor() error {
 	ctx, cancel := context.WithTimeout(context.Background(), ic.waitTimeout)
 	defer cancel()
-
 	if err := ic.limiter.Wait(ctx); err != nil {
 		return status.Errorf(codes.ResourceExhausted, "failed with timeout while waiting for rate limiting. please retry later. %v", err)
 	}
