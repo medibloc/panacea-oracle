@@ -10,7 +10,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/require"
 )
-a -m
+
 type results struct {
 	sync.Mutex
 	sync.WaitGroup
