@@ -103,7 +103,7 @@ func DefaultConfig() *Config {
 			ListenAddr:                     "tcp://127.0.0.1:9090",
 			ConnectionTimeout:              time.Minute * 2,
 			MaxConnections:                 50,
-			KeepaliveMaxConnectionIdle:     time.Hour * 3,
+			KeepaliveMaxConnectionIdle:     0,
 			KeepaliveMaxConnectionAge:      0,
 			KeepaliveMaxConnectionAgeGrace: 0,
 			KeepaliveTime:                  time.Hour * 2,
