@@ -34,6 +34,7 @@ func NewGrpcServer(svc service.Service) *GrpcServer {
 		streamInterceptor,
 		grpc.ConnectionTimeout(cfg.ConnectionTimeout),
 		grpc.MaxConcurrentStreams(uint32(cfg.MaxConcurrentStreams)),
+		grpc.MaxRecvMsgSize(cfg.MaxRecvMsgSize),
 		grpc.KeepaliveParams(keepalive.ServerParameters{
 			MaxConnectionIdle:     cfg.KeepaliveMaxConnectionIdle,
 			MaxConnectionAge:      cfg.KeepaliveMaxConnectionAge,

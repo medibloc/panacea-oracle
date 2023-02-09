@@ -78,6 +78,9 @@ max-connections = "{{ .GRPC.MaxConnections }}"
 # It will be apply a limit on the number of concurrent streams to each ServerTransport.
 max-concurrent-streams = "{{ .GRPC.MaxConcurrentStreams }}"
 
+# It is the max message size in bytes the server can receive.
+max-recv-msg-size = "{{ .GRPC.MaxRecvMsgSize }}"
+
 # It is a duration for the amount of time after which an idle connection would be closed by sending a GoAway
 # Idleness duration is defined since the most recent time the number of outstanding RPCs became zero or the connection establishment.
 keepalive-max-connection-idle = "{{ .GRPC.KeepaliveMaxConnectionIdle }}"

@@ -63,6 +63,7 @@ type GRPCConfig struct {
 	ConnectionTimeout              time.Duration `mapstructure:"connection-timeout"`
 	MaxConnections                 int           `mapstructure:"max-connections"`
 	MaxConcurrentStreams           int           `mapstructure:"max-concurrent-streams"`
+	MaxRecvMsgSize                 int           `mapstructure:"max-recv-msg-size"`
 	KeepaliveMaxConnectionIdle     time.Duration `mapstructure:"keepalive-max-connection-idle"`
 	KeepaliveMaxConnectionAge      time.Duration `mapstructure:"keepalive-max-connection-age"`
 	KeepaliveMaxConnectionAgeGrace time.Duration `mapstructure:"keepalive-max-connection-age-grace"`
@@ -103,6 +104,8 @@ func DefaultConfig() *Config {
 			ListenAddr:                     "tcp://127.0.0.1:9090",
 			ConnectionTimeout:              time.Minute * 2,
 			MaxConnections:                 50,
+			MaxConcurrentStreams:           0,
+			MaxRecvMsgSize:                 4 << (10 * 2), // 4MB
 			KeepaliveMaxConnectionIdle:     0,
 			KeepaliveMaxConnectionAge:      0,
 			KeepaliveMaxConnectionAgeGrace: 0,
