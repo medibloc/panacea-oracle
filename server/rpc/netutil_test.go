@@ -21,7 +21,7 @@ func TestNetUtil(t *testing.T) {
 	wg := &sync.WaitGroup{}
 	for i := 0; i < 10; i++ {
 		wg.Add(1)
-		go func() {
+		go func(i int) {
 			log.Infof("%d req", i)
 			defer wg.Done()
 
@@ -29,7 +29,7 @@ func TestNetUtil(t *testing.T) {
 			require.NoError(t, err)
 			defer conn.Close()
 			log.Infof("%d res", i)
-		}()
+		}(i)
 	}
 
 	wg.Wait()
