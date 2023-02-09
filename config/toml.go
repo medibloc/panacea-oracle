@@ -85,7 +85,7 @@ enabled = "{{ .API.Enabled }}"
 listen-addr = "{{ .API.ListenAddr }}"
 
 # It is the connection timeout setting of the client used for proxy with grpc.
-grpc-connection-timeout = "{{ .API.GrpcConnectionTimeout }}"
+grpc-connect-timeout = "{{ .API.GrpcConnectTimeout }}"
 
 # It is the maximum duration before timing out writes of the response.
 write-timeout = "{{ .API.WriteTimeout }}"
