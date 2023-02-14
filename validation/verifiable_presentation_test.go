@@ -70,6 +70,6 @@ func TestValidateVerifiablePresentation(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	err = ValidateVerifiablePresentation(vpBytes, privKey.PubKey().SerializeUncompressed())
+	err = ValidateData(vpBytes, privKey.PubKey().SerializeUncompressed())
 	require.NoError(t, err)
 }

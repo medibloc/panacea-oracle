@@ -22,6 +22,7 @@ import (
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/cosmos/ibc-go/v2/modules/core/23-commitment/types"
 	datadealtypes "github.com/medibloc/panacea-core/v2/x/datadeal/types"
+	didtypes "github.com/medibloc/panacea-core/v2/x/did/types"
 	oracletypes "github.com/medibloc/panacea-core/v2/x/oracle/types"
 	"github.com/medibloc/panacea-oracle/config"
 	sgxdb "github.com/medibloc/panacea-oracle/store/sgxleveldb"
@@ -42,6 +43,7 @@ import (
 type QueryClient interface {
 	Close() error
 	GetAccount(context.Context, string) (authtypes.AccountI, error)
+	GetDID(context.Context, string) (*didtypes.DIDDocumentWithSeq, error)
 	GetOracleRegistration(context.Context, string, string) (*oracletypes.OracleRegistration, error)
 	GetLightBlock(height int64) (*tmtypes.LightBlock, error)
 	GetOracleParamsPublicKey(context.Context) (*btcec.PublicKey, error)
@@ -358,6 +360,21 @@ func (q verifiedQueryClient) GetAccount(ctx context.Context, address string) (au
 	}
 
 	return account, nil
+}
+
+func (q verifiedQueryClient) GetDID(ctx context.Context, did string) (*didtypes.DIDDocumentWithSeq, error) {
+	key := append(didtypes.DIDKeyPrefix, []byte(did)...)
+	bz, err := q.GetStoreData(ctx, didtypes.StoreKey, key)
+	if err != nil {
+		return nil, err
+	}
+
+	var didDoc *didtypes.DIDDocumentWithSeq
+	if err := q.cdc.UnmarshalInterface(bz, &didDoc); err != nil {
+		return nil, err
+	}
+
+	return didDoc, nil
 }
 
 func (q verifiedQueryClient) GetDeal(ctx context.Context, dealID uint64) (*datadealtypes.Deal, error) {

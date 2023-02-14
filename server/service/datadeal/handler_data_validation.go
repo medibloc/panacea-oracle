@@ -110,7 +110,8 @@ func (s *dataDealService) ValidateData(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := validation.ValidateVerifiablePresentation(decryptedData, providerPubKeyBytes); err != nil {
+	// ****************** from this, validate VP
+	if err := validation.ValidateData(decryptedData, queryClient); err != nil {
 		log.Errorf("failed to validate verifiable presentation: %s", err.Error())
 		http.Error(w, "failed to validate verifiable presentation", http.StatusBadRequest)
 		return
