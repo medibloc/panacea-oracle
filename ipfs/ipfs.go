@@ -39,7 +39,7 @@ func (i *ipfs) Add(data []byte) (string, error) {
 
 	cid, err := i.sh.Add(reader)
 	if err != nil {
-		return "failed dto add data to IPFS", err
+		return "failed to add data to IPFS", err
 	}
 
 	return cid, nil
