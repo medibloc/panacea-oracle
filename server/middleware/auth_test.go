@@ -9,6 +9,8 @@ import (
 	"testing"
 	"time"
 
+	didtypes "github.com/medibloc/panacea-core/v2/x/did/types"
+
 	"github.com/btcsuite/btcd/btcec"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -190,6 +192,9 @@ func (c *mockQueryClient) GetAccount(_ context.Context, address string) (authtyp
 	return c.account, nil
 }
 
+func (c *mockQueryClient) GetDID(_ context.Context, _ string) (*didtypes.DIDDocumentWithSeq, error) {
+	return nil, nil
+}
 func (c *mockQueryClient) GetOracleUpgrade(_ context.Context, _, _ string) (*oracletypes.OracleUpgrade, error) {
 	return nil, nil
 }
