@@ -13,6 +13,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TestGenerateTxBytes tests that transaction messages are generated correctly and that signatures are validated.
 func TestGenerateTxBytes(t *testing.T) {
 	conf := config.DefaultConfig()
 	privKey := secp256k1.GenPrivKey()

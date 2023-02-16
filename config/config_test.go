@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TestConfigAbsPath performs a test on the Abs function.
 func TestConfigAbsPath(t *testing.T) {
 	conf := config.DefaultConfig()
 

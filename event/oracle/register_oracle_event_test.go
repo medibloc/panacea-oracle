@@ -55,6 +55,7 @@ func (suite *registerOracleEventTestSuite) BeforeTest(_, _ string) {
 	}
 }
 
+// TestNameAndGetEventQuery tests the name and eventQuery.
 func (suite *registerOracleEventTestSuite) TestNameAndGetEventQuery() {
 	e := oracle.NewRegisterOracleEvent(suite.svc)
 
@@ -62,6 +63,7 @@ func (suite *registerOracleEventTestSuite) TestNameAndGetEventQuery() {
 	suite.Require().Contains(e.GetEventQuery(), "message.action = 'RegisterOracle'")
 }
 
+// TestEventHandler tests that the EventHandler function behavior succeeds.
 func (suite *registerOracleEventTestSuite) TestEventHandler() {
 	e := oracle.NewRegisterOracleEvent(suite.svc)
 
@@ -97,6 +99,7 @@ func (suite *registerOracleEventTestSuite) TestEventHandler() {
 	suite.Require().Equal(suite.oraclePrivKey.Serialize(), decryptedOraclePrivKey)
 }
 
+// TestEventHandlerNotSameUniqueID tests for situations where the UniqueID fetched from the event is different from the UniqueID fetched from Panacea.
 func (suite *registerOracleEventTestSuite) TestEventHandlerNotSameUniqueID() {
 	e := oracle.NewRegisterOracleEvent(suite.svc)
 
@@ -115,6 +118,7 @@ func (suite *registerOracleEventTestSuite) TestEventHandlerNotSameUniqueID() {
 	suite.Require().ErrorContains(err, "requester's unique ID is different from this binary's unique ID.")
 }
 
+// TestEventHandlerInvalidTrustedBlockInfo tests for invalid block info in the OracleRegistration registered with Panacea.
 func (suite *registerOracleEventTestSuite) TestEventHandlerInvalidTrustedBlockInfo() {
 	e := oracle.NewRegisterOracleEvent(suite.svc)
 
@@ -134,6 +138,7 @@ func (suite *registerOracleEventTestSuite) TestEventHandlerInvalidTrustedBlockIn
 	suite.Require().ErrorContains(err, "failed to verify trusted block information.")
 }
 
+// TestEventHandlerInvalidVerifyRemoteReport tests for invalid remote reports.
 func (suite *registerOracleEventTestSuite) TestEventHandlerInvalidVerifyRemoteReport() {
 	e := oracle.NewRegisterOracleEvent(suite.svc)
 
@@ -153,6 +158,7 @@ func (suite *registerOracleEventTestSuite) TestEventHandlerInvalidVerifyRemoteRe
 	suite.Require().ErrorContains(err, "failed to verify remote report")
 }
 
+// TestEventHandlerFailedBroadcast tests Panacea with a transaction that fails.
 func (suite *registerOracleEventTestSuite) TestEventHandlerFailedBroadcast() {
 	e := oracle.NewRegisterOracleEvent(suite.svc)
 

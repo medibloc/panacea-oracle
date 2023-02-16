@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TestValidateJSONSchema tests for JSONSchema validation success
 func TestValidateJSONSchema(t *testing.T) {
 	schemaURI := "https://json.schemastore.org/github-issue-forms.json"
 	jsonInput := []byte(`{
@@ -19,7 +20,8 @@ func TestValidateJSONSchema(t *testing.T) {
 	require.NoError(t, err)
 }
 
-func TestValidateJSONSchema_InvalidDoc(t *testing.T) {
+// TestValidateJSONSchemaInvalidDoc tests for document invalidation
+func TestValidateJSONSchemaInvalidDoc(t *testing.T) {
 	schemaURI := "https://json.schemastore.org/github-issue-forms.json"
 	jsonInput := []byte(`{
 		"name": "This is a name"
@@ -29,7 +31,8 @@ func TestValidateJSONSchema_InvalidDoc(t *testing.T) {
 	require.Error(t, err)
 }
 
-func TestValidateJSONSchema_InvalidJSON(t *testing.T) {
+// TestValidateJSONSchemaInvalidJSON tests for invalid json
+func TestValidateJSONSchemaInvalidJSON(t *testing.T) {
 	schemaURI := "https://json.schemastore.org/github-issue-forms.json"
 	jsonInput := []byte(`{
 		"name": "This JSON is messy",,,,,
@@ -39,7 +42,8 @@ func TestValidateJSONSchema_InvalidJSON(t *testing.T) {
 	require.Error(t, err)
 }
 
-func TestValidateJSONSchema_UnknownSchemaURI(t *testing.T) {
+// TestValidateJSONSchemaUnknownSchemaURI tests for invalid schemaURIs.
+func TestValidateJSONSchemaUnknownSchemaURI(t *testing.T) {
 	schemaURI := "https://MED_TO_THE_MOON/github-issue-forms.json"
 	jsonInput := []byte(`{
 		"name": "This is a name",

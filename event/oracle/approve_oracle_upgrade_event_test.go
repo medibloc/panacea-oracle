@@ -62,11 +62,13 @@ func (suite *approveOracleUpgradeTestSuite) BeforeTest(_, _ string) {
 	}
 }
 
+// TestNameAndGetEventQuery tests the name and eventQuery.
 func (suite *approveOracleUpgradeTestSuite) AfterTest(_, _ string) {
 	os.Remove(suite.svc.GetConfig().AbsNodePrivKeyPath())
 	os.Remove(suite.svc.GetConfig().AbsOraclePrivKeyPath())
 }
 
+// TestNameAndGetEventQuery tests the name and eventQuery.
 func (suite *approveOracleUpgradeTestSuite) TestNameAndGetEventQuery() {
 	e := oracle.NewApproveOracleUpgradeEvent(suite.svc, suite.errChan)
 
@@ -90,6 +92,7 @@ func (suite *approveOracleUpgradeTestSuite) TestNameAndGetEventQuery() {
 	)
 }
 
+// TestEventHandler tests that the EventHandler function behavior succeeds.
 func (suite *approveOracleUpgradeTestSuite) TestEventHandler() {
 	svc := suite.svc
 	errChan := suite.errChan
@@ -120,6 +123,7 @@ func (suite *approveOracleUpgradeTestSuite) TestEventHandler() {
 	suite.Require().Equal(suite.oraclePrivKey.Serialize(), savedOraclePrivKey)
 }
 
+// TestEventHandlerExistOraclePrivKey tests that the OraclePrivKey exists and fails
 func (suite *approveOracleUpgradeTestSuite) TestEventHandlerExistOraclePrivKey() {
 	svc := suite.svc
 	errChan := suite.errChan
@@ -138,6 +142,7 @@ func (suite *approveOracleUpgradeTestSuite) TestEventHandlerExistOraclePrivKey()
 	suite.Require().ErrorContains(err, "the oracle private key already exists")
 }
 
+// TestEventHandlerNotExistNodePrivKey tests for a NodePrivKey that fails because it doesn't exist.
 func (suite *approveOracleUpgradeTestSuite) TestEventHandlerNotExistNodePrivKey() {
 	svc := suite.svc
 	errChan := suite.errChan

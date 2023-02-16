@@ -57,6 +57,7 @@ func (suite *upgradeOracleEventTestSuite) BeforeTest(_, _ string) {
 	}
 }
 
+// TestNameAndGetEventQuery tests the name and eventQuery.
 func (suite *upgradeOracleEventTestSuite) TestNameAndGetEventQuery() {
 	e := oracle.NewUpgradeOracleEvent(suite.svc)
 
@@ -64,6 +65,7 @@ func (suite *upgradeOracleEventTestSuite) TestNameAndGetEventQuery() {
 	suite.Require().Contains(e.GetEventQuery(), "message.action = 'UpgradeOracle'")
 }
 
+// TestEventHandler tests that the EventHandler function behavior succeeds.
 func (suite *upgradeOracleEventTestSuite) TestEventHandler() {
 	e := oracle.NewUpgradeOracleEvent(suite.svc)
 
@@ -100,6 +102,7 @@ func (suite *upgradeOracleEventTestSuite) TestEventHandler() {
 	suite.Require().Equal(suite.oraclePrivKey.Serialize(), decryptedOraclePrivKey)
 }
 
+// TestEventHandlerNotSameUniqueID tests for situations where the UniqueID fetched from the event is different from the UniqueID fetched from Panacea.
 func (suite *upgradeOracleEventTestSuite) TestEventHandlerNotSameUniqueID() {
 	e := oracle.NewUpgradeOracleEvent(suite.svc)
 
@@ -119,6 +122,7 @@ func (suite *upgradeOracleEventTestSuite) TestEventHandlerNotSameUniqueID() {
 	suite.Require().ErrorContains(err, "the upgrade unique ID is different from the one stored in panacea")
 }
 
+// TestEventHandlerInvalidTrustedBlockInfo tests for invalid block info in the OracleRegistration registered with Panacea.
 func (suite *upgradeOracleEventTestSuite) TestEventHandlerInvalidTrustedBlockInfo() {
 	e := oracle.NewUpgradeOracleEvent(suite.svc)
 
@@ -139,6 +143,7 @@ func (suite *upgradeOracleEventTestSuite) TestEventHandlerInvalidTrustedBlockInf
 	suite.Require().ErrorContains(err, "failed to verify trusted block information")
 }
 
+// TestEventHandlerInvalidVerifyRemoteReport tests for invalid remote reports.
 func (suite *upgradeOracleEventTestSuite) TestEventHandlerInvalidVerifyRemoteReport() {
 	e := oracle.NewUpgradeOracleEvent(suite.svc)
 
@@ -159,6 +164,7 @@ func (suite *upgradeOracleEventTestSuite) TestEventHandlerInvalidVerifyRemoteRep
 	suite.Require().ErrorContains(err, "failed to verify remote report")
 }
 
+// TestEventHandlerFailedBroadcast tests Panacea with a transaction that fails.
 func (suite *upgradeOracleEventTestSuite) TestEventHandlerFailedBroadcast() {
 	e := oracle.NewUpgradeOracleEvent(suite.svc)
 

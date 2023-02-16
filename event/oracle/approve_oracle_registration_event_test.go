@@ -67,6 +67,7 @@ func (suite *approveOracleRegistrationTestSuite) AfterTest(_, _ string) {
 	os.Remove(suite.svc.GetConfig().AbsOraclePrivKeyPath())
 }
 
+// TestNameAndGetEventQuery tests the name and eventQuery.
 func (suite *approveOracleRegistrationTestSuite) TestNameAndGetEventQuery() {
 	e := oracle.NewApproveOracleRegistrationEvent(suite.svc, suite.errChan)
 
@@ -90,6 +91,7 @@ func (suite *approveOracleRegistrationTestSuite) TestNameAndGetEventQuery() {
 	)
 }
 
+// TestEventHandler tests that the EventHandler function behavior succeeds.
 func (suite *approveOracleRegistrationTestSuite) TestEventHandler() {
 	svc := suite.svc
 	errChan := suite.errChan
@@ -121,6 +123,7 @@ func (suite *approveOracleRegistrationTestSuite) TestEventHandler() {
 	suite.Require().Equal(suite.oraclePrivKey.Serialize(), savedOraclePrivKey)
 }
 
+// TestEventHandlerExistOraclePrivKey tests that the OraclePrivKey exists and fails
 func (suite *approveOracleRegistrationTestSuite) TestEventHandlerExistOraclePrivKey() {
 	svc := suite.svc
 	errChan := suite.errChan
@@ -139,6 +142,7 @@ func (suite *approveOracleRegistrationTestSuite) TestEventHandlerExistOraclePriv
 	suite.Require().ErrorContains(err, "the oracle private key already exists")
 }
 
+// TestEventHandlerNotExistNodePrivKey tests for a NodePrivKey that fails because it doesn't exist.
 func (suite *approveOracleRegistrationTestSuite) TestEventHandlerNotExistNodePrivKey() {
 	svc := suite.svc
 	errChan := suite.errChan

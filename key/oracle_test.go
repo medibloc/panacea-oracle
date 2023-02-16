@@ -13,6 +13,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TestRetrieveAndStoreOraclePrivKey tests for a normal situation.
 func TestRetrieveAndStoreOraclePrivKey(t *testing.T) {
 	nodePrivKey, err := btcec.NewPrivateKey(btcec.S256())
 	require.NoError(t, err)
@@ -48,6 +49,7 @@ func TestRetrieveAndStoreOraclePrivKey(t *testing.T) {
 	require.Equal(t, oraclePrivKey.Serialize(), storedOraclePrivKeyBz)
 }
 
+// TestRetrieveAndStoreOraclePrivKeyExistOraclePrivKey tests that the OraclePrivKey exists and fails.
 func TestRetrieveAndStoreOraclePrivKeyExistOraclePrivKey(t *testing.T) {
 	nodePrivKey, err := btcec.NewPrivateKey(btcec.S256())
 	require.NoError(t, err)
@@ -80,6 +82,7 @@ func TestRetrieveAndStoreOraclePrivKeyExistOraclePrivKey(t *testing.T) {
 	require.ErrorContains(t, err, "the oracle private key already exists")
 }
 
+// AAA tests that the NodePrivKey fails because it doesn't exist.
 func TestRetrieveAndStoreOraclePrivKeyNotExistNodePrivKey(t *testing.T) {
 	nodePrivKey, err := btcec.NewPrivateKey(btcec.S256())
 	require.NoError(t, err)

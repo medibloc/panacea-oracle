@@ -10,6 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TestEncryptData tests encryption/decryption with AES256
 func TestEncryptData(t *testing.T) {
 	privKey1, err := btcec.NewPrivateKey(btcec.S256())
 	require.NoError(t, err)

@@ -15,6 +15,7 @@ import (
 // It is implemented to return the value as it is declared in this mock structure.
 type MockQueryClient struct {
 	Account                     authtypes.AccountI
+	AccountError                error
 	OracleRegistration          *oracletypes.OracleRegistration
 	LightBlock                  *tmtypes.LightBlock
 	LastBlockHeight             int64
@@ -34,7 +35,7 @@ func (q MockQueryClient) Close() error {
 }
 
 func (q MockQueryClient) GetAccount(ctx context.Context, s string) (authtypes.AccountI, error) {
-	return q.Account, nil
+	return q.Account, q.AccountError
 }
 
 func (q MockQueryClient) GetOracleRegistration(ctx context.Context, s string, s2 string) (*oracletypes.OracleRegistration, error) {

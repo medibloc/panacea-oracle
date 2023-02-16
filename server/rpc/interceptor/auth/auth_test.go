@@ -7,20 +7,14 @@ import (
 	"time"
 
 	"github.com/btcsuite/btcd/btcec"
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
-	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/lestrrat-go/jwx/v2/jwa"
 	"github.com/lestrrat-go/jwx/v2/jwt"
-	datadealtypes "github.com/medibloc/panacea-core/v2/x/datadeal/types"
-	oracletypes "github.com/medibloc/panacea-core/v2/x/oracle/types"
 	"github.com/medibloc/panacea-oracle/panacea"
 	"github.com/medibloc/panacea-oracle/server/rpc/interceptor/auth"
+	"github.com/medibloc/panacea-oracle/types/test_utils/mocks"
 	"github.com/stretchr/testify/require"
 
-	tmtypes "github.com/tendermint/tendermint/types"
 	"google.golang.org/grpc/metadata"
 )
 
@@ -38,7 +32,9 @@ func TestAuthSuccess(t *testing.T) {
 	ctx = testJWTInterceptor(
 		t,
 		ctx,
-		&mockQueryClient{&mockAccount{}},
+		&mocks.MockQueryClient{
+			Account: mocks.NewMockAccount(testPrivKey.PubKey()),
+		},
 		"",
 	)
 
@@ -52,7 +48,9 @@ func TestMissingAuthorizationHeader(t *testing.T) {
 	testJWTInterceptor(
 		t,
 		ctx,
-		&mockQueryClient{&mockAccount{}},
+		&mocks.MockQueryClient{
+			Account: mocks.NewMockAccount(testPrivKey.PubKey()),
+		},
 		"",
 	)
 
@@ -69,7 +67,9 @@ func TestInvalidBearerToken(t *testing.T) {
 	testJWTInterceptor(
 		t,
 		ctx,
-		&mockQueryClient{&mockAccount{}},
+		&mocks.MockQueryClient{
+			Account: mocks.NewMockAccount(testPrivKey.PubKey()),
+		},
 		"",
 	)
 
@@ -84,7 +84,9 @@ func TestInvalidJWT(t *testing.T) {
 	testJWTInterceptor(
 		t,
 		ctx,
-		&mockQueryClient{&mockAccount{}},
+		&mocks.MockQueryClient{
+			Account: mocks.NewMockAccount(testPrivKey.PubKey()),
+		},
 		"invalid bearer token",
 	)
 }
@@ -97,7 +99,9 @@ func TestAccountNotFound(t *testing.T) {
 	testJWTInterceptor(
 		t,
 		ctx,
-		&mockQueryClient{&mockAccount{}},
+		&mocks.MockQueryClient{
+			AccountError: fmt.Errorf("not found account"),
+		},
 		"cannot query account pubkey",
 	)
 }
@@ -107,10 +111,14 @@ func TestAccountNoPubKey(t *testing.T) {
 
 	ctx := generateContextIncludeToken("bearer", string(jwt))
 
+	account := mocks.NewMockAccount(testPrivKey.PubKey())
+	account.PubKey = nil
 	testJWTInterceptor(
 		t,
 		ctx,
-		&mockQueryClient{&mockAccountWithoutPubKey{}},
+		&mocks.MockQueryClient{
+			Account: account,
+		},
 		"cannot query account pubkey",
 	)
 }
@@ -123,7 +131,9 @@ func TestSignatureVerificationFailure(t *testing.T) {
 	testJWTInterceptor(
 		t,
 		ctx,
-		&mockQueryClient{&mockAccount{}},
+		&mocks.MockQueryClient{
+			Account: mocks.NewMockAccount(testPrivKey.PubKey()),
+		},
 		"jwt signature verification failed",
 	)
 }
@@ -174,119 +184,4 @@ func testJWTInterceptor(
 	}
 
 	return ctx
-}
-
-type mockQueryClient struct {
-	account authtypes.AccountI
-}
-
-func (c *mockQueryClient) GetConsent(_ context.Context, _ uint64, _ string) (*datadealtypes.Consent, error) {
-	return nil, nil
-}
-
-func (c *mockQueryClient) GetOracleRegistration(_ context.Context, uniqueID, oracleAddr string) (*oracletypes.OracleRegistration, error) {
-	return nil, nil
-}
-
-func (c *mockQueryClient) GetLightBlock(height int64) (*tmtypes.LightBlock, error) {
-	return nil, nil
-}
-
-func (c *mockQueryClient) GetCdc() *codec.ProtoCodec {
-	return nil
-}
-
-func (c *mockQueryClient) GetChainID() string {
-	return ""
-}
-
-func (c *mockQueryClient) Close() error {
-	return nil
-}
-
-func (c *mockQueryClient) GetAccount(_ context.Context, address string) (authtypes.AccountI, error) {
-	if address != testAccAddr {
-		return nil, fmt.Errorf("address not found: %v", address)
-	}
-	return c.account, nil
-}
-
-func (c *mockQueryClient) GetOracleUpgrade(_ context.Context, _, _ string) (*oracletypes.OracleUpgrade, error) {
-	return nil, nil
-}
-
-func (c *mockQueryClient) GetDeal(_ context.Context, _ uint64) (*datadealtypes.Deal, error) {
-	return nil, nil
-}
-
-func (c *mockQueryClient) GetOracleUpgradeInfo(_ context.Context) (*oracletypes.OracleUpgradeInfo, error) {
-	return nil, nil
-}
-
-func (c *mockQueryClient) GetOracle(_ context.Context, _ string) (*oracletypes.Oracle, error) {
-	return nil, nil
-}
-
-func (c *mockQueryClient) VerifyTrustedBlockInfo(_ int64, _ []byte) error {
-	return nil
-}
-
-type mockAccount struct{}
-
-func (a *mockAccount) Reset() {
-}
-
-func (a *mockAccount) String() string {
-	return ""
-}
-
-func (a *mockAccount) ProtoMessage() {
-}
-
-func (a *mockAccount) GetAddress() sdk.AccAddress {
-	return nil
-}
-
-func (a *mockAccount) SetAddress(address sdk.AccAddress) error {
-	return nil
-}
-
-func (a *mockAccount) GetPubKey() cryptotypes.PubKey {
-	return testPrivKey.PubKey()
-}
-
-func (a *mockAccount) SetPubKey(key cryptotypes.PubKey) error {
-	return nil
-}
-
-func (a *mockAccount) GetAccountNumber() uint64 {
-	return 0
-}
-
-func (a *mockAccount) SetAccountNumber(u uint64) error {
-	return nil
-}
-
-func (a *mockAccount) GetSequence() uint64 {
-	return 0
-}
-
-func (a *mockAccount) SetSequence(u uint64) error {
-	return nil
-}
-
-func (c *mockQueryClient) GetOracleParamsPublicKey(_ context.Context) (*btcec.PublicKey, error) {
-	return testOraclePrivKey.PubKey(), nil
-}
-
-type mockAccountWithoutPubKey struct {
-	mockAccount
-}
-
-func (a *mockAccountWithoutPubKey) GetPubKey() cryptotypes.PubKey {
-	return nil
-}
-
-func (c *mockQueryClient) GetLastBlockHeight(_ context.Context) (int64, error) {
-	return 0, nil
 }
