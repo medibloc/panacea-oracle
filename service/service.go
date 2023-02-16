@@ -67,7 +67,7 @@ func New(conf *config.Config, sgx sgx.Sgx, queryClient panacea.QueryClient) (Ser
 
 	newIpfs, err := ipfs.NewIPFS(conf.IPFS.IPFSNodeAddr)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create connection to GetIPFS node(%s): %w", conf.IPFS.IPFSNodeAddr, err)
+		return nil, fmt.Errorf("failed to create connection to IPFS node(%s): %w", conf.IPFS.IPFSNodeAddr, err)
 	}
 
 	grpcClient, err := panacea.NewGRPCClient(conf.Panacea.GRPCAddr, conf.Panacea.ChainID)
