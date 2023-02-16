@@ -22,7 +22,9 @@ var (
 )
 
 func (u MockIPFS) Add(data []byte) (string, error) {
-	os.MkdirAll(defaultPath, fs.ModePerm)
+	if err := os.MkdirAll(defaultPath, fs.ModePerm); err != nil {
+		return "", err
+	}
 
 	ran := make([]byte, 12)
 	if _, err := io.ReadFull(rand.Reader, ran); err != nil {

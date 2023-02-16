@@ -35,13 +35,16 @@ func TestGenerateTxBytes(t *testing.T) {
 	require.NoError(t, err)
 
 	var txRaw tx.TxRaw
-	txRaw.Unmarshal(txBodyBz)
+	err = txRaw.Unmarshal(txBodyBz)
+	require.NoError(t, err)
 
 	var txBody tx.TxBody
-	txBody.Unmarshal(txRaw.BodyBytes)
+	err = txBody.Unmarshal(txRaw.BodyBytes)
+	require.NoError(t, err)
 
 	var authInfo tx.AuthInfo
-	authInfo.Unmarshal(txRaw.AuthInfoBytes)
+	err = authInfo.Unmarshal(txRaw.AuthInfoBytes)
+	require.NoError(t, err)
 
 	defaultFeeAmount, err := sdk.ParseCoinsNormalized(conf.Panacea.DefaultFeeAmount)
 	require.NoError(t, err)

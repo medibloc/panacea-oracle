@@ -126,14 +126,15 @@ func (suite *approveOracleUpgradeTestSuite) TestEventHandlerExistOraclePrivKey()
 
 	e := oracle.NewApproveOracleUpgradeEvent(svc, errChan)
 	conf := svc.GetConfig()
-	os.WriteFile(conf.AbsOraclePrivKeyPath(), suite.oraclePrivKey.Serialize(), fs.ModePerm)
+	err := os.WriteFile(conf.AbsOraclePrivKeyPath(), suite.oraclePrivKey.Serialize(), fs.ModePerm)
+	suite.Require().NoError(err)
 
 	go func() {
 		err := e.EventHandler(context.Background(), coretypes.ResultEvent{})
 		suite.Require().NoError(err)
 	}()
 
-	err := <-errChan
+	err = <-errChan
 	suite.Require().ErrorContains(err, "the oracle private key already exists")
 }
 

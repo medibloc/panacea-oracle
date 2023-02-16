@@ -1,5 +1,7 @@
 export GO111MODULE = on
 
+DOCKER := $(shell which docker)
+
 GO ?= ego-go
 
 build_tags := $(strip $(BUILD_TAGS))
