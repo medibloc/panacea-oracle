@@ -8,6 +8,8 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/medibloc/panacea-oracle/panacea"
+
 	"github.com/btcsuite/btcd/btcec"
 	"github.com/gorilla/mux"
 	datadealtypes "github.com/medibloc/panacea-core/v2/x/datadeal/types"
@@ -94,15 +96,15 @@ func (s *dataDealService) ValidateData(w http.ResponseWriter, r *http.Request) {
 
 	decryptSharedKey := crypto.DeriveSharedKey(oraclePrivKey, providerPubKey, crypto.KDFSHA256)
 
-	decryptedData, err := crypto.Decrypt(decryptSharedKey, nil, encryptedDataBz)
+	vp, err := crypto.Decrypt(decryptSharedKey, nil, encryptedDataBz)
 	if err != nil {
 		log.Errorf("failed to decrypt data: %s", err.Error())
 		http.Error(w, "failed to decrypt data", http.StatusBadRequest)
 		return
 	}
 
-	// Validate data
-	dataHash := sha256.Sum256(decryptedData)
+	// Validate data hash
+	dataHash := sha256.Sum256(vp)
 	dataHashStr := hex.EncodeToString(dataHash[:])
 	if reqBody.DataHash != dataHashStr {
 		log.Errorf("data hash mismatch")
@@ -110,8 +112,9 @@ func (s *dataDealService) ValidateData(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// ****************** from this, validate VP
-	if err := validation.ValidateData(decryptedData, queryClient); err != nil {
+	// Validate VP
+	vdr := panacea.NewVdrRegistry(queryClient)
+	if err := validation.ValidateVP(vdr, vp, deal.GetPresentationDefinition()); err != nil {
 		log.Errorf("failed to validate verifiable presentation: %s", err.Error())
 		http.Error(w, "failed to validate verifiable presentation", http.StatusBadRequest)
 		return
@@ -119,7 +122,7 @@ func (s *dataDealService) ValidateData(w http.ResponseWriter, r *http.Request) {
 
 	// Re-encrypt data using a combined key
 	combinedKey := key.GetCombinedKey(oraclePrivKey.Serialize(), dealID, dataHash[:])
-	reEncryptedData, err := crypto.Encrypt(combinedKey[:], nil, decryptedData)
+	reEncryptedData, err := crypto.Encrypt(combinedKey[:], nil, vp)
 	if err != nil {
 		log.Errorf("failed to re-encrypt data with the combined key: %s", err.Error())
 		http.Error(w, "failed to re-encrypt data with the combined key", http.StatusInternalServerError)

@@ -4,7 +4,6 @@ go 1.19
 
 require (
 	github.com/btcsuite/btcd v0.22.1
-	github.com/btcsuite/btcutil v1.0.3-0.20201208143702-a53e38424cce
 	github.com/confio/ics23/go v0.7.0
 	github.com/cosmos/cosmos-sdk v0.45.9
 	github.com/cosmos/go-bip39 v1.0.0
@@ -15,8 +14,8 @@ require (
 	github.com/hyperledger/aries-framework-go v0.1.8
 	github.com/ipfs/go-ipfs-api v0.3.0
 	github.com/lestrrat-go/jwx/v2 v2.0.8
-	github.com/medibloc/panacea-core/v2 v2.1.0-alpha.3
-	github.com/medibloc/vc-sdk v0.0.3-0.20230213075829-c7eebde061ce
+	github.com/medibloc/panacea-core/v2 v2.1.0-alpha.3.0.20230210051046-64e8e2724828
+	github.com/medibloc/vc-sdk v0.0.3-0.20230216003043-416cd7116a45
 	github.com/sirupsen/logrus v1.9.0
 	github.com/spf13/cobra v1.6.1
 	github.com/spf13/viper v1.13.0
@@ -39,6 +38,7 @@ require (
 	github.com/armon/go-metrics v0.3.10 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bgentry/speakeasy v0.1.0 // indirect
+	github.com/btcsuite/btcutil v1.0.3-0.20201208143702-a53e38424cce // indirect
 	github.com/cenkalti/backoff/v4 v4.1.3 // indirect
 	github.com/cespare/xxhash v1.1.0 // indirect
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect

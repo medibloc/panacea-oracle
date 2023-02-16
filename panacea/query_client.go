@@ -369,12 +369,12 @@ func (q verifiedQueryClient) GetDID(ctx context.Context, did string) (*didtypes.
 		return nil, err
 	}
 
-	var didDoc *didtypes.DIDDocumentWithSeq
+	var didDoc didtypes.DIDDocumentWithSeq
 	if err := q.cdc.UnmarshalInterface(bz, &didDoc); err != nil {
 		return nil, err
 	}
 
-	return didDoc, nil
+	return &didDoc, nil
 }
 
 func (q verifiedQueryClient) GetDeal(ctx context.Context, dealID uint64) (*datadealtypes.Deal, error) {
