@@ -1427,6 +1427,8 @@ github.com/medibloc/panacea-core/v2 v2.1.0-alpha.3.0.20230210051046-64e8e2724828
 github.com/medibloc/panacea-core/v2 v2.1.0-alpha.3.0.20230210051046-64e8e2724828/go.mod h1:bLeCsy424zkTyCewYs/H0FFSslcigPPli65dJQbtK2A=
 github.com/medibloc/vc-sdk v0.0.3-0.20230216003043-416cd7116a45 h1:ulj2xKHZ8KrgDoNBXzAbn3Bhb+70dfSxNXdf+99fgk0=
 github.com/medibloc/vc-sdk v0.0.3-0.20230216003043-416cd7116a45/go.mod h1:/RZbOPc0jgbZlGcJ8xdOQoQpKb/Qr0q5hDEJFn7mWE4=
+github.com/medibloc/vc-sdk v0.0.3-0.20230216034748-3109271ae3be h1:5l3eciG7SZfu9sJyJEum5eXZ4lfYpZwFh8EQzodL7xQ=
+github.com/medibloc/vc-sdk v0.0.3-0.20230216034748-3109271ae3be/go.mod h1:/RZbOPc0jgbZlGcJ8xdOQoQpKb/Qr0q5hDEJFn7mWE4=
 github.com/mgechev/dots v0.0.0-20210922191527-e955255bf517/go.mod h1:KQ7+USdGKfpPjXk4Ga+5XxQM4Lm4e3gAogrreFAYpOg=
 github.com/mgechev/revive v1.2.1/go.mod h1:+Ro3wqY4vakcYNtkBWdZC7dBg1xSB6sp054wWwmeFm0=
 github.com/mgutz/ansi v0.0.0-20170206155736-9520e82c474b/go.mod h1:01TrycV0kFyexm33Z7vhZRXopbI8J3TDReVlkTgMUxE=

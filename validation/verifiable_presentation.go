@@ -15,7 +15,7 @@ func ValidateVP(vdr vdr.Registry, vpBytes, pdBytes []byte) error {
 		return fmt.Errorf("failed to create a framework for VP verification: %w", err)
 	}
 
-	if err := f.VerifyPresentation(vpBytes, pdBytes); err != nil {
+	if _, err := f.VerifyPresentation(vpBytes, pdBytes); err != nil {
 		return fmt.Errorf("invalid VP: %w", err)
 	}
 

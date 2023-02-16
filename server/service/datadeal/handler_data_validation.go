@@ -113,6 +113,7 @@ func (s *dataDealService) ValidateData(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Validate VP
+	// TODO: holder did check
 	vdr := panacea.NewVdrRegistry(queryClient)
 	if err := validation.ValidateVP(vdr, vp, deal.GetPresentationDefinition()); err != nil {
 		log.Errorf("failed to validate verifiable presentation: %s", err.Error())
