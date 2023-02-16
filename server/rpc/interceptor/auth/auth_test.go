@@ -19,9 +19,8 @@ import (
 )
 
 var (
-	testPrivKey          = secp256k1.GenPrivKey()
-	testOraclePrivKey, _ = btcec.NewPrivateKey(btcec.S256())
-	testAccAddr          = "test-addr"
+	testPrivKey = secp256k1.GenPrivKey()
+	testAccAddr = "test-addr"
 )
 
 func TestAuthSuccess(t *testing.T) {
