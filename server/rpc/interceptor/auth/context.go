@@ -1,3 +1,3 @@
-package middleware
+package auth
 
 type ContextKeyAuthenticatedAccountAddress struct{}

@@ -1,14 +1,10 @@
 package cmd
 
 import (
-	"context"
-	"errors"
 	"fmt"
-	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
-	"time"
 
 	oracleevent "github.com/medibloc/panacea-oracle/event/oracle"
 	"github.com/medibloc/panacea-oracle/server"
@@ -41,39 +37,24 @@ func startCmd() *cobra.Command {
 				return fmt.Errorf("failed to start event subscription: %w", err)
 			}
 
-			errChan := make(chan error, 1)
+			servers, errChan := server.Serve(svc)
+
 			sigChan := make(chan os.Signal, 1)
-
-			srv := server.New(svc)
-
-			go func() {
-				if err := srv.Run(); err != nil {
-					if !errors.Is(err, http.ErrServerClosed) {
-						errChan <- err
-					} else {
-						close(errChan)
-					}
-				}
-			}()
-
 			signal.Notify(sigChan, syscall.SIGTERM, syscall.SIGINT)
 
 			select {
 			case err := <-errChan:
 				if err != nil {
-					log.Errorf("http server was closed with an error: %v", err)
+					log.Errorf("rpc server was closed with an error: %v", err)
 				}
 			case <-sigChan:
 				log.Info("signal detected")
 			}
 
-			log.Infof("starting graceful shutdown")
-
-			ctxTimeout, cancel := context.WithTimeout(context.Background(), time.Second*10)
-			defer cancel()
-
-			if err := srv.Shutdown(ctxTimeout); err != nil {
-				return fmt.Errorf("error occurs while server shutting down: %w", err)
+			for _, svr := range servers {
+				if err := svr.Close(); err != nil {
+					log.Warnf("error occurs while server close: %v", err)
+				}
 			}
 
 			return nil

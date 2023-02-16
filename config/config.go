@@ -14,6 +14,8 @@ type Config struct {
 
 	IPFS IPFSConfig `mapstructure:"ipfs"`
 
+	GRPC GRPCConfig `mapstructure:"grpc"`
+
 	API APIConfig `mapstructure:"api"`
 }
 
@@ -48,9 +50,16 @@ type IPFSConfig struct {
 }
 
 type APIConfig struct {
-	ListenAddr   string `mapstructure:"listen-addr"`
-	WriteTimeout int64  `mapstructure:"write-timeout"`
-	ReadTimeout  int64  `mapstructure:"read-timeout"`
+	Enabled            bool   `mapstructure:"enabled"`
+	ListenAddr         string `mapstructure:"listen-addr"`
+	GrpcConnectTimeout int64  `mapstructure:"grpc-connect-timeout"`
+	WriteTimeout       int64  `mapstructure:"write-timeout"`
+	ReadTimeout        int64  `mapstructure:"read-timeout"`
+}
+
+type GRPCConfig struct {
+	ListenAddr        string `mapstructure:"listen-addr"`
+	ConnectionTimeout int64  `mapstructure:"connection-timeout"`
 }
 
 func DefaultConfig() *Config {
@@ -67,7 +76,7 @@ func DefaultConfig() *Config {
 			NodePrivKeyFile:   "node_priv_key.sealed",
 		},
 		Panacea: PanaceaConfig{
-			GRPCAddr: "http://127.0.0.1:9090",
+			GRPCAddr: "tcp://127.0.0.1:9090",
 			RPCAddr:  "tcp://127.0.0.1:26657",
 			ChainID:  "",
 			// TODO: calculate fee instead of using default fee
@@ -80,10 +89,16 @@ func DefaultConfig() *Config {
 		IPFS: IPFSConfig{
 			IPFSNodeAddr: "127.0.0.1:5001",
 		},
+		GRPC: GRPCConfig{
+			ListenAddr:        "tcp://127.0.0.1:9090",
+			ConnectionTimeout: 120,
+		},
 		API: APIConfig{
-			ListenAddr:   "127.0.0.1:8080",
-			WriteTimeout: 60,
-			ReadTimeout:  15,
+			Enabled:            true,
+			ListenAddr:         "http://127.0.0.1:8080",
+			GrpcConnectTimeout: 10,
+			WriteTimeout:       60,
+			ReadTimeout:        15,
 		},
 	}
 }

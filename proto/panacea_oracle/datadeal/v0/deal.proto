@@ -1,0 +1,27 @@
+syntax = "proto3";
+package panacea_oracle.datadeal.v0;
+
+option go_package = "github.com/medibloc/panacea-oracle/pb/datadeal/v0";
+
+import "google/api/annotations.proto";
+import "panacea/datadeal/v2/consent.proto";
+
+service DataDealService {
+  rpc ValidateData(ValidateDataRequest) returns (ValidateDataResponse) {
+    option (google.api.http) = {
+      post: "/v0/data-deal/deals/{deal_id}/data"
+      body: "*"
+    };
+  }
+}
+
+message ValidateDataRequest {
+  uint64 deal_id = 1 [json_name = "deal_id"];
+  string provider_address = 2 [json_name = "provider_address"];
+  bytes encrypted_data = 3 [json_name = "encrypted_data"];
+  bytes data_hash = 4 [json_name = "data_hash"];
+}
+
+message ValidateDataResponse {
+  panacea.datadeal.v2.Certificate certificate = 1;
+}

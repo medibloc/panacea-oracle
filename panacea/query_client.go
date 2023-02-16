@@ -95,13 +95,13 @@ func newVerifiedQueryClientWithSgxLevelDB(ctx context.Context, config *config.Co
 	if err != nil {
 		return nil, err
 	}
-	return newVerifiedQueryClientWithDB(ctx, config, info, db)
+	return NewVerifiedQueryClientWithDB(ctx, config, info, db)
 }
 
-// newVerifiedQueryClientWithDB creates a verifiedQueryClient using a provided DB.
+// NewVerifiedQueryClientWithDB creates a verifiedQueryClient using a provided DB.
 // If TrustedBlockInfo exists, a new lightClient is created based on this information,
 // and if TrustedBlockInfo is nil, a lightClient is created with information obtained from TrustedStore.
-func newVerifiedQueryClientWithDB(ctx context.Context, config *config.Config, info *TrustedBlockInfo, db dbm.DB) (QueryClient, error) {
+func NewVerifiedQueryClientWithDB(ctx context.Context, config *config.Config, info *TrustedBlockInfo, db dbm.DB) (QueryClient, error) {
 	lcMutex := sync.Mutex{}
 	chainID := config.Panacea.ChainID
 	rpcClient, err := rpchttp.New(config.Panacea.RPCAddr, "/websocket")

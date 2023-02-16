@@ -1,18 +1,26 @@
 package datadeal
 
 import (
-	"net/http"
+	"context"
 
-	"github.com/gorilla/mux"
+	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
+	datadeal "github.com/medibloc/panacea-oracle/pb/datadeal/v0"
 	serverservice "github.com/medibloc/panacea-oracle/server/service"
+	"google.golang.org/grpc"
 )
 
-type dataDealService struct {
+type dataDealServiceServer struct {
+	datadeal.UnimplementedDataDealServiceServer
+
 	serverservice.Service
 }
 
-func RegisterHandlers(svc serverservice.Service, router *mux.Router) {
-	s := &dataDealService{svc}
+func RegisterService(svc serverservice.Service, svr *grpc.Server) {
+	datadeal.RegisterDataDealServiceServer(svr, &dataDealServiceServer{
+		Service: svc,
+	})
+}
 
-	router.HandleFunc("/deals/{dealId}/data", s.ValidateData).Methods(http.MethodPost)
+func RegisterServiceHandler(ctx context.Context, mux *runtime.ServeMux, conn *grpc.ClientConn) error {
+	return datadeal.RegisterDataDealServiceHandler(ctx, mux, conn)
 }

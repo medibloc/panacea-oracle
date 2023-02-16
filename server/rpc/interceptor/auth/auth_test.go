@@ -1,11 +1,8 @@
-package middleware_test
+package auth_test
 
 import (
 	"context"
 	"fmt"
-	"io"
-	"net/http"
-	"net/http/httptest"
 	"testing"
 	"time"
 
@@ -20,9 +17,11 @@ import (
 	datadealtypes "github.com/medibloc/panacea-core/v2/x/datadeal/types"
 	oracletypes "github.com/medibloc/panacea-core/v2/x/oracle/types"
 	"github.com/medibloc/panacea-oracle/panacea"
-	"github.com/medibloc/panacea-oracle/server/middleware"
+	"github.com/medibloc/panacea-oracle/server/rpc/interceptor/auth"
 	"github.com/stretchr/testify/require"
+
 	tmtypes "github.com/tendermint/tendermint/types"
+	"google.golang.org/grpc/metadata"
 )
 
 var (
@@ -33,75 +32,98 @@ var (
 
 func TestAuthSuccess(t *testing.T) {
 	jwt := testGenerateJWT(t, testAccAddr, testPrivKey, 10*time.Second)
-	testHTTPRequest(
+
+	ctx := generateContextIncludeToken("bearer", string(jwt))
+
+	ctx = testJWTInterceptor(
 		t,
+		ctx,
 		&mockQueryClient{&mockAccount{}},
-		fmt.Sprintf("Bearer %s", string(jwt)),
-		http.StatusOK,
 		"",
 	)
+
+	address, err := auth.GetRequestAddress(ctx)
+	require.NoError(t, err)
+	require.Equal(t, testAccAddr, address)
 }
 
 func TestMissingAuthorizationHeader(t *testing.T) {
-	testHTTPRequest(
+	ctx := context.Background()
+	testJWTInterceptor(
 		t,
+		ctx,
 		&mockQueryClient{&mockAccount{}},
 		"",
-		http.StatusUnauthorized,
-		"missing authorization header",
 	)
+
+	address, err := auth.GetRequestAddress(ctx)
+	require.ErrorContains(t, err, "missing authorization header")
+	require.Equal(t, "", address)
 }
 
 func TestInvalidBearerToken(t *testing.T) {
 	jwt := testGenerateJWT(t, testAccAddr, testPrivKey, 10*time.Second)
-	testHTTPRequest(
+
+	ctx := generateContextIncludeToken("bea123er", string(jwt))
+
+	testJWTInterceptor(
 		t,
+		ctx,
 		&mockQueryClient{&mockAccount{}},
-		fmt.Sprintf("Bea123er %s", string(jwt)),
-		http.StatusUnauthorized,
-		"invalid bearer token",
+		"",
 	)
+
+	address, err := auth.GetRequestAddress(ctx)
+	require.ErrorContains(t, err, "missing authorization header")
+	require.Equal(t, "", address)
 }
 
 func TestInvalidJWT(t *testing.T) {
-	testHTTPRequest(
+	ctx := generateContextIncludeToken("bearer", "abcdef")
+
+	testJWTInterceptor(
 		t,
+		ctx,
 		&mockQueryClient{&mockAccount{}},
-		"Bearer abcdef",
-		http.StatusUnauthorized,
-		"invalid jwt",
+		"invalid bearer token",
 	)
 }
 
 func TestAccountNotFound(t *testing.T) {
 	jwt := testGenerateJWT(t, "dummy-account", testPrivKey, 10*time.Second)
-	testHTTPRequest(
+
+	ctx := generateContextIncludeToken("bearer", string(jwt))
+
+	testJWTInterceptor(
 		t,
+		ctx,
 		&mockQueryClient{&mockAccount{}},
-		fmt.Sprintf("Bearer %s", string(jwt)),
-		http.StatusUnauthorized,
 		"cannot query account pubkey",
 	)
 }
 
 func TestAccountNoPubKey(t *testing.T) {
 	jwt := testGenerateJWT(t, testAccAddr, testPrivKey, 10*time.Second)
-	testHTTPRequest(
+
+	ctx := generateContextIncludeToken("bearer", string(jwt))
+
+	testJWTInterceptor(
 		t,
+		ctx,
 		&mockQueryClient{&mockAccountWithoutPubKey{}},
-		fmt.Sprintf("Bearer %s", string(jwt)),
-		http.StatusUnauthorized,
 		"cannot query account pubkey",
 	)
 }
 
 func TestSignatureVerificationFailure(t *testing.T) {
 	jwt := testGenerateJWT(t, testAccAddr, secp256k1.GenPrivKey(), 10*time.Second)
-	testHTTPRequest(
+
+	ctx := generateContextIncludeToken("bearer", string(jwt))
+
+	testJWTInterceptor(
 		t,
+		ctx,
 		&mockQueryClient{&mockAccount{}},
-		fmt.Sprintf("Bearer %s", string(jwt)),
-		http.StatusUnauthorized,
 		"jwt signature verification failed",
 	)
 }
@@ -124,36 +146,35 @@ func testGenerateJWT(t *testing.T, issuer string, privKey *secp256k1.PrivKey, ex
 	return signedJWT
 }
 
-func testHTTPRequest(t *testing.T, queryClient panacea.QueryClient, authorizationHeader string, statusCode int, errMsg string) {
-	req := httptest.NewRequest("GET", "http://test.com", nil)
-	req.Header.Set("Authorization", authorizationHeader)
+func generateContextIncludeToken(tokenType, jwt string) context.Context {
+	ctx := context.Background()
 
-	w := httptest.NewRecorder()
-
-	testHandler := middleware.NewJWTAuthMiddleware(queryClient).Middleware(
-		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			// For tests, return OK only if the request is requested by the 'testAccAddr'
-			accAddr := r.Context().Value(middleware.ContextKeyAuthenticatedAccountAddress{}).(string)
-			if accAddr == testAccAddr {
-				w.WriteHeader(http.StatusOK)
-			} else {
-				w.WriteHeader(http.StatusNotAcceptable)
-			}
-		}),
-	)
-	testHandler.ServeHTTP(w, req)
-
-	resp := w.Result()
-	body, err := io.ReadAll(resp.Body)
-	require.NoError(t, err)
-
-	require.Equal(t, statusCode, resp.StatusCode)
-	if errMsg != "" {
-		require.Equal(t, errMsg+"\n", string(body))
+	m := map[string]string{
+		"authorization": fmt.Sprintf("%s %s", tokenType, jwt),
 	}
+
+	md := metadata.New(m)
+	ctx = metadata.NewIncomingContext(ctx, md)
+	return ctx
 }
 
-//// Mocks //////////////////////////////////////////////////////////////
+func testJWTInterceptor(
+	t *testing.T,
+	ctx context.Context,
+	queryClient panacea.QueryClient,
+	errMsg string,
+) context.Context {
+	interceptor := auth.NewJWTAuthInterceptor(queryClient)
+
+	ctx, err := interceptor.Interceptor(ctx)
+	if errMsg != "" {
+		require.ErrorContains(t, err, errMsg)
+	} else {
+		require.NoError(t, err)
+	}
+
+	return ctx
+}
 
 type mockQueryClient struct {
 	account authtypes.AccountI
