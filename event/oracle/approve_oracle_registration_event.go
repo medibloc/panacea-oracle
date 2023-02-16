@@ -30,17 +30,17 @@ func (e ApproveOracleRegistrationEvent) GetEventQuery() string {
 	return fmt.Sprintf("message.action = 'ApproveOracleRegistration' and %s.%s = '%s' and %s.%s = '%s'",
 		oracletypes.EventTypeApproveOracleRegistration,
 		oracletypes.AttributeKeyOracleAddress,
-		e.service.OracleAcc().GetAddress(),
+		e.service.GetOracleAcc().GetAddress(),
 		oracletypes.EventTypeApproveOracleRegistration,
 		oracletypes.AttributeKeyUniqueID,
-		e.service.EnclaveInfo().UniqueIDHex(),
+		e.service.GetEnclaveInfo().UniqueIDHex(),
 	)
 }
 
 func (e ApproveOracleRegistrationEvent) EventHandler(ctx context.Context, _ ctypes.ResultEvent) error {
-	uniqueID := e.service.EnclaveInfo().UniqueIDHex()
-	oracleAddress := e.service.OracleAcc().GetAddress()
-	oracleRegistration, err := e.service.QueryClient().GetOracleRegistration(ctx, uniqueID, oracleAddress)
+	uniqueID := e.service.GetEnclaveInfo().UniqueIDHex()
+	oracleAddress := e.service.GetOracleAcc().GetAddress()
+	oracleRegistration, err := e.service.GetQueryClient().GetOracleRegistration(ctx, uniqueID, oracleAddress)
 	if err != nil {
 		e.doneChan <- fmt.Errorf("failed to get oracle registration: %w", err)
 	}

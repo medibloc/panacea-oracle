@@ -13,7 +13,7 @@ type Server interface {
 }
 
 func Serve(svc service.Service) ([]Server, chan error) {
-	cfg := svc.Config()
+	cfg := svc.GetConfig()
 
 	var servers []Server
 

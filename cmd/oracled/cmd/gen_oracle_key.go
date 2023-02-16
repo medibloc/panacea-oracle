@@ -62,6 +62,8 @@ func genOracleKeyCmd() *cobra.Command {
 				return err
 			}
 
+			sgx := sgx.NewOracleSgx()
+
 			// seal and store oracle private key
 			if err := sgx.SealToFile(oraclePrivKey.Serialize(), oraclePrivKeyPath); err != nil {
 				log.Errorf("failed to write %s: %v", oraclePrivKeyPath, err)
@@ -84,7 +86,7 @@ func genOracleKeyCmd() *cobra.Command {
 			}
 
 			// initialize query client using trustedBlockInfo
-			queryClient, err := panacea.NewVerifiedQueryClient(context.Background(), conf, trustedBlockInfo)
+			queryClient, err := panacea.NewVerifiedQueryClient(context.Background(), conf, trustedBlockInfo, sgx)
 			if err != nil {
 				return fmt.Errorf("failed to initialize verifiedQueryClient: %w", err)
 			}

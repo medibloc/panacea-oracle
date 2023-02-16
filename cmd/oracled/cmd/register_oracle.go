@@ -15,7 +15,6 @@ import (
 	"github.com/edgelesssys/ego/enclave"
 	oracletypes "github.com/medibloc/panacea-core/v2/x/oracle/types"
 	"github.com/medibloc/panacea-oracle/client/flags"
-	"github.com/medibloc/panacea-oracle/config"
 	"github.com/medibloc/panacea-oracle/crypto"
 	oracleevent "github.com/medibloc/panacea-oracle/event/oracle"
 	"github.com/medibloc/panacea-oracle/panacea"
@@ -43,18 +42,20 @@ func registerOracleCmd() *cobra.Command {
 				return err
 			}
 
-			queryClient, err := panacea.NewVerifiedQueryClient(context.Background(), conf, trustedBlockInfo)
+			sgx := sgx.NewOracleSgx()
+
+			queryClient, err := panacea.NewVerifiedQueryClient(context.Background(), conf, trustedBlockInfo, sgx)
 			if err != nil {
 				return fmt.Errorf("failed to create queryClient: %w", err)
 			}
 
-			svc, err := service.NewWithQueryClient(conf, queryClient)
+			svc, err := service.New(conf, sgx, queryClient)
 			if err != nil {
 				return fmt.Errorf("failed to create service: %w", err)
 			}
 			defer svc.Close()
 
-			if err := sendTxRegisterOracle(cmd, conf, svc, trustedBlockInfo); err != nil {
+			if err := sendTxRegisterOracle(cmd, svc, trustedBlockInfo); err != nil {
 				return fmt.Errorf("failed to send tx RegisterOracle. %w", err)
 			}
 
@@ -92,12 +93,11 @@ func registerOracleCmd() *cobra.Command {
 	return cmd
 }
 
-func sendTxRegisterOracle(cmd *cobra.Command, conf *config.Config, svc service.Service, trustedBlockInfo *panacea.TrustedBlockInfo) error {
-
+func sendTxRegisterOracle(cmd *cobra.Command, svc service.Service, trustedBlockInfo *panacea.TrustedBlockInfo) error {
 	// get oracle account from mnemonic.
-	oracleAccount := svc.OracleAcc()
+	oracleAccount := svc.GetOracleAcc()
 
-	msgRegisterOracle, err := generateMsgRegisterOracle(cmd, conf, oracleAccount, trustedBlockInfo)
+	msgRegisterOracle, err := generateMsgRegisterOracle(cmd, svc, oracleAccount, trustedBlockInfo)
 	if err != nil {
 		return err
 	}
@@ -112,7 +112,9 @@ func sendTxRegisterOracle(cmd *cobra.Command, conf *config.Config, svc service.S
 	return nil
 }
 
-func generateMsgRegisterOracle(cmd *cobra.Command, conf *config.Config, oracleAccount *panacea.OracleAccount, trustedBlockInfo *panacea.TrustedBlockInfo) (*oracletypes.MsgRegisterOracle, error) {
+func generateMsgRegisterOracle(cmd *cobra.Command, svc service.Service, oracleAccount *panacea.OracleAccount, trustedBlockInfo *panacea.TrustedBlockInfo) (*oracletypes.MsgRegisterOracle, error) {
+	conf := svc.GetConfig()
+
 	// if node key exists, return error.
 	nodePrivKeyPath := conf.AbsNodePrivKeyPath()
 	if tos.FileExists(nodePrivKeyPath) {
@@ -125,7 +127,7 @@ func generateMsgRegisterOracle(cmd *cobra.Command, conf *config.Config, oracleAc
 	}
 
 	// generate node key and its remote report
-	nodePubKey, nodePubKeyRemoteReport, err := generateAndSealedNodeKey(nodePrivKeyPath)
+	nodePubKey, nodePubKeyRemoteReport, err := generateAndSealedNodeKey(svc.GetSgx(), nodePrivKeyPath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate node key pair: %w", err)
 	}
@@ -189,7 +191,7 @@ func generateMsgRegisterOracle(cmd *cobra.Command, conf *config.Config, oracleAc
 
 // generateAndSealedNodeKey generates random node key and its remote report
 // And the generated private key is sealed and stored
-func generateAndSealedNodeKey(nodePrivKeyPath string) ([]byte, []byte, error) {
+func generateAndSealedNodeKey(sgx sgx.Sgx, nodePrivKeyPath string) ([]byte, []byte, error) {
 	nodePrivKey, err := crypto.NewPrivKey()
 	if err != nil {
 		return nil, nil, err

@@ -6,7 +6,9 @@ import (
 
 	"github.com/medibloc/panacea-oracle/client/flags"
 	"github.com/medibloc/panacea-oracle/key"
+	"github.com/medibloc/panacea-oracle/panacea"
 	"github.com/medibloc/panacea-oracle/service"
+	"github.com/medibloc/panacea-oracle/sgx"
 	"github.com/spf13/cobra"
 )
 
@@ -25,15 +27,22 @@ func getOracleKeyCmd() *cobra.Command {
 				return err
 			}
 
-			svc, err := service.New(conf)
+			sgx := sgx.NewOracleSgx()
+
+			queryClient, err := panacea.LoadVerifiedQueryClient(context.Background(), conf, sgx)
+			if err != nil {
+				return fmt.Errorf("failed to load query client: %w", err)
+			}
+
+			svc, err := service.New(conf, sgx, queryClient)
 			if err != nil {
 				return err
 			}
 
 			ctx := context.Background()
 
-			uniqueID := svc.EnclaveInfo().UniqueIDHex()
-			oracleAddress := svc.OracleAcc().GetAddress()
+			uniqueID := svc.GetEnclaveInfo().UniqueIDHex()
+			oracleAddress := svc.GetOracleAcc().GetAddress()
 
 			from, err := cmd.Flags().GetString(flags.FlagFromOracleRegistrationOrUpgrade)
 			if err != nil {
@@ -42,7 +51,7 @@ func getOracleKeyCmd() *cobra.Command {
 
 			switch from {
 			case fromRegistration:
-				oracleRegistration, err := svc.QueryClient().GetOracleRegistration(ctx, uniqueID, oracleAddress)
+				oracleRegistration, err := svc.GetQueryClient().GetOracleRegistration(ctx, uniqueID, oracleAddress)
 				if err != nil {
 					return fmt.Errorf("failed to get oracle registration: %w", err)
 				}
@@ -53,7 +62,7 @@ func getOracleKeyCmd() *cobra.Command {
 				return key.RetrieveAndStoreOraclePrivKey(ctx, svc, oracleRegistration.EncryptedOraclePrivKey)
 
 			case fromUpgrade:
-				oracleUpgrade, err := svc.QueryClient().GetOracleUpgrade(ctx, uniqueID, oracleAddress)
+				oracleUpgrade, err := svc.GetQueryClient().GetOracleUpgrade(ctx, uniqueID, oracleAddress)
 				if err != nil {
 					return fmt.Errorf("failed to get oracle upgrade: %w", err)
 				}

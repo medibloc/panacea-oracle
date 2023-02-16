@@ -12,9 +12,9 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func (s *combinedKeyService) GetSecretKey(ctx context.Context, req *key.GetSecretKeyRequest) (*key.GetSecretKeyResponse, error) {
-	queryClient := s.QueryClient()
-	oraclePrivKey := s.OraclePrivKey()
+func (s *secretKeyService) GetSecretKey(ctx context.Context, req *key.GetSecretKeyRequest) (*key.GetSecretKeyResponse, error) {
+	queryClient := s.GetQueryClient()
+	oraclePrivKey := s.GetOraclePrivKey()
 
 	dealID := req.DealId
 	dataHashStr := hex.EncodeToString(req.DataHash)
@@ -22,7 +22,7 @@ func (s *combinedKeyService) GetSecretKey(ctx context.Context, req *key.GetSecre
 	requesterAddress, err := auth.GetRequestAddress(ctx)
 	if err != nil {
 		log.Errorf("failed to get request address. %v", err.Error())
-		return nil, err
+		return nil, fmt.Errorf("failed to get request address. %w", err)
 	}
 
 	deal, err := queryClient.GetDeal(ctx, dealID)
@@ -51,7 +51,7 @@ func (s *combinedKeyService) GetSecretKey(ctx context.Context, req *key.GetSecre
 
 	sharedKey := crypto.DeriveSharedKey(oraclePrivKey, consumerPubKey, crypto.KDFSHA256)
 
-	secretKey := GetCombinedKey(oraclePrivKey.Serialize(), dealID, req.DataHash)
+	secretKey := GetSecretKey(oraclePrivKey.Serialize(), dealID, req.DataHash)
 	encryptedSecretKey, err := crypto.Encrypt(sharedKey, nil, secretKey)
 	if err != nil {
 		return nil, fmt.Errorf("failed to encrypt secret key with shared key: %w", err)

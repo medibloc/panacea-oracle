@@ -8,7 +8,6 @@ import (
 
 	oracletypes "github.com/medibloc/panacea-core/v2/x/oracle/types"
 	"github.com/medibloc/panacea-oracle/event"
-	"github.com/medibloc/panacea-oracle/sgx"
 	log "github.com/sirupsen/logrus"
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 )
@@ -36,7 +35,7 @@ func (e UpgradeOracleEvent) EventHandler(ctx context.Context, event ctypes.Resul
 	targetAddress := event.Events[oracletypes.EventTypeUpgrade+"."+oracletypes.AttributeKeyOracleAddress][0]
 
 	// get oracle upgrade
-	oracleUpgrade, err := e.reactor.QueryClient().GetOracleUpgrade(ctx, uniqueID, targetAddress)
+	oracleUpgrade, err := e.reactor.GetQueryClient().GetOracleUpgrade(ctx, uniqueID, targetAddress)
 	if err != nil {
 		return fmt.Errorf("failed to get oracle upgrade. unique ID(%s), target address(%s): %w", uniqueID, targetAddress, err)
 	}
@@ -69,7 +68,7 @@ func (e UpgradeOracleEvent) EventHandler(ctx context.Context, event ctypes.Resul
 }
 
 func (e UpgradeOracleEvent) verifyOracleUpgrade(ctx context.Context, oracleUpgrade *oracletypes.OracleUpgrade, uniqueID, targetAddress string) error {
-	queryClient := e.reactor.QueryClient()
+	queryClient := e.reactor.GetQueryClient()
 
 	oracleUpgradeInfo, err := queryClient.GetOracleUpgradeInfo(ctx)
 	if err != nil {
@@ -99,7 +98,7 @@ func (e UpgradeOracleEvent) verifyOracleUpgrade(ctx context.Context, oracleUpgra
 		return fmt.Errorf("failed to decode unique ID: %w", err)
 	}
 
-	if err := sgx.VerifyRemoteReport(oracleUpgrade.GetNodePubKeyRemoteReport(), nodePubKeyHash[:], uniqueIDBz); err != nil {
+	if err := e.reactor.GetSgx().VerifyRemoteReport(oracleUpgrade.GetNodePubKeyRemoteReport(), nodePubKeyHash[:], uniqueIDBz); err != nil {
 		return fmt.Errorf("failed to verify remote report: %w", err)
 	}
 
@@ -107,9 +106,9 @@ func (e UpgradeOracleEvent) verifyOracleUpgrade(ctx context.Context, oracleUpgra
 }
 
 func (e UpgradeOracleEvent) generateApproveOracleUpgradeMsg(oracleUpgrade *oracletypes.OracleUpgrade, targetUniqueID, targetAddress string) (*oracletypes.MsgApproveOracleUpgrade, error) {
-	approverAddress := e.reactor.OracleAcc().GetAddress()
-	oraclePrivKeyBz := e.reactor.OraclePrivKey().Serialize()
-	approverUniqueID := e.reactor.EnclaveInfo().UniqueIDHex()
+	approverAddress := e.reactor.GetOracleAcc().GetAddress()
+	oraclePrivKeyBz := e.reactor.GetOraclePrivKey().Serialize()
+	approverUniqueID := e.reactor.GetEnclaveInfo().UniqueIDHex()
 
 	// generate transaction message for approval of oracle upgrade
 	encryptedOraclePrivKey, err := encryptOraclePrivKey(oraclePrivKeyBz, oracleUpgrade.NodePubKey)

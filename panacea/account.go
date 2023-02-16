@@ -43,7 +43,7 @@ func (oa OracleAccount) GetAddress() string {
 }
 
 func (oa OracleAccount) AccAddressFromBech32() sdk.AccAddress {
-	return oa.pubKey.Bytes()
+	return oa.pubKey.Address().Bytes()
 }
 
 func (oa OracleAccount) GetPrivKey() cryptotypes.PrivKey {
@@ -76,7 +76,7 @@ func GetAddressFromPrivateKey(key secp256k1.PrivKey) string {
 }
 
 func GetPrivateKeyFromMnemonic(mnemonic string, accNum, index uint32) (secp256k1.PrivKey, error) {
-	key, err :=  crypto.GeneratePrivateKeyFromMnemonic(mnemonic, CoinType, accNum, index)
+	key, err := crypto.GeneratePrivateKeyFromMnemonic(mnemonic, CoinType, accNum, index)
 	if err != nil {
 		return secp256k1.PrivKey{}, err
 	}

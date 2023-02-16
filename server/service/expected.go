@@ -10,10 +10,10 @@ import (
 
 // Service is 'service/service.go'
 type Service interface {
-	EnclaveInfo() *sgx.EnclaveInfo
-	OracleAcc() *panacea.OracleAccount
-	OraclePrivKey() *btcec.PrivateKey
-	Config() *config.Config
-	QueryClient() panacea.QueryClient
-	IPFS() *ipfs.IPFS
+	GetEnclaveInfo() *sgx.EnclaveInfo
+	GetOracleAcc() *panacea.OracleAccount
+	GetOraclePrivKey() *btcec.PrivateKey
+	GetConfig() *config.Config
+	GetQueryClient() panacea.QueryClient
+	GetIPFS() ipfs.IPFS
 }

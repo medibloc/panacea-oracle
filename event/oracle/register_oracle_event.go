@@ -7,7 +7,6 @@ import (
 
 	oracletypes "github.com/medibloc/panacea-core/v2/x/oracle/types"
 	"github.com/medibloc/panacea-oracle/event"
-	"github.com/medibloc/panacea-oracle/sgx"
 	log "github.com/sirupsen/logrus"
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 )
@@ -35,7 +34,7 @@ func (e RegisterOracleEvent) EventHandler(ctx context.Context, event ctypes.Resu
 	targetAddress := event.Events[oracletypes.EventTypeRegistration+"."+oracletypes.AttributeKeyOracleAddress][0]
 
 	// get oracle registration
-	oracleRegistration, err := e.reactor.QueryClient().GetOracleRegistration(ctx, uniqueID, targetAddress)
+	oracleRegistration, err := e.reactor.GetQueryClient().GetOracleRegistration(ctx, uniqueID, targetAddress)
 	if err != nil {
 		return fmt.Errorf("failed to get oracle registration. unique ID(%s), target address(%s): %w", uniqueID, targetAddress, err)
 	}
@@ -68,8 +67,8 @@ func (e RegisterOracleEvent) EventHandler(ctx context.Context, event ctypes.Resu
 }
 
 func (e RegisterOracleEvent) verifyOracleRegistration(oracleRegistration *oracletypes.OracleRegistration, uniqueID string) error {
-	queryClient := e.reactor.QueryClient()
-	approverUniqueID := e.reactor.EnclaveInfo().UniqueIDHex()
+	queryClient := e.reactor.GetQueryClient()
+	approverUniqueID := e.reactor.GetEnclaveInfo().UniqueIDHex()
 
 	if uniqueID != approverUniqueID {
 		return fmt.Errorf("requester's unique ID is different from this binary's unique ID. expected(%s) got(%s)", approverUniqueID, uniqueID)
@@ -81,7 +80,7 @@ func (e RegisterOracleEvent) verifyOracleRegistration(oracleRegistration *oracle
 
 	nodePubKeyHash := sha256.Sum256(oracleRegistration.NodePubKey)
 
-	if err := sgx.VerifyRemoteReport(oracleRegistration.NodePubKeyRemoteReport, nodePubKeyHash[:], e.reactor.EnclaveInfo().UniqueID); err != nil {
+	if err := e.reactor.GetSgx().VerifyRemoteReport(oracleRegistration.NodePubKeyRemoteReport, nodePubKeyHash[:], e.reactor.GetEnclaveInfo().UniqueID); err != nil {
 		return fmt.Errorf("failed to verify remote report: %w", err)
 	}
 
@@ -89,9 +88,9 @@ func (e RegisterOracleEvent) verifyOracleRegistration(oracleRegistration *oracle
 }
 
 func (e RegisterOracleEvent) generateApproveOracleRegistrationMsg(oracleRegistration *oracletypes.OracleRegistration, targetUniqueID, targetAddress string) (*oracletypes.MsgApproveOracleRegistration, error) {
-	approverAddress := e.reactor.OracleAcc().GetAddress()
-	oraclePrivKeyBz := e.reactor.OraclePrivKey().Serialize()
-	approverUniqueID := e.reactor.EnclaveInfo().UniqueIDHex()
+	approverAddress := e.reactor.GetOracleAcc().GetAddress()
+	oraclePrivKeyBz := e.reactor.GetOraclePrivKey().Serialize()
+	approverUniqueID := e.reactor.GetEnclaveInfo().UniqueIDHex()
 
 	encryptedOraclePrivKey, err := encryptOraclePrivKey(oraclePrivKeyBz, oracleRegistration.NodePubKey)
 	if err != nil {

@@ -6,7 +6,6 @@ import (
 
 	"github.com/medibloc/panacea-oracle/crypto"
 	"github.com/medibloc/panacea-oracle/service"
-	"github.com/medibloc/panacea-oracle/sgx"
 	"github.com/tendermint/tendermint/libs/os"
 )
 
@@ -16,7 +15,7 @@ func RetrieveAndStoreOraclePrivKey(ctx context.Context, svc service.Service, enc
 		return err
 	}
 
-	if err := sgx.SealToFile(oraclePrivKeyBz, svc.Config().AbsOraclePrivKeyPath()); err != nil {
+	if err := svc.GetSgx().SealToFile(oraclePrivKeyBz, svc.GetConfig().AbsOraclePrivKeyPath()); err != nil {
 		return fmt.Errorf("failed to seal oraclePrivKey to file. %w", err)
 	}
 
@@ -24,7 +23,7 @@ func RetrieveAndStoreOraclePrivKey(ctx context.Context, svc service.Service, enc
 }
 
 func retrieveOraclePrivKey(ctx context.Context, svc service.Service, encryptedOraclePrivKey []byte) ([]byte, error) {
-	oraclePrivKeyPath := svc.Config().AbsOraclePrivKeyPath()
+	oraclePrivKeyPath := svc.GetConfig().AbsOraclePrivKeyPath()
 	if os.FileExists(oraclePrivKeyPath) {
 		return nil, fmt.Errorf("the oracle private key already exists")
 	}
@@ -38,17 +37,17 @@ func retrieveOraclePrivKey(ctx context.Context, svc service.Service, encryptedOr
 }
 
 func deriveSharedKey(ctx context.Context, svc service.Service) ([]byte, error) {
-	nodePrivKeyPath := svc.Config().AbsNodePrivKeyPath()
+	nodePrivKeyPath := svc.GetConfig().AbsNodePrivKeyPath()
 	if !os.FileExists(nodePrivKeyPath) {
 		return nil, fmt.Errorf("the node private key is not exists")
 	}
-	nodePrivKeyBz, err := sgx.UnsealFromFile(nodePrivKeyPath)
+	nodePrivKeyBz, err := svc.GetSgx().UnsealFromFile(nodePrivKeyPath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unseal nodePrivKey from file.%w", err)
 	}
 	nodePrivKey, _ := crypto.PrivKeyFromBytes(nodePrivKeyBz)
 
-	oraclePublicKey, err := svc.QueryClient().GetOracleParamsPublicKey(ctx)
+	oraclePublicKey, err := svc.GetQueryClient().GetOracleParamsPublicKey(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get oraclePublicKey. %w", err)
 	}

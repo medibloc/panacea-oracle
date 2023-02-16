@@ -10,10 +10,11 @@ import (
 
 // Service is 'service/service.go'
 type Service interface {
-	EnclaveInfo() *sgx.EnclaveInfo
-	OracleAcc() *panacea.OracleAccount
-	OraclePrivKey() *btcec.PrivateKey
-	QueryClient() panacea.QueryClient
-	Config() *config.Config
+	GetEnclaveInfo() *sgx.EnclaveInfo
+	GetSgx() sgx.Sgx
+	GetOracleAcc() *panacea.OracleAccount
+	GetOraclePrivKey() *btcec.PrivateKey
+	GetQueryClient() panacea.QueryClient
+	GetConfig() *config.Config
 	BroadcastTx(...sdk.Msg) (int64, string, error)
 }

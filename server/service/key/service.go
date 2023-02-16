@@ -9,15 +9,15 @@ import (
 	"google.golang.org/grpc"
 )
 
-var _ serverservice.Service = &combinedKeyService{}
+var _ serverservice.Service = &secretKeyService{}
 
-type combinedKeyService struct {
+type secretKeyService struct {
 	key.UnimplementedKeyServiceServer
 	serverservice.Service
 }
 
 func RegisterService(svc serverservice.Service, svr *grpc.Server) {
-	key.RegisterKeyServiceServer(svr, &combinedKeyService{
+	key.RegisterKeyServiceServer(svr, &secretKeyService{
 		Service: svc,
 	})
 }
