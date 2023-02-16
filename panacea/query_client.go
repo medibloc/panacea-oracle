@@ -370,7 +370,7 @@ func (q verifiedQueryClient) GetDID(ctx context.Context, did string) (*didtypes.
 	}
 
 	var didDoc didtypes.DIDDocumentWithSeq
-	if err := q.cdc.UnmarshalInterface(bz, &didDoc); err != nil {
+	if err := q.cdc.UnmarshalLengthPrefixed(bz, &didDoc); err != nil {
 		return nil, err
 	}
 
