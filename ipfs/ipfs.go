@@ -23,10 +23,10 @@ func NewIPFS(url string) (IPFS, error) {
 	newShell := shell.NewShell(url)
 
 	if !newShell.IsUp() {
-		return nil, fmt.Errorf("GetIPFS is not connected")
+		return nil, fmt.Errorf("IPFS is not connected")
 	}
 
-	log.Info("successfully connect to GetIPFS node")
+	log.Info("successfully connect to IPFS node")
 
 	return &ipfs{
 		sh: newShell,
@@ -39,7 +39,7 @@ func (i *ipfs) Add(data []byte) (string, error) {
 
 	cid, err := i.sh.Add(reader)
 	if err != nil {
-		return "", err
+		return "failed dto add data to IPFS", err
 	}
 
 	return cid, nil
