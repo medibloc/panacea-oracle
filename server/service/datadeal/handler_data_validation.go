@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/medibloc/panacea-oracle/panacea"
+	"github.com/medibloc/vc-sdk/pkg/vdr"
 
 	"github.com/btcsuite/btcd/btcec"
 	"github.com/gorilla/mux"
@@ -114,8 +114,8 @@ func (s *dataDealService) ValidateData(w http.ResponseWriter, r *http.Request) {
 
 	// Validate VP
 	// TODO: holder did check
-	vdr := panacea.NewVdrRegistry(queryClient)
-	if err := validation.ValidateVP(vdr, vp, deal.GetPresentationDefinition()); err != nil {
+	panaceaVDR := vdr.NewPanaceaVDR(queryClient)
+	if err := validation.ValidateVP(panaceaVDR, vp, deal.GetPresentationDefinition()); err != nil {
 		log.Errorf("failed to validate verifiable presentation: %s", err.Error())
 		http.Error(w, "failed to validate verifiable presentation", http.StatusBadRequest)
 		return
