@@ -10,9 +10,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/lestrrat-go/jwx/v2/jwa"
 	"github.com/lestrrat-go/jwx/v2/jwt"
+	"github.com/medibloc/panacea-oracle/mocks"
 	"github.com/medibloc/panacea-oracle/panacea"
 	"github.com/medibloc/panacea-oracle/server/rpc/interceptor/auth"
-	"github.com/medibloc/panacea-oracle/types/test_utils/mocks"
 	"github.com/stretchr/testify/require"
 
 	"google.golang.org/grpc/metadata"

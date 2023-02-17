@@ -9,7 +9,7 @@ import (
 	"github.com/medibloc/panacea-oracle/config"
 	"github.com/medibloc/panacea-oracle/crypto"
 	"github.com/medibloc/panacea-oracle/key"
-	"github.com/medibloc/panacea-oracle/types/test_utils/mocks"
+	"github.com/medibloc/panacea-oracle/mocks"
 	"github.com/stretchr/testify/require"
 )
 

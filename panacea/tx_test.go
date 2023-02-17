@@ -8,8 +8,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	oracletypes "github.com/medibloc/panacea-core/v2/x/oracle/types"
 	"github.com/medibloc/panacea-oracle/config"
+	"github.com/medibloc/panacea-oracle/mocks"
 	"github.com/medibloc/panacea-oracle/panacea"
-	"github.com/medibloc/panacea-oracle/types/test_utils/mocks"
 	"github.com/stretchr/testify/require"
 )
 
