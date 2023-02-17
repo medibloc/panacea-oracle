@@ -12,12 +12,12 @@ import (
 )
 
 type rateLimitInterceptor struct {
-	waitTimeout int64
+	waitTimeout time.Duration
 	limiter     *rate.Limiter
 }
 
 func NewRateLimitInterceptor(cfg config.GRPCConfig) *rateLimitInterceptor {
-	maxConnectionSize := cfg.RateLimitPerSecond
+	maxConnectionSize := cfg.RateLimits
 	return &rateLimitInterceptor{
 		waitTimeout: cfg.RateLimitWaitTimeout,
 		limiter:     rate.NewLimiter(per(maxConnectionSize, time.Second), maxConnectionSize),
@@ -47,7 +47,7 @@ func (ic *rateLimitInterceptor) StreamServerInterceptor() grpc.StreamServerInter
 }
 
 func (ic *rateLimitInterceptor) Interceptor() error {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(ic.waitTimeout)*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), ic.waitTimeout)
 	defer cancel()
 	if err := ic.limiter.Wait(ctx); err != nil {
 		return status.Errorf(codes.ResourceExhausted, "failed with timeout while waiting for rate limiting. please retry later. %v", err)

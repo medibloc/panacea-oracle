@@ -49,8 +49,8 @@ func NewGatewayServer(cfg *config.Config) (*GatewayServer, error) {
 		Server: &http.Server{
 			Handler:      mux,
 			Addr:         restListenURL.Host,
-			WriteTimeout: time.Duration(cfg.API.WriteTimeout) * time.Second,
-			ReadTimeout:  time.Duration(cfg.API.ReadTimeout) * time.Second,
+			WriteTimeout: cfg.API.WriteTimeout,
+			ReadTimeout:  cfg.API.ReadTimeout,
 		},
 		grpcConn: conn,
 	}, nil
@@ -75,7 +75,7 @@ func createGrpcConnection(cfg *config.Config) (*grpc.ClientConn, error) {
 		grpcListenURL.Host,
 		grpc.WithConnectParams(grpc.ConnectParams{
 			Backoff:           backoff.DefaultConfig,
-			MinConnectTimeout: time.Duration(cfg.API.GrpcConnectionTimeout) * time.Second,
+			MinConnectTimeout: cfg.API.GrpcConnectTimeout,
 		}),
 		grpc.WithInsecure(),
 	)
