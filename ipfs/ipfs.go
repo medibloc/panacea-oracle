@@ -14,6 +14,8 @@ type IPFS interface {
 	Get(cid string) ([]byte, error)
 }
 
+var _ IPFS = &ipfs{}
+
 type ipfs struct {
 	sh *shell.Shell
 }

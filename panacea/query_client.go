@@ -64,6 +64,8 @@ type TrustedBlockInfo struct {
 	TrustedBlockHash   []byte
 }
 
+var _ QueryClient = &verifiedQueryClient{}
+
 type verifiedQueryClient struct {
 	rpcClient   *rpchttp.HTTP
 	lightClient *light.Client

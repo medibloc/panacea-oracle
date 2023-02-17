@@ -23,6 +23,8 @@ type GRPCClient interface {
 	GetAccount(address string) (authtypes.AccountI, error)
 }
 
+var _ GRPCClient = &grpcClient{}
+
 type grpcClient struct {
 	conn    *grpc.ClientConn
 	cdc     *codec.ProtoCodec
