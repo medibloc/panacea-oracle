@@ -18,7 +18,7 @@ type MockIPFS struct {
 var (
 	_ ipfs.IPFS = &MockIPFS{}
 
-	defaultPath = "ipfs"
+	defaultPath = "MockIPFS"
 )
 
 func (u MockIPFS) Add(data []byte) (string, error) {

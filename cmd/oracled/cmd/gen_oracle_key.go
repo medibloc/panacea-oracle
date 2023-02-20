@@ -62,7 +62,7 @@ func genOracleKeyCmd() *cobra.Command {
 				return err
 			}
 
-			sgx := sgx.NewOracleSgx()
+			sgx := sgx.NewOracleSGX()
 
 			// seal and store oracle private key
 			if err := sgx.SealToFile(oraclePrivKey.Serialize(), oraclePrivKeyPath); err != nil {

@@ -8,6 +8,7 @@ import (
 
 	oracletypes "github.com/medibloc/panacea-core/v2/x/oracle/types"
 	"github.com/medibloc/panacea-oracle/event"
+	"github.com/medibloc/panacea-oracle/service"
 	log "github.com/sirupsen/logrus"
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 )
@@ -15,10 +16,10 @@ import (
 var _ event.Event = (*UpgradeOracleEvent)(nil)
 
 type UpgradeOracleEvent struct {
-	reactor event.Service
+	svc service.Service
 }
 
-func NewUpgradeOracleEvent(s event.Service) UpgradeOracleEvent {
+func NewUpgradeOracleEvent(s service.Service) UpgradeOracleEvent {
 	return UpgradeOracleEvent{s}
 }
 
@@ -35,7 +36,7 @@ func (e UpgradeOracleEvent) EventHandler(ctx context.Context, event ctypes.Resul
 	targetAddress := event.Events[oracletypes.EventTypeUpgrade+"."+oracletypes.AttributeKeyOracleAddress][0]
 
 	// get oracle upgrade
-	oracleUpgrade, err := e.reactor.GetQueryClient().GetOracleUpgrade(ctx, uniqueID, targetAddress)
+	oracleUpgrade, err := e.svc.QueryClient().GetOracleUpgrade(ctx, uniqueID, targetAddress)
 	if err != nil {
 		return fmt.Errorf("failed to get oracle upgrade. unique ID(%s), target address(%s): %w", uniqueID, targetAddress, err)
 	}
@@ -57,7 +58,7 @@ func (e UpgradeOracleEvent) EventHandler(ctx context.Context, event ctypes.Resul
 		msgApproveOracleUpgrade.ApprovalSharingOracleKey.TargetOracleAddress,
 	)
 
-	txHeight, txHash, err := e.reactor.BroadcastTx(msgApproveOracleUpgrade)
+	txHeight, txHash, err := e.svc.BroadcastTx(msgApproveOracleUpgrade)
 	if err != nil {
 		return fmt.Errorf("failed to ApproveOracleUpgrade transaction for oracle upgrade: %w", err)
 	}
@@ -68,7 +69,7 @@ func (e UpgradeOracleEvent) EventHandler(ctx context.Context, event ctypes.Resul
 }
 
 func (e UpgradeOracleEvent) verifyOracleUpgrade(ctx context.Context, oracleUpgrade *oracletypes.OracleUpgrade, uniqueID, targetAddress string) error {
-	queryClient := e.reactor.GetQueryClient()
+	queryClient := e.svc.QueryClient()
 
 	oracleUpgradeInfo, err := queryClient.GetOracleUpgradeInfo(ctx)
 	if err != nil {
@@ -98,7 +99,7 @@ func (e UpgradeOracleEvent) verifyOracleUpgrade(ctx context.Context, oracleUpgra
 		return fmt.Errorf("failed to decode unique ID: %w", err)
 	}
 
-	if err := e.reactor.GetSgx().VerifyRemoteReport(oracleUpgrade.GetNodePubKeyRemoteReport(), nodePubKeyHash[:], uniqueIDBz); err != nil {
+	if err := e.svc.SGX().VerifyRemoteReport(oracleUpgrade.GetNodePubKeyRemoteReport(), nodePubKeyHash[:], uniqueIDBz); err != nil {
 		return fmt.Errorf("failed to verify remote report: %w", err)
 	}
 
@@ -106,9 +107,9 @@ func (e UpgradeOracleEvent) verifyOracleUpgrade(ctx context.Context, oracleUpgra
 }
 
 func (e UpgradeOracleEvent) generateApproveOracleUpgradeMsg(oracleUpgrade *oracletypes.OracleUpgrade, targetUniqueID, targetAddress string) (*oracletypes.MsgApproveOracleUpgrade, error) {
-	approverAddress := e.reactor.GetOracleAcc().GetAddress()
-	oraclePrivKeyBz := e.reactor.GetOraclePrivKey().Serialize()
-	approverUniqueID := e.reactor.GetEnclaveInfo().UniqueIDHex()
+	approverAddress := e.svc.OracleAcc().GetAddress()
+	oraclePrivKeyBz := e.svc.OraclePrivKey().Serialize()
+	approverUniqueID := e.svc.EnclaveInfo().UniqueIDHex()
 
 	// generate transaction message for approval of oracle upgrade
 	encryptedOraclePrivKey, err := encryptOraclePrivKey(oraclePrivKeyBz, oracleUpgrade.NodePubKey)

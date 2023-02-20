@@ -75,7 +75,7 @@ func verifyPubKeyRemoteReport(pubKeyInfo OraclePubKeyInfo) error {
 		return fmt.Errorf("failed to decode oracle public key remote report: %w", err)
 	}
 
-	sgx := sgx.NewOracleSgx()
+	sgx := sgx.NewOracleSGX()
 
 	selfEnclaveInfo, err := sgx.GenerateSelfEnclaveInfo()
 	if err != nil {

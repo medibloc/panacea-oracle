@@ -24,7 +24,7 @@ func updateOracleInfoCmd() *cobra.Command {
 				return err
 			}
 
-			sgx := sgx.NewOracleSgx()
+			sgx := sgx.NewOracleSGX()
 
 			queryClient, err := panacea.LoadVerifiedQueryClient(context.Background(), conf, sgx)
 			if err != nil {
@@ -37,7 +37,7 @@ func updateOracleInfoCmd() *cobra.Command {
 			}
 			defer svc.Close()
 
-			oracleAccount := svc.GetOracleAcc()
+			oracleAccount := svc.OracleAcc()
 			if err != nil {
 				return fmt.Errorf("failed to get oracle account from mnemonic: %w", err)
 			}

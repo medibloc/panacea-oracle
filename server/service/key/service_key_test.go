@@ -18,11 +18,7 @@ import (
 )
 
 type secretKeyServiceTestSuite struct {
-	suite.Suite
-
-	svc *mocks.MockService
-
-	oraclePrivKey *btcec.PrivateKey
+	mocks.MockTestSuite
 
 	consumerAccPrivKey secp256k1.PrivKey
 	consumerAccPubKey  cryptotypes.PubKey
@@ -35,28 +31,23 @@ func TestCombinedKeyServiceTestSuite(t *testing.T) {
 }
 
 func (suite *secretKeyServiceTestSuite) BeforeTest(_, _ string) {
-	suite.oraclePrivKey, _ = btcec.NewPrivateKey(btcec.S256())
+	suite.Initialize()
+
 	suite.consumerAccPrivKey = *secp256k1.GenPrivKey()
 	suite.consumerAccPubKey = suite.consumerAccPrivKey.PubKey()
 	suite.consumerAcc = mocks.NewMockAccount(suite.consumerAccPubKey)
 	suite.consumerAddress = panacea.GetAddressFromPrivateKey(suite.consumerAccPrivKey)
-	suite.svc = &mocks.MockService{
-		OraclePrivKey: suite.oraclePrivKey,
-		QueryClient: &mocks.MockQueryClient{
-			Deal:    &datadealtypes.Deal{},
-			Consent: &datadealtypes.Consent{},
-			Account: suite.consumerAcc,
-		},
-	}
-
+	suite.QueryClient.Deal = &datadealtypes.Deal{}
+	suite.QueryClient.Consent = &datadealtypes.Consent{}
+	suite.QueryClient.Account = suite.consumerAcc
 }
 
 func (suite *secretKeyServiceTestSuite) TestGetSecretKey() {
-	combinedKeyService := secretKeyService{Service: suite.svc}
+	combinedKeyService := secretKeyService{Service: suite.Svc}
 	data := "my_data"
 	dataHash := crypto.KDFSHA256([]byte(data))
 
-	suite.svc.QueryClient.Deal.ConsumerAddress = suite.consumerAddress
+	suite.QueryClient.Deal.ConsumerAddress = suite.consumerAddress
 
 	req := &key.GetSecretKeyRequest{
 		DealId:   1,
@@ -76,7 +67,7 @@ func (suite *secretKeyServiceTestSuite) TestGetSecretKey() {
 	consumerPrivKey, _ := btcec.PrivKeyFromBytes(btcec.S256(), suite.consumerAccPrivKey.Bytes())
 	sharedKey := crypto.DeriveSharedKey(
 		consumerPrivKey,
-		suite.oraclePrivKey.PubKey(),
+		suite.OraclePubKey,
 		crypto.KDFSHA256,
 	)
 
@@ -84,17 +75,17 @@ func (suite *secretKeyServiceTestSuite) TestGetSecretKey() {
 	suite.Require().NoError(err)
 
 	suite.Require().Equal(
-		GetSecretKey(suite.oraclePrivKey.Serialize(), req.DealId, req.DataHash),
+		GetSecretKey(suite.OraclePrivKey.Serialize(), req.DealId, req.DataHash),
 		secretKey,
 	)
 }
 
 func (suite *secretKeyServiceTestSuite) TestGetSecretKeyNotExistAuthentication() {
-	combinedKeyService := secretKeyService{Service: suite.svc}
+	combinedKeyService := secretKeyService{Service: suite.Svc}
 	data := "my_data"
 	dataHash := crypto.KDFSHA256([]byte(data))
 
-	suite.svc.QueryClient.Deal.ConsumerAddress = suite.consumerAddress
+	suite.QueryClient.Deal.ConsumerAddress = suite.consumerAddress
 
 	req := &key.GetSecretKeyRequest{
 		DealId:   1,
@@ -109,11 +100,11 @@ func (suite *secretKeyServiceTestSuite) TestGetSecretKeyNotExistAuthentication()
 }
 
 func (suite *secretKeyServiceTestSuite) TestGetSecretKeyNotSameRequesterAndDealsConsumer() {
-	combinedKeyService := secretKeyService{Service: suite.svc}
+	combinedKeyService := secretKeyService{Service: suite.Svc}
 	data := "my_data"
 	dataHash := crypto.KDFSHA256([]byte(data))
 
-	suite.svc.QueryClient.Deal.ConsumerAddress = suite.consumerAddress
+	suite.QueryClient.Deal.ConsumerAddress = suite.consumerAddress
 
 	req := &key.GetSecretKeyRequest{
 		DealId:   1,

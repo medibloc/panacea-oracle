@@ -11,69 +11,107 @@ import (
 	"github.com/medibloc/panacea-oracle/sgx"
 )
 
+var _ service.Service = &MockService{}
+
 // MockService is a very simple mock structure.
 // It is implemented to return the value as it is declared in this mock structure.
 type MockService struct {
-	GrpcClient  *MockGrpcClient
-	QueryClient *MockQueryClient
-	Sgx         *MockSGX
-	Ipfs        *MockIPFS
+	grpcClient  *MockGrpcClient
+	queryClient *MockQueryClient
+	sgx         *MockSGX
+	ipfs        *MockIPFS
 
-	Config *config.Config
+	config *config.Config
 
-	EnclaveInfo *sgx.EnclaveInfo
+	enclaveInfo *sgx.EnclaveInfo
 
-	OracleAccount *panacea.OracleAccount
-	OraclePrivKey *btcec.PrivateKey
-	NodePrivKey   *btcec.PrivateKey
+	oracleAccount *panacea.OracleAccount
+	oraclePrivKey *btcec.PrivateKey
+	nodePrivKey   *btcec.PrivateKey
 
-	BroadcastCode        int64
-	BroadcastDescription string
-	BroadcastError       error
+	broadcastTxResponse *MockBroadcastTxResponse
 
 	broadcastMsgs []sdk.Msg
 }
 
-var _ service.Service = &MockService{}
-
-func (m *MockService) GetGRPCClient() panacea.GRPCClient {
-	return m.GrpcClient
+func NewMockService(
+	grpcClient *MockGrpcClient,
+	queryClient *MockQueryClient,
+	sgx *MockSGX,
+	ipfs *MockIPFS,
+	conf *config.Config,
+	enclaveInfo *sgx.EnclaveInfo,
+	oracleAccount *panacea.OracleAccount,
+	oraclePrivKey *btcec.PrivateKey,
+	nodePrivKey *btcec.PrivateKey,
+) *MockService {
+	return &MockService{
+		grpcClient:    grpcClient,
+		queryClient:   queryClient,
+		sgx:           sgx,
+		ipfs:          ipfs,
+		config:        conf,
+		enclaveInfo:   enclaveInfo,
+		oracleAccount: oracleAccount,
+		oraclePrivKey: oraclePrivKey,
+		nodePrivKey:   nodePrivKey,
+		broadcastMsgs: make([]sdk.Msg, 0),
+	}
 }
 
-func (m *MockService) GetEnclaveInfo() *sgx.EnclaveInfo {
-	return m.EnclaveInfo
+// SetBroadcastTxResponse sets the result after running BroadcastTx
+func (m *MockService) SetBroadcastTxResponse(
+	code int64,
+	description string,
+	err error,
+) {
+	m.broadcastTxResponse = &MockBroadcastTxResponse{
+		code:        code,
+		description: description,
+		error:       err,
+	}
 }
 
-func (m *MockService) GetSgx() sgx.Sgx {
-	return m.Sgx
+func (m *MockService) GRPCClient() panacea.GRPCClient {
+	return m.grpcClient
 }
 
-func (m *MockService) GetOracleAcc() *panacea.OracleAccount {
-	return m.OracleAccount
+func (m *MockService) EnclaveInfo() *sgx.EnclaveInfo {
+	return m.enclaveInfo
 }
 
-func (m *MockService) GetOraclePrivKey() *btcec.PrivateKey {
-	return m.OraclePrivKey
+func (m *MockService) SGX() sgx.Sgx {
+	return m.sgx
 }
 
-func (m *MockService) GetConfig() *config.Config {
-	return m.Config
+func (m *MockService) OracleAcc() *panacea.OracleAccount {
+	return m.oracleAccount
 }
 
-func (m *MockService) GetQueryClient() panacea.QueryClient {
-	return m.QueryClient
+func (m *MockService) OraclePrivKey() *btcec.PrivateKey {
+	return m.oraclePrivKey
 }
 
-func (m *MockService) GetIPFS() ipfs.IPFS {
-	return m.Ipfs
+func (m *MockService) Config() *config.Config {
+	return m.config
+}
+
+func (m *MockService) QueryClient() panacea.QueryClient {
+	return m.queryClient
+}
+
+func (m *MockService) IPFS() ipfs.IPFS {
+	return m.ipfs
 }
 
 func (m *MockService) BroadcastTx(msg ...sdk.Msg) (int64, string, error) {
 	m.broadcastMsgs = append(m.broadcastMsgs, msg...)
-	return m.BroadcastCode, m.BroadcastDescription, m.BroadcastError
+	tx := m.broadcastTxResponse
+	return tx.code, tx.description, tx.error
 }
 
-func (m *MockService) GetBroadCastTxMsgs() []sdk.Msg {
+// BroadCastTxMsgs returns the Tx messages for which it ran BroadcastTx
+func (m *MockService) BroadCastTxMsgs() []sdk.Msg {
 	return m.broadcastMsgs
 }
 

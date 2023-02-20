@@ -30,22 +30,22 @@ func (e ApproveOracleUpgradeEvent) GetEventQuery() string {
 	return fmt.Sprintf("message.action = 'ApproveOracleUpgrade' and %s.%s = '%s' and %s.%s = '%s'",
 		oracletypes.EventTypeApproveOracleUpgrade,
 		oracletypes.AttributeKeyOracleAddress,
-		e.service.GetOracleAcc().GetAddress(),
+		e.service.OracleAcc().GetAddress(),
 		oracletypes.EventTypeApproveOracleUpgrade,
 		oracletypes.AttributeKeyUniqueID,
-		e.service.GetEnclaveInfo().UniqueIDHex(),
+		e.service.EnclaveInfo().UniqueIDHex(),
 	)
 }
 
 func (e ApproveOracleUpgradeEvent) EventHandler(ctx context.Context, _ ctypes.ResultEvent) error {
-	uniqueID := e.service.GetEnclaveInfo().UniqueIDHex()
-	oracleAddress := e.service.GetOracleAcc().GetAddress()
-	oracleUpgrade, err := e.service.GetQueryClient().GetOracleUpgrade(ctx, uniqueID, oracleAddress)
+	uniqueID := e.service.EnclaveInfo().UniqueIDHex()
+	oracleAddress := e.service.OracleAcc().GetAddress()
+	oracleUpgrade, err := e.service.QueryClient().GetOracleUpgrade(ctx, uniqueID, oracleAddress)
 	if err != nil {
 		e.doneChan <- fmt.Errorf("failed to get oracle upgrade: %w", err)
 	}
 
-	e.doneChan <- key.RetrieveAndStoreOraclePrivKey(ctx, e.service, oracleUpgrade.EncryptedOraclePrivKey)
+	e.doneChan <- key.DecryptAndStoreOraclePrivKey(ctx, e.service, oracleUpgrade.EncryptedOraclePrivKey)
 
 	return nil
 }

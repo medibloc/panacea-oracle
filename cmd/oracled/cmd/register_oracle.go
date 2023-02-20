@@ -42,7 +42,7 @@ func registerOracleCmd() *cobra.Command {
 				return err
 			}
 
-			sgx := sgx.NewOracleSgx()
+			sgx := sgx.NewOracleSGX()
 
 			queryClient, err := panacea.NewVerifiedQueryClient(context.Background(), conf, trustedBlockInfo, sgx)
 			if err != nil {
@@ -95,7 +95,7 @@ func registerOracleCmd() *cobra.Command {
 
 func sendTxRegisterOracle(cmd *cobra.Command, svc service.Service, trustedBlockInfo *panacea.TrustedBlockInfo) error {
 	// get oracle account from mnemonic.
-	oracleAccount := svc.GetOracleAcc()
+	oracleAccount := svc.OracleAcc()
 
 	msgRegisterOracle, err := generateMsgRegisterOracle(cmd, svc, oracleAccount, trustedBlockInfo)
 	if err != nil {
@@ -113,7 +113,7 @@ func sendTxRegisterOracle(cmd *cobra.Command, svc service.Service, trustedBlockI
 }
 
 func generateMsgRegisterOracle(cmd *cobra.Command, svc service.Service, oracleAccount *panacea.OracleAccount, trustedBlockInfo *panacea.TrustedBlockInfo) (*oracletypes.MsgRegisterOracle, error) {
-	conf := svc.GetConfig()
+	conf := svc.Config()
 
 	// if node key exists, return error.
 	nodePrivKeyPath := conf.AbsNodePrivKeyPath()
@@ -127,7 +127,7 @@ func generateMsgRegisterOracle(cmd *cobra.Command, svc service.Service, oracleAc
 	}
 
 	// generate node key and its remote report
-	nodePubKey, nodePubKeyRemoteReport, err := generateAndSealedNodeKey(svc.GetSgx(), nodePrivKeyPath)
+	nodePubKey, nodePubKeyRemoteReport, err := generateAndSealedNodeKey(svc.SGX(), nodePrivKeyPath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate node key pair: %w", err)
 	}

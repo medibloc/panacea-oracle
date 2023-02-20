@@ -9,21 +9,21 @@ import (
 	"github.com/tendermint/tendermint/libs/os"
 )
 
-func RetrieveAndStoreOraclePrivKey(ctx context.Context, svc service.Service, encryptedOraclePrivKey []byte) error {
-	oraclePrivKeyBz, err := retrieveOraclePrivKey(ctx, svc, encryptedOraclePrivKey)
+func DecryptAndStoreOraclePrivKey(ctx context.Context, svc service.Service, encryptedOraclePrivKey []byte) error {
+	oraclePrivKeyBz, err := decryptOraclePrivKey(ctx, svc, encryptedOraclePrivKey)
 	if err != nil {
 		return err
 	}
 
-	if err := svc.GetSgx().SealToFile(oraclePrivKeyBz, svc.GetConfig().AbsOraclePrivKeyPath()); err != nil {
+	if err := svc.SGX().SealToFile(oraclePrivKeyBz, svc.Config().AbsOraclePrivKeyPath()); err != nil {
 		return fmt.Errorf("failed to seal oraclePrivKey to file. %w", err)
 	}
 
 	return nil
 }
 
-func retrieveOraclePrivKey(ctx context.Context, svc service.Service, encryptedOraclePrivKey []byte) ([]byte, error) {
-	oraclePrivKeyPath := svc.GetConfig().AbsOraclePrivKeyPath()
+func decryptOraclePrivKey(ctx context.Context, svc service.Service, encryptedOraclePrivKey []byte) ([]byte, error) {
+	oraclePrivKeyPath := svc.Config().AbsOraclePrivKeyPath()
 	if os.FileExists(oraclePrivKeyPath) {
 		return nil, fmt.Errorf("the oracle private key already exists")
 	}
@@ -37,17 +37,17 @@ func retrieveOraclePrivKey(ctx context.Context, svc service.Service, encryptedOr
 }
 
 func deriveSharedKey(ctx context.Context, svc service.Service) ([]byte, error) {
-	nodePrivKeyPath := svc.GetConfig().AbsNodePrivKeyPath()
+	nodePrivKeyPath := svc.Config().AbsNodePrivKeyPath()
 	if !os.FileExists(nodePrivKeyPath) {
 		return nil, fmt.Errorf("the node private key is not exists")
 	}
-	nodePrivKeyBz, err := svc.GetSgx().UnsealFromFile(nodePrivKeyPath)
+	nodePrivKeyBz, err := svc.SGX().UnsealFromFile(nodePrivKeyPath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unseal nodePrivKey from file.%w", err)
 	}
 	nodePrivKey, _ := crypto.PrivKeyFromBytes(nodePrivKeyBz)
 
-	oraclePublicKey, err := svc.GetQueryClient().GetOracleParamsPublicKey(ctx)
+	oraclePublicKey, err := svc.QueryClient().GetOracleParamsPublicKey(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get oraclePublicKey. %w", err)
 	}

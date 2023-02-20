@@ -5,103 +5,75 @@ import (
 	"os"
 	"testing"
 
-	"github.com/btcsuite/btcd/btcec"
-	"github.com/medibloc/panacea-oracle/config"
 	"github.com/medibloc/panacea-oracle/crypto"
+	"github.com/medibloc/panacea-oracle/integration/suite"
 	"github.com/medibloc/panacea-oracle/key"
 	"github.com/medibloc/panacea-oracle/mocks"
-	"github.com/stretchr/testify/require"
 )
 
+type oracleTestSuite struct {
+	mocks.MockTestSuite
+}
+
+func TestOracleTestSuite(t *testing.T) {
+	suite.Run(t, &oracleTestSuite{})
+}
+
+func (suite *oracleTestSuite) BeforeTest(_, _ string) {
+	suite.Initialize()
+}
+
+func (suite *oracleTestSuite) AfterTest(_, _ string) {
+	os.Remove(suite.Config.AbsNodePrivKeyPath())
+	os.Remove(suite.Config.AbsOraclePrivKeyPath())
+}
+
 // TestRetrieveAndStoreOraclePrivKey tests for a normal situation.
-func TestRetrieveAndStoreOraclePrivKey(t *testing.T) {
-	nodePrivKey, err := btcec.NewPrivateKey(btcec.S256())
-	require.NoError(t, err)
+func (suite *oracleTestSuite) TestDecryptAndStoreOraclePrivKey() {
+	suite.QueryClient.OraclePubKey = suite.OraclePubKey
 
-	oraclePrivKey, err := btcec.NewPrivateKey(btcec.S256())
-	require.NoError(t, err)
+	err := suite.SGX.SealToFile(suite.NodePrivKey.Serialize(), suite.Config.AbsNodePrivKeyPath())
+	suite.Require().NoError(err)
 
-	svc := &mocks.MockService{
-		Config: config.DefaultConfig(),
-		Sgx:    &mocks.MockSGX{},
-		QueryClient: &mocks.MockQueryClient{
-			OraclePubKey: oraclePrivKey.PubKey(),
-		},
-	}
+	secretKey := crypto.DeriveSharedKey(suite.OraclePrivKey, suite.NodePrivKey.PubKey(), crypto.KDFSHA256)
+	encryptedOraclePrivKey, err := crypto.Encrypt(secretKey, nil, suite.OraclePrivKey.Serialize())
+	suite.Require().NoError(err)
 
-	err = svc.Sgx.SealToFile(nodePrivKey.Serialize(), svc.Config.AbsNodePrivKeyPath())
-	require.NoError(t, err)
-	defer func() {
-		os.Remove(svc.Config.AbsNodePrivKeyPath())
-		os.Remove(svc.Config.AbsOraclePrivKeyPath())
-	}()
+	err = key.DecryptAndStoreOraclePrivKey(context.Background(), suite.Svc, encryptedOraclePrivKey)
+	suite.Require().NoError(err)
 
-	secretKey := crypto.DeriveSharedKey(oraclePrivKey, nodePrivKey.PubKey(), crypto.KDFSHA256)
-	encryptedOraclePrivKey, err := crypto.Encrypt(secretKey, nil, oraclePrivKey.Serialize())
-	require.NoError(t, err)
+	storedOraclePrivKeyBz, err := suite.SGX.UnsealFromFile(suite.Config.AbsOraclePrivKeyPath())
+	suite.Require().NoError(err)
 
-	err = key.RetrieveAndStoreOraclePrivKey(context.Background(), svc, encryptedOraclePrivKey)
-	require.NoError(t, err)
-
-	storedOraclePrivKeyBz, err := svc.Sgx.UnsealFromFile(svc.GetConfig().AbsOraclePrivKeyPath())
-	require.NoError(t, err)
-
-	require.Equal(t, oraclePrivKey.Serialize(), storedOraclePrivKeyBz)
+	suite.Require().Equal(suite.OraclePrivKey.Serialize(), storedOraclePrivKeyBz)
 }
 
 // TestRetrieveAndStoreOraclePrivKeyExistOraclePrivKey tests that the OraclePrivKey exists and fails.
-func TestRetrieveAndStoreOraclePrivKeyExistOraclePrivKey(t *testing.T) {
-	nodePrivKey, err := btcec.NewPrivateKey(btcec.S256())
-	require.NoError(t, err)
+func (suite *oracleTestSuite) TestRetrieveAndStoreOraclePrivKeyExistOraclePrivKey() {
+	suite.OraclePubKey = suite.OraclePrivKey.PubKey()
 
-	oraclePrivKey, err := btcec.NewPrivateKey(btcec.S256())
-	require.NoError(t, err)
+	err := suite.SGX.SealToFile(suite.NodePrivKey.Serialize(), suite.Config.AbsNodePrivKeyPath())
+	suite.Require().NoError(err)
 
-	svc := &mocks.MockService{
-		Config: config.DefaultConfig(),
-		Sgx:    &mocks.MockSGX{},
-		QueryClient: &mocks.MockQueryClient{
-			OraclePubKey: oraclePrivKey.PubKey(),
-		},
-	}
+	err = suite.SGX.SealToFile(suite.OraclePrivKey.Serialize(), suite.Config.AbsOraclePrivKeyPath())
+	suite.Require().NoError(err)
 
-	err = svc.Sgx.SealToFile(nodePrivKey.Serialize(), svc.Config.AbsNodePrivKeyPath())
-	require.NoError(t, err)
-	err = svc.Sgx.SealToFile(oraclePrivKey.Serialize(), svc.Config.AbsOraclePrivKeyPath())
-	require.NoError(t, err)
-	defer func() {
-		os.Remove(svc.Config.AbsNodePrivKeyPath())
-		os.Remove(svc.Config.AbsOraclePrivKeyPath())
-	}()
+	secretKey := crypto.DeriveSharedKey(suite.OraclePrivKey, suite.NodePrivKey.PubKey(), crypto.KDFSHA256)
+	encryptedOraclePrivKey, err := crypto.Encrypt(secretKey, nil, suite.OraclePrivKey.Serialize())
+	suite.Require().NoError(err)
 
-	secretKey := crypto.DeriveSharedKey(oraclePrivKey, nodePrivKey.PubKey(), crypto.KDFSHA256)
-	encryptedOraclePrivKey, err := crypto.Encrypt(secretKey, nil, oraclePrivKey.Serialize())
-	require.NoError(t, err)
-
-	err = key.RetrieveAndStoreOraclePrivKey(context.Background(), svc, encryptedOraclePrivKey)
-	require.ErrorContains(t, err, "the oracle private key already exists")
+	err = key.DecryptAndStoreOraclePrivKey(context.Background(), suite.Svc, encryptedOraclePrivKey)
+	suite.Require().ErrorContains(err, "the oracle private key already exists")
 }
 
 // AAA tests that the NodePrivKey fails because it doesn't exist.
-func TestRetrieveAndStoreOraclePrivKeyNotExistNodePrivKey(t *testing.T) {
-	nodePrivKey, err := btcec.NewPrivateKey(btcec.S256())
-	require.NoError(t, err)
+func (suite *oracleTestSuite) TestRetrieveAndStoreOraclePrivKeyNotExistNodePrivKey() {
+	suite.QueryClient.OraclePubKey = suite.OraclePubKey
 
-	oraclePrivKey, err := btcec.NewPrivateKey(btcec.S256())
-	require.NoError(t, err)
+	secretKey := crypto.DeriveSharedKey(suite.OraclePrivKey, suite.NodePrivKey.PubKey(), crypto.KDFSHA256)
+	encryptedOraclePrivKey, err := crypto.Encrypt(secretKey, nil, suite.OraclePrivKey.Serialize())
+	suite.Require().NoError(err)
 
-	svc := &mocks.MockService{
-		Config: config.DefaultConfig(),
-		Sgx:    &mocks.MockSGX{},
-		QueryClient: &mocks.MockQueryClient{
-			OraclePubKey: oraclePrivKey.PubKey(),
-		},
-	}
-
-	secretKey := crypto.DeriveSharedKey(oraclePrivKey, nodePrivKey.PubKey(), crypto.KDFSHA256)
-	encryptedOraclePrivKey, err := crypto.Encrypt(secretKey, nil, oraclePrivKey.Serialize())
-	require.NoError(t, err)
-
-	err = key.RetrieveAndStoreOraclePrivKey(context.Background(), svc, encryptedOraclePrivKey)
-	require.ErrorContains(t, err, "the node private key is not exists")
+	err = key.DecryptAndStoreOraclePrivKey(context.Background(), suite.Svc, encryptedOraclePrivKey)
+	suite.Require().ErrorContains(err, "the node private key is not exists")
 }

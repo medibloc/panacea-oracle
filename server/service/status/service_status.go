@@ -8,17 +8,17 @@ import (
 
 func (s *statusService) GetStatus(ctx context.Context, req *status.GetStatusRequest) (*status.GetStatusResponse, error) {
 	return &status.GetStatusResponse{
-		OracleAccountAddress: s.GetOracleAcc().GetAddress(),
+		OracleAccountAddress: s.OracleAcc().GetAddress(),
 		Api: &status.StatusAPI{
-			Enabled:    s.GetConfig().API.Enabled,
-			ListenAddr: s.GetConfig().API.ListenAddr,
+			Enabled:    s.Config().API.Enabled,
+			ListenAddr: s.Config().API.ListenAddr,
 		},
 		Grpc: &status.StatusGRPC{
-			ListenAddr: s.GetConfig().GRPC.ListenAddr,
+			ListenAddr: s.Config().GRPC.ListenAddr,
 		},
 		EnclaveInfo: &status.StatusEnclaveInfo{
-			ProductId: s.GetEnclaveInfo().ProductID,
-			UniqueId:  s.GetEnclaveInfo().UniqueIDHex(),
+			ProductId: s.EnclaveInfo().ProductID,
+			UniqueId:  s.EnclaveInfo().UniqueIDHex(),
 		},
 	}, nil
 }

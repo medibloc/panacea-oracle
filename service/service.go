@@ -17,14 +17,14 @@ import (
 )
 
 type Service interface {
-	GetGRPCClient() panacea.GRPCClient
-	GetEnclaveInfo() *sgx.EnclaveInfo
-	GetSgx() sgx.Sgx
-	GetOracleAcc() *panacea.OracleAccount
-	GetOraclePrivKey() *btcec.PrivateKey
-	GetConfig() *config.Config
-	GetQueryClient() panacea.QueryClient
-	GetIPFS() ipfs.IPFS
+	GRPCClient() panacea.GRPCClient
+	EnclaveInfo() *sgx.EnclaveInfo
+	SGX() sgx.Sgx
+	OracleAcc() *panacea.OracleAccount
+	OraclePrivKey() *btcec.PrivateKey
+	Config() *config.Config
+	QueryClient() panacea.QueryClient
+	IPFS() ipfs.IPFS
 	BroadcastTx(...sdk.Msg) (int64, string, error)
 	StartSubscriptions(...event.Event) error
 	Close() error
@@ -115,40 +115,40 @@ func (s *service) Close() error {
 	return nil
 }
 
-func (s *service) GetConfig() *config.Config {
+func (s *service) Config() *config.Config {
 	return s.conf
 }
 
-func (s *service) GetOracleAcc() *panacea.OracleAccount {
+func (s *service) OracleAcc() *panacea.OracleAccount {
 	return s.oracleAccount
 }
 
-func (s *service) GetOraclePrivKey() *btcec.PrivateKey {
+func (s *service) OraclePrivKey() *btcec.PrivateKey {
 	return s.oraclePrivKey
 }
 
-func (s *service) GetEnclaveInfo() *sgx.EnclaveInfo {
+func (s *service) EnclaveInfo() *sgx.EnclaveInfo {
 	return s.enclaveInfo
 }
 
-func (s *service) GetSgx() sgx.Sgx {
+func (s *service) SGX() sgx.Sgx {
 	return s.sgx
 }
 
-func (s *service) GetGRPCClient() panacea.GRPCClient {
+func (s *service) GRPCClient() panacea.GRPCClient {
 	return s.grpcClient
 }
 
-func (s *service) GetQueryClient() panacea.QueryClient {
+func (s *service) QueryClient() panacea.QueryClient {
 	return s.queryClient
 }
 
 func (s *service) BroadcastTx(msg ...sdk.Msg) (int64, string, error) {
-	defaultFeeAmount, _ := sdk.ParseCoinsNormalized(s.GetConfig().Panacea.DefaultFeeAmount)
+	defaultFeeAmount, _ := sdk.ParseCoinsNormalized(s.Config().Panacea.DefaultFeeAmount)
 
 	txBytes, err := s.txBuilder.GenerateSignedTxBytes(
-		s.GetOracleAcc().GetPrivKey(),
-		s.GetConfig().Panacea.DefaultGasLimit,
+		s.OracleAcc().GetPrivKey(),
+		s.Config().Panacea.DefaultGasLimit,
 		defaultFeeAmount,
 		msg...,
 	)
@@ -156,7 +156,7 @@ func (s *service) BroadcastTx(msg ...sdk.Msg) (int64, string, error) {
 		return 0, "", fmt.Errorf("failed to generate signed Tx bytes: %w", err)
 	}
 
-	resp, err := s.GetGRPCClient().BroadcastTx(txBytes)
+	resp, err := s.GRPCClient().BroadcastTx(txBytes)
 	if err != nil {
 		return 0, "", fmt.Errorf("broadcast transaction failed. txBytes(%v)", txBytes)
 	}
@@ -168,6 +168,6 @@ func (s *service) BroadcastTx(msg ...sdk.Msg) (int64, string, error) {
 	return resp.TxResponse.Height, resp.TxResponse.TxHash, nil
 }
 
-func (s *service) GetIPFS() ipfs.IPFS {
+func (s *service) IPFS() ipfs.IPFS {
 	return s.ipfs
 }

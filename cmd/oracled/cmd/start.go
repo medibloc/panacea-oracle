@@ -26,7 +26,7 @@ func startCmd() *cobra.Command {
 				return err
 			}
 
-			sgx := sgx.NewOracleSgx()
+			sgx := sgx.NewOracleSGX()
 
 			queryClient, err := panacea.LoadVerifiedQueryClient(context.Background(), conf, sgx)
 			if err != nil {

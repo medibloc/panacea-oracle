@@ -30,7 +30,7 @@ var _ Sgx = oracleSgx{}
 
 type oracleSgx struct{}
 
-func NewOracleSgx() Sgx {
+func NewOracleSGX() Sgx {
 	return &oracleSgx{}
 }
 

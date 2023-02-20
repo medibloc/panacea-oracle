@@ -13,8 +13,8 @@ import (
 )
 
 func (s *secretKeyService) GetSecretKey(ctx context.Context, req *key.GetSecretKeyRequest) (*key.GetSecretKeyResponse, error) {
-	queryClient := s.GetQueryClient()
-	oraclePrivKey := s.GetOraclePrivKey()
+	queryClient := s.QueryClient()
+	oraclePrivKey := s.OraclePrivKey()
 
 	dealID := req.DealId
 	dataHashStr := hex.EncodeToString(req.DataHash)

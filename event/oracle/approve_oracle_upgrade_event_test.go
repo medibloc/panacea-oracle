@@ -2,36 +2,23 @@ package oracle_test
 
 import (
 	"context"
-	"encoding/hex"
 	"fmt"
 	"io/fs"
 	"os"
 	"testing"
 
-	"github.com/btcsuite/btcd/btcec"
 	oracletypes "github.com/medibloc/panacea-core/v2/x/oracle/types"
-	"github.com/medibloc/panacea-oracle/config"
 	"github.com/medibloc/panacea-oracle/crypto"
 	"github.com/medibloc/panacea-oracle/event/oracle"
 	"github.com/medibloc/panacea-oracle/mocks"
-	"github.com/medibloc/panacea-oracle/panacea"
-	"github.com/medibloc/panacea-oracle/sgx"
 	"github.com/stretchr/testify/suite"
 	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 )
 
 type approveOracleUpgradeTestSuite struct {
-	suite.Suite
+	mocks.MockTestSuite
 
-	svc     *mocks.MockService
 	errChan chan error
-
-	productID []byte
-	uniqueID  []byte
-
-	oracleAcc     *panacea.OracleAccount
-	oraclePrivKey *btcec.PrivateKey
-	nodePrivKey   *btcec.PrivateKey
 }
 
 func TestApproveOracleUpgradeTestSuite(t *testing.T) {
@@ -39,38 +26,25 @@ func TestApproveOracleUpgradeTestSuite(t *testing.T) {
 }
 
 func (suite *approveOracleUpgradeTestSuite) BeforeTest(_, _ string) {
-	mnemonic, _ := crypto.NewMnemonic()
+	suite.Initialize()
 
 	suite.errChan = make(chan error)
-	suite.productID = []byte("productID")
-	suite.uniqueID = []byte("uniqueID")
-	suite.oracleAcc, _ = panacea.NewOracleAccount(mnemonic, 0, 0)
-	suite.oraclePrivKey, _ = btcec.NewPrivateKey(btcec.S256())
-	suite.nodePrivKey, _ = btcec.NewPrivateKey(btcec.S256())
-	suite.svc = &mocks.MockService{
-		QueryClient: &mocks.MockQueryClient{
-			OraclePubKey: suite.oraclePrivKey.PubKey(),
-			OracleUpgrade: &oracletypes.OracleUpgrade{
-				UniqueId:      hex.EncodeToString(suite.uniqueID),
-				OracleAddress: suite.oracleAcc.GetAddress(),
-			},
-		},
-		OracleAccount: suite.oracleAcc,
-		Sgx:           &mocks.MockSGX{},
-		Config:        config.DefaultConfig(),
-		EnclaveInfo:   sgx.NewEnclaveInfo(suite.productID, suite.uniqueID),
+	suite.QueryClient.OraclePubKey = suite.OraclePubKey
+	suite.QueryClient.OracleUpgrade = &oracletypes.OracleUpgrade{
+		UniqueId:      suite.UniqueID,
+		OracleAddress: suite.OracleAcc.GetAddress(),
 	}
 }
 
 // TestNameAndGetEventQuery tests the name and eventQuery.
 func (suite *approveOracleUpgradeTestSuite) AfterTest(_, _ string) {
-	os.Remove(suite.svc.GetConfig().AbsNodePrivKeyPath())
-	os.Remove(suite.svc.GetConfig().AbsOraclePrivKeyPath())
+	os.Remove(suite.Config.AbsNodePrivKeyPath())
+	os.Remove(suite.Config.AbsOraclePrivKeyPath())
 }
 
 // TestNameAndGetEventQuery tests the name and eventQuery.
 func (suite *approveOracleUpgradeTestSuite) TestNameAndGetEventQuery() {
-	e := oracle.NewApproveOracleUpgradeEvent(suite.svc, suite.errChan)
+	e := oracle.NewApproveOracleUpgradeEvent(suite.Svc, suite.errChan)
 
 	suite.Require().Equal("ApproveOracleUpgradeEvent", e.Name())
 	suite.Require().Contains(e.GetEventQuery(), "message.action = 'ApproveOracleUpgrade'")
@@ -79,7 +53,7 @@ func (suite *approveOracleUpgradeTestSuite) TestNameAndGetEventQuery() {
 		fmt.Sprintf("%s.%s = '%s'",
 			oracletypes.EventTypeApproveOracleUpgrade,
 			oracletypes.AttributeKeyOracleAddress,
-			suite.oracleAcc.GetAddress(),
+			suite.OracleAcc.GetAddress(),
 		),
 	)
 	suite.Require().Contains(
@@ -87,28 +61,28 @@ func (suite *approveOracleUpgradeTestSuite) TestNameAndGetEventQuery() {
 		fmt.Sprintf("%s.%s = '%s'",
 			oracletypes.EventTypeApproveOracleUpgrade,
 			oracletypes.AttributeKeyUniqueID,
-			hex.EncodeToString(suite.uniqueID),
+			suite.UniqueID,
 		),
 	)
 }
 
 // TestEventHandler tests that the EventHandler function behavior succeeds.
 func (suite *approveOracleUpgradeTestSuite) TestEventHandler() {
-	svc := suite.svc
+	svc := suite.Svc
 	errChan := suite.errChan
 
 	e := oracle.NewApproveOracleUpgradeEvent(svc, errChan)
-	conf := svc.GetConfig()
+	conf := suite.Config
 
-	err := svc.GetSgx().SealToFile(suite.nodePrivKey.Serialize(), conf.NodePrivKeyFile)
+	err := suite.SGX.SealToFile(suite.NodePrivKey.Serialize(), conf.NodePrivKeyFile)
 	suite.Require().NoError(err)
 
-	nodePubKey := suite.nodePrivKey.PubKey()
-	sharedKey := crypto.DeriveSharedKey(suite.oraclePrivKey, nodePubKey, crypto.KDFSHA256)
-	encryptedOraclePrivKey, err := crypto.Encrypt(sharedKey, nil, suite.oraclePrivKey.Serialize())
+	nodePubKey := suite.NodePrivKey.PubKey()
+	sharedKey := crypto.DeriveSharedKey(suite.OraclePrivKey, nodePubKey, crypto.KDFSHA256)
+	encryptedOraclePrivKey, err := crypto.Encrypt(sharedKey, nil, suite.OraclePrivKey.Serialize())
 	suite.Require().NoError(err)
 
-	suite.svc.QueryClient.OracleUpgrade.EncryptedOraclePrivKey = encryptedOraclePrivKey
+	suite.QueryClient.OracleUpgrade.EncryptedOraclePrivKey = encryptedOraclePrivKey
 
 	go func() {
 		err := e.EventHandler(context.Background(), coretypes.ResultEvent{})
@@ -120,17 +94,17 @@ func (suite *approveOracleUpgradeTestSuite) TestEventHandler() {
 
 	savedOraclePrivKey, err := os.ReadFile(conf.AbsOraclePrivKeyPath())
 	suite.Require().NoError(err)
-	suite.Require().Equal(suite.oraclePrivKey.Serialize(), savedOraclePrivKey)
+	suite.Require().Equal(suite.OraclePrivKey.Serialize(), savedOraclePrivKey)
 }
 
 // TestEventHandlerExistOraclePrivKey tests that the OraclePrivKey exists and fails
 func (suite *approveOracleUpgradeTestSuite) TestEventHandlerExistOraclePrivKey() {
-	svc := suite.svc
+	svc := suite.Svc
 	errChan := suite.errChan
 
 	e := oracle.NewApproveOracleUpgradeEvent(svc, errChan)
-	conf := svc.GetConfig()
-	err := os.WriteFile(conf.AbsOraclePrivKeyPath(), suite.oraclePrivKey.Serialize(), fs.ModePerm)
+	conf := suite.Config
+	err := os.WriteFile(conf.AbsOraclePrivKeyPath(), suite.OraclePrivKey.Serialize(), fs.ModePerm)
 	suite.Require().NoError(err)
 
 	go func() {
@@ -144,7 +118,7 @@ func (suite *approveOracleUpgradeTestSuite) TestEventHandlerExistOraclePrivKey()
 
 // TestEventHandlerNotExistNodePrivKey tests for a NodePrivKey that fails because it doesn't exist.
 func (suite *approveOracleUpgradeTestSuite) TestEventHandlerNotExistNodePrivKey() {
-	svc := suite.svc
+	svc := suite.Svc
 	errChan := suite.errChan
 
 	e := oracle.NewApproveOracleUpgradeEvent(svc, errChan)

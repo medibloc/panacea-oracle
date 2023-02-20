@@ -2,37 +2,23 @@ package oracle_test
 
 import (
 	"context"
-	"encoding/hex"
 	"fmt"
 	"io/fs"
 	"os"
 	"testing"
 
-	"github.com/btcsuite/btcd/btcec"
 	oracletypes "github.com/medibloc/panacea-core/v2/x/oracle/types"
-	"github.com/medibloc/panacea-oracle/config"
 	"github.com/medibloc/panacea-oracle/crypto"
 	"github.com/medibloc/panacea-oracle/event/oracle"
 	"github.com/medibloc/panacea-oracle/mocks"
-	"github.com/medibloc/panacea-oracle/panacea"
-	"github.com/medibloc/panacea-oracle/sgx"
 	"github.com/stretchr/testify/suite"
 	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 )
 
 type approveOracleRegistrationTestSuite struct {
-	suite.Suite
+	mocks.MockTestSuite
 
-	svc     *mocks.MockService
 	errChan chan error
-
-	productID []byte
-	uniqueID  []byte
-
-	oracleAcc     *panacea.OracleAccount
-	oraclePrivKey *btcec.PrivateKey
-	oraclePubKey  *btcec.PublicKey
-	nodePrivKey   *btcec.PrivateKey
 }
 
 func TestApproveOracleRegistrationTestSuite(t *testing.T) {
@@ -40,36 +26,22 @@ func TestApproveOracleRegistrationTestSuite(t *testing.T) {
 }
 
 func (suite *approveOracleRegistrationTestSuite) BeforeTest(_, _ string) {
-	mnemonic, _ := crypto.NewMnemonic()
+	suite.Initialize()
 
 	suite.errChan = make(chan error)
-	suite.productID = []byte("productID")
-	suite.uniqueID = []byte("uniqueID")
-	suite.oracleAcc, _ = panacea.NewOracleAccount(mnemonic, 0, 0)
-	suite.oraclePrivKey, _ = btcec.NewPrivateKey(btcec.S256())
-	suite.oraclePubKey = suite.oraclePrivKey.PubKey()
-	suite.nodePrivKey, _ = btcec.NewPrivateKey(btcec.S256())
-	suite.svc = &mocks.MockService{
-		QueryClient: &mocks.MockQueryClient{
-			OracleRegistration: &oracletypes.OracleRegistration{},
-			OraclePubKey:       suite.oraclePubKey,
-		},
-		Sgx:           &mocks.MockSGX{},
-		Config:        config.DefaultConfig(),
-		EnclaveInfo:   sgx.NewEnclaveInfo(suite.productID, suite.uniqueID),
-		OracleAccount: suite.oracleAcc,
-		OraclePrivKey: suite.oraclePrivKey,
-	}
+	suite.QueryClient.OracleRegistration = &oracletypes.OracleRegistration{}
+	suite.QueryClient.OraclePubKey = suite.OraclePubKey
+
 }
 
 func (suite *approveOracleRegistrationTestSuite) AfterTest(_, _ string) {
-	os.Remove(suite.svc.GetConfig().AbsNodePrivKeyPath())
-	os.Remove(suite.svc.GetConfig().AbsOraclePrivKeyPath())
+	os.Remove(suite.Svc.Config().AbsNodePrivKeyPath())
+	os.Remove(suite.Svc.Config().AbsOraclePrivKeyPath())
 }
 
 // TestNameAndGetEventQuery tests the name and eventQuery.
 func (suite *approveOracleRegistrationTestSuite) TestNameAndGetEventQuery() {
-	e := oracle.NewApproveOracleRegistrationEvent(suite.svc, suite.errChan)
+	e := oracle.NewApproveOracleRegistrationEvent(suite.Svc, suite.errChan)
 
 	suite.Require().Equal("ApproveOracleRegistrationEvent", e.Name())
 	suite.Require().Contains(e.GetEventQuery(), "message.action = 'ApproveOracleRegistration'")
@@ -78,7 +50,7 @@ func (suite *approveOracleRegistrationTestSuite) TestNameAndGetEventQuery() {
 		fmt.Sprintf("%s.%s = '%s'",
 			oracletypes.EventTypeApproveOracleRegistration,
 			oracletypes.AttributeKeyOracleAddress,
-			suite.oracleAcc.GetAddress(),
+			suite.OracleAcc.GetAddress(),
 		),
 	)
 	suite.Require().Contains(
@@ -86,27 +58,27 @@ func (suite *approveOracleRegistrationTestSuite) TestNameAndGetEventQuery() {
 		fmt.Sprintf("%s.%s = '%s'",
 			oracletypes.EventTypeApproveOracleRegistration,
 			oracletypes.AttributeKeyUniqueID,
-			hex.EncodeToString(suite.uniqueID),
+			suite.UniqueID,
 		),
 	)
 }
 
 // TestEventHandler tests that the EventHandler function behavior succeeds.
 func (suite *approveOracleRegistrationTestSuite) TestEventHandler() {
-	svc := suite.svc
+	svc := suite.Svc
 	errChan := suite.errChan
 
 	e := oracle.NewApproveOracleRegistrationEvent(svc, errChan)
-	conf := svc.GetConfig()
+	conf := suite.Config
 
-	err := svc.GetSgx().SealToFile(suite.nodePrivKey.Serialize(), conf.NodePrivKeyFile)
+	err := suite.SGX.SealToFile(suite.NodePrivKey.Serialize(), conf.NodePrivKeyFile)
 	suite.Require().NoError(err)
 
-	sharedKey := crypto.DeriveSharedKey(suite.oraclePrivKey, suite.nodePrivKey.PubKey(), crypto.KDFSHA256)
-	encryptedOraclePrivKey, err := crypto.Encrypt(sharedKey, nil, suite.oraclePrivKey.Serialize())
+	sharedKey := crypto.DeriveSharedKey(suite.OraclePrivKey, suite.NodePrivKey.PubKey(), crypto.KDFSHA256)
+	encryptedOraclePrivKey, err := crypto.Encrypt(sharedKey, nil, suite.OraclePrivKey.Serialize())
 	suite.Require().NoError(err)
 
-	svc.QueryClient.OracleRegistration = &oracletypes.OracleRegistration{
+	suite.QueryClient.OracleRegistration = &oracletypes.OracleRegistration{
 		EncryptedOraclePrivKey: encryptedOraclePrivKey,
 	}
 
@@ -120,17 +92,17 @@ func (suite *approveOracleRegistrationTestSuite) TestEventHandler() {
 
 	savedOraclePrivKey, err := os.ReadFile(conf.AbsOraclePrivKeyPath())
 	suite.Require().NoError(err)
-	suite.Require().Equal(suite.oraclePrivKey.Serialize(), savedOraclePrivKey)
+	suite.Require().Equal(suite.OraclePrivKey.Serialize(), savedOraclePrivKey)
 }
 
 // TestEventHandlerExistOraclePrivKey tests that the OraclePrivKey exists and fails
 func (suite *approveOracleRegistrationTestSuite) TestEventHandlerExistOraclePrivKey() {
-	svc := suite.svc
+	svc := suite.Svc
 	errChan := suite.errChan
 
 	e := oracle.NewApproveOracleRegistrationEvent(svc, errChan)
-	conf := svc.GetConfig()
-	err := os.WriteFile(conf.AbsOraclePrivKeyPath(), suite.oraclePrivKey.Serialize(), fs.ModePerm)
+	conf := suite.Config
+	err := os.WriteFile(conf.AbsOraclePrivKeyPath(), suite.OraclePrivKey.Serialize(), fs.ModePerm)
 	suite.Require().NoError(err)
 
 	go func() {
@@ -144,7 +116,7 @@ func (suite *approveOracleRegistrationTestSuite) TestEventHandlerExistOraclePriv
 
 // TestEventHandlerNotExistNodePrivKey tests for a NodePrivKey that fails because it doesn't exist.
 func (suite *approveOracleRegistrationTestSuite) TestEventHandlerNotExistNodePrivKey() {
-	svc := suite.svc
+	svc := suite.Svc
 	errChan := suite.errChan
 
 	e := oracle.NewApproveOracleRegistrationEvent(svc, errChan)

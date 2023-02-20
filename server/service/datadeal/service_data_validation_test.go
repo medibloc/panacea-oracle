@@ -18,20 +18,11 @@ import (
 	datadeal "github.com/medibloc/panacea-oracle/pb/datadeal/v0"
 	"github.com/medibloc/panacea-oracle/server/rpc/interceptor/auth"
 	"github.com/medibloc/panacea-oracle/server/service/key"
-	"github.com/medibloc/panacea-oracle/sgx"
 	"github.com/stretchr/testify/suite"
 )
 
 type dataDealServiceServerTestSuite struct {
-	suite.Suite
-
-	svc *mocks.MockService
-
-	productID []byte
-	uniqueID  []byte
-
-	oracleAcc     *panacea.OracleAccount
-	oraclePrivKey *btcec.PrivateKey
+	mocks.MockTestSuite
 
 	deal *datadealtypes.Deal
 
@@ -45,12 +36,7 @@ func TestDataDealServiceServer(t *testing.T) {
 }
 
 func (suite *dataDealServiceServerTestSuite) BeforeTest(_, _ string) {
-	suite.productID = []byte("productID")
-	suite.uniqueID = []byte("uniqueID")
-
-	mnemonic, _ := crypto.NewMnemonic()
-	suite.oracleAcc, _ = panacea.NewOracleAccount(mnemonic, 0, 0)
-	suite.oraclePrivKey, _ = btcec.NewPrivateKey(btcec.S256())
+	suite.Initialize()
 
 	suite.deal = &datadealtypes.Deal{
 		Id:         1,
@@ -60,16 +46,9 @@ func (suite *dataDealServiceServerTestSuite) BeforeTest(_, _ string) {
 	suite.providerAccPrivKey = *secp256k1.GenPrivKey()
 	suite.providerAccPubKey = suite.providerAccPrivKey.PubKey()
 	suite.providerAcc = mocks.NewMockAccount(suite.providerAccPubKey)
-	suite.svc = &mocks.MockService{
-		QueryClient: &mocks.MockQueryClient{
-			Account: suite.providerAcc,
-			Deal:    suite.deal,
-		},
-		Ipfs:          &mocks.MockIPFS{},
-		EnclaveInfo:   sgx.NewEnclaveInfo(suite.productID, suite.uniqueID),
-		OracleAccount: suite.oracleAcc,
-		OraclePrivKey: suite.oraclePrivKey,
-	}
+	suite.QueryClient.Account = suite.providerAcc
+	suite.QueryClient.Deal = suite.deal
+
 }
 
 func (suite *dataDealServiceServerTestSuite) AfterTest(_, _ string) {
@@ -92,7 +71,7 @@ func (suite *dataDealServiceServerTestSuite) TestValidateDataSuccess() {
 
 	sharedKey := crypto.DeriveSharedKey(
 		providerPrivKey,
-		suite.oraclePrivKey.PubKey(),
+		suite.OraclePrivKey.PubKey(),
 		crypto.KDFSHA256,
 	)
 
@@ -113,14 +92,14 @@ func (suite *dataDealServiceServerTestSuite) TestValidateDataSuccess() {
 	ctx = context.WithValue(ctx, auth.ContextKeyAuthenticatedAccountAddress{}, req.ProviderAddress)
 
 	// request validation for provider data
-	server := dataDealServiceServer{Service: suite.svc}
+	server := dataDealServiceServer{Service: suite.Svc}
 	res, err := server.ValidateData(ctx, req)
 	suite.Require().NoError(err)
 
 	// compare certificate
 	unsignedCertificate := res.Certificate.UnsignedCertificate
-	suite.Require().Equal(hex.EncodeToString(suite.uniqueID), unsignedCertificate.UniqueId)
-	suite.Require().Equal(suite.oracleAcc.GetAddress(), unsignedCertificate.OracleAddress)
+	suite.Require().Equal(suite.UniqueID, unsignedCertificate.UniqueId)
+	suite.Require().Equal(suite.OracleAcc.GetAddress(), unsignedCertificate.OracleAddress)
 	suite.Require().Equal(req.DealId, unsignedCertificate.DealId)
 	suite.Require().Equal(req.ProviderAddress, unsignedCertificate.ProviderAddress)
 	suite.Require().Equal(hex.EncodeToString(req.DataHash), unsignedCertificate.DataHash)
@@ -131,12 +110,12 @@ func (suite *dataDealServiceServerTestSuite) TestValidateDataSuccess() {
 	suite.Require().NoError(err)
 	signature, err := btcec.ParseSignature(res.Certificate.Signature, btcec.S256())
 	suite.Require().NoError(err)
-	suite.Require().True(signature.Verify(marshal, suite.oraclePrivKey.PubKey()))
+	suite.Require().True(signature.Verify(marshal, suite.OraclePrivKey.PubKey()))
 
 	// decrypt re-encrypted provider's data
-	reEncryptedData, err := suite.svc.GetIPFS().Get(unsignedCertificate.Cid)
+	reEncryptedData, err := suite.IPFS.Get(unsignedCertificate.Cid)
 	suite.Require().NoError(err)
-	combinedKey := key.GetSecretKey(suite.oraclePrivKey.Serialize(), req.DealId, dataHash[:])
+	combinedKey := key.GetSecretKey(suite.OraclePrivKey.Serialize(), req.DealId, dataHash[:])
 	decryptedData, err := crypto.Decrypt(combinedKey[:], nil, reEncryptedData)
 	suite.Require().NoError(err)
 	suite.Require().Equal(jsonDataBz, decryptedData)
@@ -153,7 +132,7 @@ func (suite *dataDealServiceServerTestSuite) TestValidateDataInvalidRequest() {
 	ctx := context.Background()
 
 	// request validation for provider data
-	server := dataDealServiceServer{Service: suite.svc}
+	server := dataDealServiceServer{Service: suite.Svc}
 	res, err := server.ValidateData(ctx, req)
 	suite.Require().Nil(res)
 	suite.Require().ErrorContains(err, "invalid provider address:")
@@ -195,7 +174,7 @@ func (suite *dataDealServiceServerTestSuite) TestValidateDataDealStatusIsNotActi
 	ctx = context.WithValue(ctx, auth.ContextKeyAuthenticatedAccountAddress{}, req.ProviderAddress)
 
 	// request validation for provider data
-	server := dataDealServiceServer{Service: suite.svc}
+	server := dataDealServiceServer{Service: suite.Svc}
 	res, err := server.ValidateData(ctx, req)
 	suite.Require().Nil(res)
 	suite.Require().ErrorContains(err, "cannot provide data to INACTIVE/COMPLETED deal")
@@ -219,7 +198,7 @@ func (suite *dataDealServiceServerTestSuite) TestValidateDataNotFoundProviderPub
 	ctx = context.WithValue(ctx, auth.ContextKeyAuthenticatedAccountAddress{}, req.ProviderAddress)
 
 	// set provider public key to nil
-	suite.svc.QueryClient.Account = authtypes.NewBaseAccount(
+	suite.QueryClient.Account = authtypes.NewBaseAccount(
 		sdk.AccAddress(suite.providerAccPubKey.Address()),
 		nil,
 		1,
@@ -227,7 +206,7 @@ func (suite *dataDealServiceServerTestSuite) TestValidateDataNotFoundProviderPub
 	)
 
 	// request validation for provider data
-	server := dataDealServiceServer{Service: suite.svc}
+	server := dataDealServiceServer{Service: suite.Svc}
 	res, err := server.ValidateData(ctx, req)
 	suite.Require().Nil(res)
 	suite.Require().ErrorContains(err, "failed to get public key of provider's account")
@@ -246,7 +225,7 @@ func (suite *dataDealServiceServerTestSuite) TestValidateDataInvalidProviderEncr
 	ctx = context.WithValue(ctx, auth.ContextKeyAuthenticatedAccountAddress{}, req.ProviderAddress)
 
 	// request validation for provider data
-	server := dataDealServiceServer{Service: suite.svc}
+	server := dataDealServiceServer{Service: suite.Svc}
 	res, err := server.ValidateData(ctx, req)
 	suite.Require().Nil(res)
 	suite.Require().ErrorContains(err, "failed to decrypt data")
@@ -268,7 +247,7 @@ func (suite *dataDealServiceServerTestSuite) TestValidateDataNotMatchedDataHash(
 
 	sharedKey := crypto.DeriveSharedKey(
 		providerPrivKey,
-		suite.oraclePrivKey.PubKey(),
+		suite.OraclePubKey,
 		crypto.KDFSHA256,
 	)
 
@@ -287,7 +266,7 @@ func (suite *dataDealServiceServerTestSuite) TestValidateDataNotMatchedDataHash(
 	ctx = context.WithValue(ctx, auth.ContextKeyAuthenticatedAccountAddress{}, req.ProviderAddress)
 
 	// request validation for provider data
-	server := dataDealServiceServer{Service: suite.svc}
+	server := dataDealServiceServer{Service: suite.Svc}
 	res, err := server.ValidateData(ctx, req)
 	suite.Require().Nil(res)
 	suite.Require().ErrorContains(err, "data hash mismatch")
@@ -309,7 +288,7 @@ func (suite *dataDealServiceServerTestSuite) TestValidateDataInvalidJSONSchema()
 
 	sharedKey := crypto.DeriveSharedKey(
 		providerPrivKey,
-		suite.oraclePrivKey.PubKey(),
+		suite.OraclePrivKey.PubKey(),
 		crypto.KDFSHA256,
 	)
 
@@ -330,7 +309,7 @@ func (suite *dataDealServiceServerTestSuite) TestValidateDataInvalidJSONSchema()
 	ctx = context.WithValue(ctx, auth.ContextKeyAuthenticatedAccountAddress{}, req.ProviderAddress)
 
 	// request validation for provider data
-	server := dataDealServiceServer{Service: suite.svc}
+	server := dataDealServiceServer{Service: suite.Svc}
 	res, err := server.ValidateData(ctx, req)
 	suite.Require().Nil(res)
 	suite.Require().ErrorContains(err, "failed to validate data")

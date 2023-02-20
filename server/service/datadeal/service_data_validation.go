@@ -20,8 +20,8 @@ import (
 )
 
 func (s *dataDealServiceServer) ValidateData(ctx context.Context, req *datadeal.ValidateDataRequest) (*datadeal.ValidateDataResponse, error) {
-	queryClient := s.GetQueryClient()
-	oraclePrivKey := s.GetOraclePrivKey()
+	queryClient := s.QueryClient()
+	oraclePrivKey := s.OraclePrivKey()
 	dealID := req.DealId
 
 	if err := validateRequest(req); err != nil {
@@ -102,18 +102,18 @@ func (s *dataDealServiceServer) ValidateData(ctx context.Context, req *datadeal.
 		return nil, fmt.Errorf("failed to re-encrypt data with the combined key")
 	}
 
-	// Put data into GetIPFS
-	cid, err := s.GetIPFS().Add(reEncryptedData)
+	// Put data into IPFS
+	cid, err := s.IPFS().Add(reEncryptedData)
 	if err != nil {
-		log.Errorf("failed to store data to GetIPFS: %s", err.Error())
-		return nil, fmt.Errorf("failed to store data to GetIPFS")
+		log.Errorf("failed to store data to IPFS: %s", err.Error())
+		return nil, fmt.Errorf("failed to store data to IPFS")
 	}
 
 	// Issue a certificate to the client
 	unsignedDataCert := &datadealtypes.UnsignedCertificate{
 		Cid:             cid,
-		UniqueId:        s.GetEnclaveInfo().UniqueIDHex(),
-		OracleAddress:   s.GetOracleAcc().GetAddress(),
+		UniqueId:        s.EnclaveInfo().UniqueIDHex(),
+		OracleAddress:   s.OracleAcc().GetAddress(),
 		DealId:          dealID,
 		ProviderAddress: req.ProviderAddress,
 		DataHash:        hex.EncodeToString(dataHash[:]),

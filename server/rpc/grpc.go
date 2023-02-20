@@ -24,7 +24,7 @@ type GrpcServer struct {
 }
 
 func NewGrpcServer(svc service.Service) *GrpcServer {
-	cfg := svc.GetConfig().GRPC
+	cfg := svc.Config().GRPC
 
 	unaryInterceptor, streamInterceptor := createInterceptors(svc)
 
@@ -50,9 +50,9 @@ func NewGrpcServer(svc service.Service) *GrpcServer {
 }
 
 func createInterceptors(svc service.Service) (grpc.ServerOption, grpc.ServerOption) {
-	jwtAuthInterceptor := auth.NewJWTAuthInterceptor(svc.GetQueryClient())
-	queryInterceptor := query.NewQueryInterceptor(svc.GetQueryClient())
-	rateLimitInterceptor := limit.NewRateLimitInterceptor(svc.GetConfig().GRPC)
+	jwtAuthInterceptor := auth.NewJWTAuthInterceptor(svc.QueryClient())
+	queryInterceptor := query.NewQueryInterceptor(svc.QueryClient())
+	rateLimitInterceptor := limit.NewRateLimitInterceptor(svc.Config().GRPC)
 
 	return grpc.ChainUnaryInterceptor(
 			rateLimitInterceptor.UnaryServerInterceptor(),
@@ -94,7 +94,7 @@ func (s *GrpcServer) registerServices(registerServices ...func(service.Service, 
 }
 
 func (s *GrpcServer) listenAndServe() error {
-	cfg := s.svc.GetConfig().GRPC
+	cfg := s.svc.Config().GRPC
 	grpcListenURL, err := url.Parse(cfg.ListenAddr)
 	if err != nil {
 		return fmt.Errorf("failed to parsing rest URL: %w", err)

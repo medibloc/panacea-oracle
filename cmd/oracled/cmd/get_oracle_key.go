@@ -27,7 +27,7 @@ func getOracleKeyCmd() *cobra.Command {
 				return err
 			}
 
-			sgx := sgx.NewOracleSgx()
+			sgx := sgx.NewOracleSGX()
 
 			queryClient, err := panacea.LoadVerifiedQueryClient(context.Background(), conf, sgx)
 			if err != nil {
@@ -41,8 +41,8 @@ func getOracleKeyCmd() *cobra.Command {
 
 			ctx := context.Background()
 
-			uniqueID := svc.GetEnclaveInfo().UniqueIDHex()
-			oracleAddress := svc.GetOracleAcc().GetAddress()
+			uniqueID := svc.EnclaveInfo().UniqueIDHex()
+			oracleAddress := svc.OracleAcc().GetAddress()
 
 			from, err := cmd.Flags().GetString(flags.FlagFromOracleRegistrationOrUpgrade)
 			if err != nil {
@@ -51,7 +51,7 @@ func getOracleKeyCmd() *cobra.Command {
 
 			switch from {
 			case fromRegistration:
-				oracleRegistration, err := svc.GetQueryClient().GetOracleRegistration(ctx, uniqueID, oracleAddress)
+				oracleRegistration, err := svc.QueryClient().GetOracleRegistration(ctx, uniqueID, oracleAddress)
 				if err != nil {
 					return fmt.Errorf("failed to get oracle registration: %w", err)
 				}
@@ -59,17 +59,17 @@ func getOracleKeyCmd() *cobra.Command {
 				if len(oracleRegistration.EncryptedOraclePrivKey) == 0 {
 					return fmt.Errorf("the encrypted oracle private key has not set yet. please try again later")
 				}
-				return key.RetrieveAndStoreOraclePrivKey(ctx, svc, oracleRegistration.EncryptedOraclePrivKey)
+				return key.DecryptAndStoreOraclePrivKey(ctx, svc, oracleRegistration.EncryptedOraclePrivKey)
 
 			case fromUpgrade:
-				oracleUpgrade, err := svc.GetQueryClient().GetOracleUpgrade(ctx, uniqueID, oracleAddress)
+				oracleUpgrade, err := svc.QueryClient().GetOracleUpgrade(ctx, uniqueID, oracleAddress)
 				if err != nil {
 					return fmt.Errorf("failed to get oracle upgrade: %w", err)
 				}
 				if len(oracleUpgrade.EncryptedOraclePrivKey) == 0 {
 					return fmt.Errorf("the encrypted oracle private key has not set yet. please try again later")
 				}
-				return key.RetrieveAndStoreOraclePrivKey(ctx, svc, oracleUpgrade.EncryptedOraclePrivKey)
+				return key.DecryptAndStoreOraclePrivKey(ctx, svc, oracleUpgrade.EncryptedOraclePrivKey)
 
 			default:
 				return fmt.Errorf("invalid --from flag input. please put \"registration\" or \"upgrade\"")

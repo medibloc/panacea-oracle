@@ -39,7 +39,7 @@ func upgradeOracle() *cobra.Command {
 				return err
 			}
 
-			sgx := sgx.NewOracleSgx()
+			sgx := sgx.NewOracleSGX()
 
 			queryClient, err := panacea.NewVerifiedQueryClient(context.Background(), conf, trustedBlockInfo, sgx)
 			if err != nil {
@@ -77,7 +77,7 @@ func upgradeOracle() *cobra.Command {
 }
 
 func sendTxUpgradeOracle(svc service.Service, trustedBlockInfo *panacea.TrustedBlockInfo) error {
-	oracleAccount := svc.GetOracleAcc()
+	oracleAccount := svc.OracleAcc()
 
 	msgRegisterOracle, err := generateMsgUpgradeOracle(svc, oracleAccount, trustedBlockInfo)
 	if err != nil {
@@ -95,7 +95,7 @@ func sendTxUpgradeOracle(svc service.Service, trustedBlockInfo *panacea.TrustedB
 }
 
 func generateMsgUpgradeOracle(svc service.Service, oracleAccount *panacea.OracleAccount, trustedBlockInfo *panacea.TrustedBlockInfo) (*oracletypes.MsgUpgradeOracle, error) {
-	conf := svc.GetConfig()
+	conf := svc.Config()
 
 	// if node key exists, return error.
 	nodePrivKeyPath := conf.AbsNodePrivKeyPath()
@@ -109,7 +109,7 @@ func generateMsgUpgradeOracle(svc service.Service, oracleAccount *panacea.Oracle
 	}
 
 	// generate node key and its remote report
-	nodePubKey, nodePubKeyRemoteReport, err := generateAndSealedNodeKey(svc.GetSgx(), nodePrivKeyPath)
+	nodePubKey, nodePubKeyRemoteReport, err := generateAndSealedNodeKey(svc.SGX(), nodePrivKeyPath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate node key pair: %w", err)
 	}
