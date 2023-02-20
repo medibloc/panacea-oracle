@@ -15,7 +15,7 @@ require (
 	github.com/ipfs/go-ipfs-api v0.3.0
 	github.com/lestrrat-go/jwx/v2 v2.0.8
 	github.com/medibloc/panacea-core/v2 v2.1.0-alpha.3.0.20230217061749-d8bc8233f6bc
-	github.com/medibloc/vc-sdk v0.0.3-0.20230217065527-f220bab490bb
+	github.com/medibloc/vc-sdk v0.0.3-0.20230220072858-a856f62087d7
 	github.com/sirupsen/logrus v1.9.0
 	github.com/spf13/cobra v1.6.1
 	github.com/spf13/viper v1.14.0
