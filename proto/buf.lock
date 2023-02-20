@@ -8,4 +8,4 @@ deps:
   - remote: buf.build
     owner: medibloc
     repository: panacea-core
-    commit: 3759ae24b92f4f2a88b2fa6c4dfd2d07
+    commit: 5cbddd2f7b9d409c9eb37169bd8bb654
