@@ -19,7 +19,7 @@ message ValidateDataRequest {
   uint64 deal_id = 1 [json_name = "deal_id"];
   string provider_address = 2 [json_name = "provider_address"];
   bytes encrypted_data = 3 [json_name = "encrypted_data"];
-  bytes data_hash = 4 [json_name = "data_hash"];
+  string data_hash = 4 [json_name = "data_hash"];
 }
 
 message ValidateDataResponse {

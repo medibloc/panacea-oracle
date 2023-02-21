@@ -84,7 +84,7 @@ func (suite *dataDealServiceServerTestSuite) TestValidateDataSuccess() {
 		DealId:          1,
 		ProviderAddress: panacea.GetAddressFromPrivateKey(suite.providerAccPrivKey),
 		EncryptedData:   encryptedData,
-		DataHash:        dataHash[:],
+		DataHash:        hex.EncodeToString(dataHash[:]),
 	}
 
 	// add authentication in header
@@ -102,7 +102,7 @@ func (suite *dataDealServiceServerTestSuite) TestValidateDataSuccess() {
 	suite.Require().Equal(suite.OracleAcc.GetAddress(), unsignedCertificate.OracleAddress)
 	suite.Require().Equal(req.DealId, unsignedCertificate.DealId)
 	suite.Require().Equal(req.ProviderAddress, unsignedCertificate.ProviderAddress)
-	suite.Require().Equal(hex.EncodeToString(req.DataHash), unsignedCertificate.DataHash)
+	suite.Require().Equal(req.DataHash, unsignedCertificate.DataHash)
 	suite.Require().NotNil(res.Certificate.Signature)
 
 	// verify certificate
@@ -126,7 +126,7 @@ func (suite *dataDealServiceServerTestSuite) TestValidateDataInvalidRequest() {
 		DealId:          1,
 		ProviderAddress: "invalid_provider_address",
 		EncryptedData:   nil,
-		DataHash:        nil,
+		DataHash:        "",
 	}
 
 	ctx := context.Background()
@@ -147,7 +147,7 @@ func (suite *dataDealServiceServerTestSuite) TestValidateDataInvalidRequest() {
 	suite.Require().Nil(res)
 	suite.Require().ErrorContains(err, "data hash is empty in request")
 
-	req.DataHash = []byte("dataHash")
+	req.DataHash = "dataHash"
 	res, err = server.ValidateData(ctx, req)
 	suite.Require().Nil(res)
 	suite.Require().ErrorContains(err, "failed to get request address")
@@ -166,7 +166,7 @@ func (suite *dataDealServiceServerTestSuite) TestValidateDataDealStatusIsNotActi
 		DealId:          1,
 		ProviderAddress: panacea.GetAddressFromPrivateKey(suite.providerAccPrivKey),
 		EncryptedData:   []byte("encryptedData"),
-		DataHash:        []byte("dataHash"),
+		DataHash:        "dataHash",
 	}
 
 	// add authentication in header
@@ -190,7 +190,7 @@ func (suite *dataDealServiceServerTestSuite) TestValidateDataNotFoundProviderPub
 		DealId:          1,
 		ProviderAddress: panacea.GetAddressFromPrivateKey(suite.providerAccPrivKey),
 		EncryptedData:   []byte("encryptedData"),
-		DataHash:        []byte("dataHash"),
+		DataHash:        "dataHash",
 	}
 
 	// add authentication in header
@@ -217,7 +217,7 @@ func (suite *dataDealServiceServerTestSuite) TestValidateDataInvalidProviderEncr
 		DealId:          1,
 		ProviderAddress: panacea.GetAddressFromPrivateKey(suite.providerAccPrivKey),
 		EncryptedData:   []byte("encryptedData"),
-		DataHash:        []byte("dataHash"),
+		DataHash:        "dataHash",
 	}
 
 	// add authentication in header
@@ -258,7 +258,7 @@ func (suite *dataDealServiceServerTestSuite) TestValidateDataNotMatchedDataHash(
 		DealId:          1,
 		ProviderAddress: panacea.GetAddressFromPrivateKey(suite.providerAccPrivKey),
 		EncryptedData:   encryptedData,
-		DataHash:        []byte("invalid data hash"),
+		DataHash:        "invalid data hash",
 	}
 
 	// add authentication in header
@@ -301,7 +301,7 @@ func (suite *dataDealServiceServerTestSuite) TestValidateDataInvalidJSONSchema()
 		DealId:          1,
 		ProviderAddress: panacea.GetAddressFromPrivateKey(suite.providerAccPrivKey),
 		EncryptedData:   encryptedData,
-		DataHash:        dataHash[:],
+		DataHash:        hex.EncodeToString(dataHash[:]),
 	}
 
 	// add authentication in header

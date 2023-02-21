@@ -10,9 +10,10 @@ OUT_DIR = ./build
 MODULE=github.com/medibloc/panacea-oracle
 
 PROTO_DIR=proto
+PROTOBUF_DIR=pb
 PROTO_OUT_DIR=./
 
-.PHONY: all build test sign-prod clean
+.PHONY: all build test sign-prod clean proto-gen
 
 all: build test
 
@@ -38,4 +39,5 @@ clean:
 	rm -rf $(OUT_DIR)
 
 proto-gen:
+	rm -rfv $(PROTO_OUT_DIR)$(PROTOBUF_DIR)
 	cd $(PROTO_DIR) && buf mod update && buf build && buf generate; cd -
