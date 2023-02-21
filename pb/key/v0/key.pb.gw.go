@@ -81,7 +81,7 @@ func RegisterKeyServiceHandlerServer(ctx context.Context, mux *runtime.ServeMux,
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/panacea_oracle.key.v0.KeyService/GetSecretKey", runtime.WithHTTPPathPattern("/v0/secret-key"))
+		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/panacea_oracle.key.v0.KeyService/GetSecretKey", runtime.WithHTTPPathPattern("/v0/data-deal/secret-key"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -145,7 +145,7 @@ func RegisterKeyServiceHandlerClient(ctx context.Context, mux *runtime.ServeMux,
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/panacea_oracle.key.v0.KeyService/GetSecretKey", runtime.WithHTTPPathPattern("/v0/secret-key"))
+		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/panacea_oracle.key.v0.KeyService/GetSecretKey", runtime.WithHTTPPathPattern("/v0/data-deal/secret-key"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -165,7 +165,7 @@ func RegisterKeyServiceHandlerClient(ctx context.Context, mux *runtime.ServeMux,
 }
 
 var (
-	pattern_KeyService_GetSecretKey_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v0", "secret-key"}, ""))
+	pattern_KeyService_GetSecretKey_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v0", "data-deal", "secret-key"}, ""))
 )
 
 var (
