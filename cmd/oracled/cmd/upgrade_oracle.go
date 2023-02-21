@@ -45,6 +45,7 @@ func upgradeOracle() *cobra.Command {
 			if err != nil {
 				return fmt.Errorf("failed to create queryClient: %w", err)
 			}
+			defer queryClient.Close()
 
 			svc, err := service.New(conf, sgx, queryClient)
 			if err != nil {

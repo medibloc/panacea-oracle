@@ -102,9 +102,6 @@ func (s *service) StartSubscriptions(events ...event.Event) error {
 
 func (s *service) Close() error {
 	log.Info("calling the service's close function")
-	if err := s.queryClient.Close(); err != nil {
-		log.Warn(err)
-	}
 	if err := s.grpcClient.Close(); err != nil {
 		log.Warn(err)
 	}

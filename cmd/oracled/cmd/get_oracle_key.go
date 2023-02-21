@@ -33,11 +33,13 @@ func getOracleKeyCmd() *cobra.Command {
 			if err != nil {
 				return fmt.Errorf("failed to load query client: %w", err)
 			}
+			defer queryClient.Close()
 
 			svc, err := service.New(conf, sgx, queryClient)
 			if err != nil {
 				return err
 			}
+			defer svc.Close()
 
 			ctx := context.Background()
 
