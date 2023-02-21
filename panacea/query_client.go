@@ -24,6 +24,7 @@ import (
 	datadealtypes "github.com/medibloc/panacea-core/v2/x/datadeal/types"
 	oracletypes "github.com/medibloc/panacea-core/v2/x/oracle/types"
 	"github.com/medibloc/panacea-oracle/config"
+	"github.com/medibloc/panacea-oracle/sgx"
 	sgxdb "github.com/medibloc/panacea-oracle/store/sgxleveldb"
 	log "github.com/sirupsen/logrus"
 	tmbytes "github.com/tendermint/tendermint/libs/bytes"
@@ -63,6 +64,8 @@ type TrustedBlockInfo struct {
 	TrustedBlockHash   []byte
 }
 
+var _ QueryClient = &verifiedQueryClient{}
+
 type verifiedQueryClient struct {
 	rpcClient   *rpchttp.HTTP
 	lightClient *light.Client
@@ -82,16 +85,16 @@ func makeInterfaceRegistry() sdk.InterfaceRegistry {
 
 // NewVerifiedQueryClient set verifiedQueryClient with rpcClient & and returns, if successful,
 // a verifiedQueryClient that can be used to add query function.
-func NewVerifiedQueryClient(ctx context.Context, config *config.Config, info *TrustedBlockInfo) (QueryClient, error) {
-	return newVerifiedQueryClientWithSgxLevelDB(ctx, config, info)
+func NewVerifiedQueryClient(ctx context.Context, config *config.Config, info *TrustedBlockInfo, sgx sgx.Sgx) (QueryClient, error) {
+	return newVerifiedQueryClientWithSgxLevelDB(ctx, config, info, sgx)
 }
 
-func LoadVerifiedQueryClient(ctx context.Context, config *config.Config) (QueryClient, error) {
-	return newVerifiedQueryClientWithSgxLevelDB(ctx, config, nil)
+func LoadVerifiedQueryClient(ctx context.Context, config *config.Config, sgx sgx.Sgx) (QueryClient, error) {
+	return newVerifiedQueryClientWithSgxLevelDB(ctx, config, nil, sgx)
 }
 
-func newVerifiedQueryClientWithSgxLevelDB(ctx context.Context, config *config.Config, info *TrustedBlockInfo) (QueryClient, error) {
-	db, err := sgxdb.NewSgxLevelDB("light-client", config.AbsDataDirPath())
+func newVerifiedQueryClientWithSgxLevelDB(ctx context.Context, config *config.Config, info *TrustedBlockInfo, sgx sgx.Sgx) (QueryClient, error) {
+	db, err := sgxdb.NewSgxLevelDB("light-client", config.AbsDataDirPath(), sgx)
 	if err != nil {
 		return nil, err
 	}

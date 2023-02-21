@@ -45,7 +45,7 @@ func (e ApproveOracleRegistrationEvent) EventHandler(ctx context.Context, _ ctyp
 		e.doneChan <- fmt.Errorf("failed to get oracle registration: %w", err)
 	}
 
-	e.doneChan <- key.RetrieveAndStoreOraclePrivKey(ctx, e.service, oracleRegistration.EncryptedOraclePrivKey)
+	e.doneChan <- key.DecryptAndStoreOraclePrivKey(ctx, e.service, oracleRegistration.EncryptedOraclePrivKey)
 
 	return nil
 }

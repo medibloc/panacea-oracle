@@ -7,12 +7,13 @@ import (
 )
 
 type sgxLevelDBBatch struct {
+	sgx sgx.Sgx
 	tmdb.Batch
 }
 
 func (sbatch *sgxLevelDBBatch) Set(key, value []byte) error {
 	log.Debug("sealing before writing to leveldb in batch")
-	sealValue, err := sgx.Seal(value)
+	sealValue, err := sbatch.sgx.Seal(value)
 	if err != nil {
 		return err
 	}

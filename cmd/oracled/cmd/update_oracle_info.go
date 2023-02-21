@@ -1,12 +1,15 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	oracletypes "github.com/medibloc/panacea-core/v2/x/oracle/types"
 	"github.com/medibloc/panacea-oracle/client/flags"
+	"github.com/medibloc/panacea-oracle/panacea"
 	"github.com/medibloc/panacea-oracle/service"
+	"github.com/medibloc/panacea-oracle/sgx"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
@@ -21,7 +24,15 @@ func updateOracleInfoCmd() *cobra.Command {
 				return err
 			}
 
-			svc, err := service.New(conf)
+			sgx := sgx.NewOracleSGX()
+
+			queryClient, err := panacea.LoadVerifiedQueryClient(context.Background(), conf, sgx)
+			if err != nil {
+				return fmt.Errorf("failed to load query client: %w", err)
+			}
+			defer queryClient.Close()
+
+			svc, err := service.New(conf, sgx, queryClient)
 			if err != nil {
 				return fmt.Errorf("failed to create service: %w", err)
 			}

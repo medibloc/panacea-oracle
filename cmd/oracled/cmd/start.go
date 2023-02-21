@@ -1,14 +1,17 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"os/signal"
 	"syscall"
 
 	oracleevent "github.com/medibloc/panacea-oracle/event/oracle"
+	"github.com/medibloc/panacea-oracle/panacea"
 	"github.com/medibloc/panacea-oracle/server"
 	"github.com/medibloc/panacea-oracle/service"
+	"github.com/medibloc/panacea-oracle/sgx"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
@@ -23,7 +26,15 @@ func startCmd() *cobra.Command {
 				return err
 			}
 
-			svc, err := service.New(conf)
+			sgx := sgx.NewOracleSGX()
+
+			queryClient, err := panacea.LoadVerifiedQueryClient(context.Background(), conf, sgx)
+			if err != nil {
+				return fmt.Errorf("failed to load query client: %w", err)
+			}
+			defer queryClient.Close()
+
+			svc, err := service.New(conf, sgx, queryClient)
 			if err != nil {
 				return fmt.Errorf("failed to create service: %w", err)
 			}

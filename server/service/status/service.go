@@ -5,17 +5,17 @@ import (
 
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	status "github.com/medibloc/panacea-oracle/pb/status/v0"
-	serverservice "github.com/medibloc/panacea-oracle/server/service"
+	"github.com/medibloc/panacea-oracle/service"
 	"google.golang.org/grpc"
 )
 
 type statusService struct {
 	status.UnimplementedStatusServiceServer
 
-	serverservice.Service
+	service.Service
 }
 
-func RegisterService(svc serverservice.Service, svr *grpc.Server) {
+func RegisterService(svc service.Service, svr *grpc.Server) {
 	status.RegisterStatusServiceServer(svr, &statusService{Service: svc})
 }
 

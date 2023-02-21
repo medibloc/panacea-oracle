@@ -1,7 +1,6 @@
 package service
 
 import (
-	"context"
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -18,13 +17,14 @@ import (
 )
 
 type Service interface {
-	GRPCClient() *panacea.GRPCClient
+	GRPCClient() panacea.GRPCClient
 	EnclaveInfo() *sgx.EnclaveInfo
+	SGX() sgx.Sgx
 	OracleAcc() *panacea.OracleAccount
 	OraclePrivKey() *btcec.PrivateKey
 	Config() *config.Config
 	QueryClient() panacea.QueryClient
-	IPFS() *ipfs.IPFS
+	IPFS() ipfs.IPFS
 	BroadcastTx(...sdk.Msg) (int64, string, error)
 	StartSubscriptions(...event.Event) error
 	Close() error
@@ -33,27 +33,19 @@ type Service interface {
 type service struct {
 	conf        *config.Config
 	enclaveInfo *sgx.EnclaveInfo
+	sgx         sgx.Sgx
 
 	oracleAccount *panacea.OracleAccount
 	oraclePrivKey *btcec.PrivateKey
 
 	queryClient panacea.QueryClient
-	grpcClient  *panacea.GRPCClient
+	grpcClient  panacea.GRPCClient
 	subscriber  *event.PanaceaSubscriber
 	txBuilder   *panacea.TxBuilder
-	ipfs        *ipfs.IPFS
+	ipfs        ipfs.IPFS
 }
 
-func New(conf *config.Config) (Service, error) {
-	queryClient, err := panacea.LoadVerifiedQueryClient(context.Background(), conf)
-	if err != nil {
-		return nil, fmt.Errorf("failed to load query client: %w", err)
-	}
-
-	return NewWithQueryClient(conf, queryClient)
-}
-
-func NewWithQueryClient(conf *config.Config, queryClient panacea.QueryClient) (Service, error) {
+func New(conf *config.Config, sgx sgx.Sgx, queryClient panacea.QueryClient) (Service, error) {
 	oracleAccount, err := panacea.NewOracleAccount(conf.OracleMnemonic, conf.OracleAccNum, conf.OracleAccIndex)
 	if err != nil {
 		return nil, err
@@ -68,7 +60,7 @@ func NewWithQueryClient(conf *config.Config, queryClient panacea.QueryClient) (S
 		oraclePrivKey, _ = crypto.PrivKeyFromBytes(oraclePrivKeyBz)
 	}
 
-	selfEnclaveInfo, err := sgx.GetSelfEnclaveInfo()
+	selfEnclaveInfo, err := sgx.GenerateSelfEnclaveInfo()
 	if err != nil {
 		return nil, fmt.Errorf("failed to set self-enclave info: %w", err)
 	}
@@ -83,7 +75,7 @@ func NewWithQueryClient(conf *config.Config, queryClient panacea.QueryClient) (S
 		return nil, fmt.Errorf("failed to create a new gRPC client: %w", err)
 	}
 
-	txBuilder := panacea.NewTxBuilder(*grpcClient)
+	txBuilder := panacea.NewTxBuilder(grpcClient)
 
 	subscriber, err := event.NewSubscriber(conf.Panacea.RPCAddr)
 	if err != nil {
@@ -95,6 +87,7 @@ func NewWithQueryClient(conf *config.Config, queryClient panacea.QueryClient) (S
 		oracleAccount: oracleAccount,
 		oraclePrivKey: oraclePrivKey,
 		enclaveInfo:   selfEnclaveInfo,
+		sgx:           sgx,
 		queryClient:   queryClient,
 		grpcClient:    grpcClient,
 		txBuilder:     txBuilder,
@@ -109,9 +102,6 @@ func (s *service) StartSubscriptions(events ...event.Event) error {
 
 func (s *service) Close() error {
 	log.Info("calling the service's close function")
-	if err := s.queryClient.Close(); err != nil {
-		log.Warn(err)
-	}
 	if err := s.grpcClient.Close(); err != nil {
 		log.Warn(err)
 	}
@@ -138,7 +128,11 @@ func (s *service) EnclaveInfo() *sgx.EnclaveInfo {
 	return s.enclaveInfo
 }
 
-func (s *service) GRPCClient() *panacea.GRPCClient {
+func (s *service) SGX() sgx.Sgx {
+	return s.sgx
+}
+
+func (s *service) GRPCClient() panacea.GRPCClient {
 	return s.grpcClient
 }
 
@@ -171,6 +165,6 @@ func (s *service) BroadcastTx(msg ...sdk.Msg) (int64, string, error) {
 	return resp.TxResponse.Height, resp.TxResponse.TxHash, nil
 }
 
-func (s *service) IPFS() *ipfs.IPFS {
+func (s *service) IPFS() ipfs.IPFS {
 	return s.ipfs
 }

@@ -8,7 +8,6 @@ import (
 	"github.com/medibloc/panacea-oracle/server/rpc/interceptor/auth"
 	"github.com/medibloc/panacea-oracle/server/rpc/interceptor/limit"
 	"github.com/medibloc/panacea-oracle/server/rpc/interceptor/query"
-	serverservice "github.com/medibloc/panacea-oracle/server/service"
 	"github.com/medibloc/panacea-oracle/server/service/datadeal"
 	"github.com/medibloc/panacea-oracle/server/service/key"
 	"github.com/medibloc/panacea-oracle/server/service/status"
@@ -87,7 +86,7 @@ func (s *GrpcServer) Close() error {
 	return nil
 }
 
-func (s *GrpcServer) registerServices(registerServices ...func(serverservice.Service, *grpc.Server)) {
+func (s *GrpcServer) registerServices(registerServices ...func(service.Service, *grpc.Server)) {
 	log.Info("Register grpc services")
 	for _, registerService := range registerServices {
 		registerService(s.svc, s.grpcServer)

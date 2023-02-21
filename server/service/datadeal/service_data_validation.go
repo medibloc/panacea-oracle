@@ -23,30 +23,29 @@ func (s *dataDealServiceServer) ValidateData(ctx context.Context, req *datadeal.
 	dealID := req.DealId
 
 	if err := validateRequest(req); err != nil {
-		log.Errorf("invalid request body: %s", err.Error())
+		log.Debugf("invalid request body: %s", err.Error())
 		return nil, err
 	}
 
 	requesterAddress, err := auth.GetRequestAddress(ctx)
 	if err != nil {
-		log.Errorf("failed to get request address. %v", err.Error())
-		return nil, err
+		log.Debugf("failed to get request address. %v", err.Error())
+		return nil, fmt.Errorf("failed to get request address. %w", err)
 	}
 
 	if requesterAddress != req.ProviderAddress {
-		err := fmt.Errorf("data provider and token issuer do not matched. provider: %s, jwt issuer: %s", req.ProviderAddress, requesterAddress)
-		log.Error(err)
-		return nil, err
+		log.Debugf("data provider and token issuer do not matched.  provider: %s, jwt issuer: %s", req.ProviderAddress, requesterAddress)
+		return nil, fmt.Errorf("data provider and token issuer do not matched.  provider: %s, jwt issuer: %s", req.ProviderAddress, requesterAddress)
 	}
 
 	deal, err := queryClient.GetDeal(ctx, dealID)
 	if err != nil {
-		log.Errorf("failed to get deal(%d): %s", dealID, err.Error())
+		log.Debugf("failed to get deal(%d): %s", dealID, err.Error())
 		return nil, fmt.Errorf("failed to get deal. %w", err)
 	}
 
 	if deal.Status != datadealtypes.DEAL_STATUS_ACTIVE {
-		log.Errorf("cannot provide data to INACTIVE/COMPLETED deal")
+		log.Debugf("cannot provide data to INACTIVE/COMPLETED deal")
 		return nil, fmt.Errorf("cannot provide data to INACTIVE/COMPLETED deal")
 	}
 
@@ -55,28 +54,28 @@ func (s *dataDealServiceServer) ValidateData(ctx context.Context, req *datadeal.
 
 	providerAcc, err := queryClient.GetAccount(ctx, req.ProviderAddress)
 	if err != nil {
-		log.Errorf("failed to get provider's account: %s", err.Error())
-		return nil, fmt.Errorf("failed to get provider's account")
+		log.Debugf("failed to get provider's account: %v", err)
+		return nil, fmt.Errorf("failed to get provider's account: %w", err)
 	}
 
 	if providerAcc.GetPubKey() == nil {
-		log.Errorf("failed to get public key of provider's account: %s", err.Error())
-		return nil, fmt.Errorf("failed to get public key of provider's account")
+		log.Debugf("failed to get public key of provider's account: %s", req.ProviderAddress)
+		return nil, fmt.Errorf("failed to get public key of provider's account: %s", req.ProviderAddress)
 	}
 
 	providerPubKeyBytes := providerAcc.GetPubKey().Bytes()
 
 	providerPubKey, err := btcec.ParsePubKey(providerPubKeyBytes, btcec.S256())
 	if err != nil {
-		log.Errorf("failed to parse provider's public key: %s", err.Error())
-		return nil, fmt.Errorf("failed to parse provider's public key")
+		log.Debugf("failed to parse provider's public key: %v", err)
+		return nil, fmt.Errorf("failed to parse provider's public key: %w", err)
 	}
 
 	decryptSharedKey := crypto.DeriveSharedKey(oraclePrivKey, providerPubKey, crypto.KDFSHA256)
 
 	decryptedData, err := crypto.Decrypt(decryptSharedKey, nil, encryptedData)
 	if err != nil {
-		log.Errorf("failed to decrypt data: %s", err.Error())
+		log.Debugf("failed to decrypt data: %s", err.Error())
 		return nil, fmt.Errorf("failed to decrypt data")
 	}
 
@@ -90,13 +89,13 @@ func (s *dataDealServiceServer) ValidateData(ctx context.Context, req *datadeal.
 	}
 
 	if err := validation.ValidateJSONSchemata(decryptedData, deal.DataSchema); err != nil {
-		log.Errorf("failed to validate data: %s", err.Error())
+		log.Debugf("failed to validate data: %s", err.Error())
 		return nil, fmt.Errorf("failed to validate data")
 	}
 
 	// Re-encrypt data using a combined key
-	combinedKey := key.GetCombinedKey(oraclePrivKey.Serialize(), dealID, dataHashBz)
-	reEncryptedData, err := crypto.Encrypt(combinedKey[:], nil, decryptedData)
+	secretKey := key.GetSecretKey(oraclePrivKey.Serialize(), dealID, dataHashBz)
+	reEncryptedData, err := crypto.Encrypt(secretKey, nil, decryptedData)
 	if err != nil {
 		log.Errorf("failed to re-encrypt data with the combined key: %s", err.Error())
 		return nil, fmt.Errorf("failed to re-encrypt data with the combined key")
