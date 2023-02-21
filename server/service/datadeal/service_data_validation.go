@@ -1,9 +1,7 @@
 package datadeal
 
 import (
-	"bytes"
 	"context"
-	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
 
@@ -83,9 +81,10 @@ func (s *dataDealServiceServer) ValidateData(ctx context.Context, req *datadeal.
 	}
 
 	// Validate data
-	dataHash := sha256.Sum256(decryptedData)
+	dataHashBz := crypto.KDFSHA256(decryptedData)
+	dataHash := hex.EncodeToString(dataHashBz)
 
-	if bytes.Equal(req.DataHash, dataHash[:]) {
+	if req.DataHash != dataHash {
 		log.Errorf("data hash mismatch")
 		return nil, fmt.Errorf("data hash mismatch")
 	}
@@ -96,7 +95,7 @@ func (s *dataDealServiceServer) ValidateData(ctx context.Context, req *datadeal.
 	}
 
 	// Re-encrypt data using a combined key
-	combinedKey := key.GetCombinedKey(oraclePrivKey.Serialize(), dealID, dataHash[:])
+	combinedKey := key.GetCombinedKey(oraclePrivKey.Serialize(), dealID, dataHashBz)
 	reEncryptedData, err := crypto.Encrypt(combinedKey[:], nil, decryptedData)
 	if err != nil {
 		log.Errorf("failed to re-encrypt data with the combined key: %s", err.Error())
@@ -117,7 +116,7 @@ func (s *dataDealServiceServer) ValidateData(ctx context.Context, req *datadeal.
 		OracleAddress:   s.OracleAcc().GetAddress(),
 		DealId:          dealID,
 		ProviderAddress: req.ProviderAddress,
-		DataHash:        hex.EncodeToString(dataHash[:]),
+		DataHash:        dataHash,
 	}
 	key, _ := btcec.PrivKeyFromBytes(btcec.S256(), oraclePrivKey.Serialize())
 
