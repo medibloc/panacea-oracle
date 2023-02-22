@@ -3,6 +3,7 @@ package config
 import (
 	"errors"
 	"path/filepath"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -13,6 +14,8 @@ type Config struct {
 	Panacea PanaceaConfig `mapstructure:"panacea"`
 
 	IPFS IPFSConfig `mapstructure:"ipfs"`
+
+	GRPC GRPCConfig `mapstructure:"grpc"`
 
 	API APIConfig `mapstructure:"api"`
 }
@@ -48,9 +51,26 @@ type IPFSConfig struct {
 }
 
 type APIConfig struct {
-	ListenAddr   string `mapstructure:"listen-addr"`
-	WriteTimeout int64  `mapstructure:"write-timeout"`
-	ReadTimeout  int64  `mapstructure:"read-timeout"`
+	Enabled            bool          `mapstructure:"enabled"`
+	ListenAddr         string        `mapstructure:"listen-addr"`
+	GrpcConnectTimeout time.Duration `mapstructure:"grpc-connect-timeout"`
+	WriteTimeout       time.Duration `mapstructure:"write-timeout"`
+	ReadTimeout        time.Duration `mapstructure:"read-timeout"`
+}
+
+type GRPCConfig struct {
+	ListenAddr                     string        `mapstructure:"listen-addr"`
+	ConnectionTimeout              time.Duration `mapstructure:"connection-timeout"`
+	MaxConnections                 int           `mapstructure:"max-connections"`
+	MaxConcurrentStreams           int           `mapstructure:"max-concurrent-streams"`
+	MaxRecvMsgSize                 int           `mapstructure:"max-recv-msg-size"`
+	KeepaliveMaxConnectionIdle     time.Duration `mapstructure:"keepalive-max-connection-idle"`
+	KeepaliveMaxConnectionAge      time.Duration `mapstructure:"keepalive-max-connection-age"`
+	KeepaliveMaxConnectionAgeGrace time.Duration `mapstructure:"keepalive-max-connection-age-grace"`
+	KeepaliveTime                  time.Duration `mapstructure:"keepalive-time"`
+	KeepaliveTimeout               time.Duration `mapstructure:"keepalive-timeout"`
+	RateLimits                     int           `mapstructure:"rate-limits"`
+	RateLimitWaitTimeout           time.Duration `mapstructure:"rate-limit-wait-timeout"`
 }
 
 func DefaultConfig() *Config {
@@ -67,7 +87,7 @@ func DefaultConfig() *Config {
 			NodePrivKeyFile:   "node_priv_key.sealed",
 		},
 		Panacea: PanaceaConfig{
-			GRPCAddr: "http://127.0.0.1:9090",
+			GRPCAddr: "tcp://127.0.0.1:9090",
 			RPCAddr:  "tcp://127.0.0.1:26657",
 			ChainID:  "",
 			// TODO: calculate fee instead of using default fee
@@ -80,10 +100,26 @@ func DefaultConfig() *Config {
 		IPFS: IPFSConfig{
 			IPFSNodeAddr: "127.0.0.1:5001",
 		},
+		GRPC: GRPCConfig{
+			ListenAddr:                     "tcp://127.0.0.1:9090",
+			ConnectionTimeout:              time.Minute * 2,
+			MaxConnections:                 50,
+			MaxConcurrentStreams:           0,
+			MaxRecvMsgSize:                 4 << (10 * 2), // 4MB
+			KeepaliveMaxConnectionIdle:     0,
+			KeepaliveMaxConnectionAge:      0,
+			KeepaliveMaxConnectionAgeGrace: 0,
+			KeepaliveTime:                  time.Hour * 2,
+			KeepaliveTimeout:               time.Second * 20,
+			RateLimits:                     100,
+			RateLimitWaitTimeout:           time.Second * 5,
+		},
 		API: APIConfig{
-			ListenAddr:   "127.0.0.1:8080",
-			WriteTimeout: 60,
-			ReadTimeout:  15,
+			Enabled:            true,
+			ListenAddr:         "http://127.0.0.1:8080",
+			GrpcConnectTimeout: time.Second * 10,
+			WriteTimeout:       time.Second * 60,
+			ReadTimeout:        time.Second * 15,
 		},
 	}
 }

@@ -13,25 +13,26 @@ import (
 )
 
 type SgxLevelDB struct {
+	sgx sgx.Sgx
 	*tmdb.GoLevelDB
 }
 
-func NewSgxLevelDB(name string, dir string) (*SgxLevelDB, error) {
-	return NewSgxLevelDBWithOpts(name, dir, nil)
+func NewSgxLevelDB(name string, dir string, sgx sgx.Sgx) (*SgxLevelDB, error) {
+	return NewSgxLevelDBWithOpts(name, dir, sgx, nil)
 }
 
-func NewSgxLevelDBWithOpts(name string, dir string, o *opt.Options) (*SgxLevelDB, error) {
+func NewSgxLevelDBWithOpts(name string, dir string, sgx sgx.Sgx, o *opt.Options) (*SgxLevelDB, error) {
 	goLevelDB, err := tmdb.NewGoLevelDBWithOpts(name, dir, o)
 	if err != nil {
 		return nil, fmt.Errorf("failed to NewGoLevelDBWithOpts: %w", err)
 	}
 
-	return &SgxLevelDB{goLevelDB}, nil
+	return &SgxLevelDB{sgx, goLevelDB}, nil
 }
 
 func (sdb *SgxLevelDB) Set(key, value []byte) error {
 	log.Debug("sealing before writing to leveldb")
-	sealValue, err := sgx.Seal(value)
+	sealValue, err := sdb.sgx.Seal(value)
 	if err != nil {
 		return err
 	}
@@ -47,7 +48,7 @@ func (sdb *SgxLevelDB) Get(key []byte) ([]byte, error) {
 	}
 
 	log.Debug("unsealing after reading from leveldb")
-	unsealedVal, err := sgx.Unseal(val)
+	unsealedVal, err := sdb.sgx.Unseal(val)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unseal value from leveldb: %w", err)
 	}
@@ -57,5 +58,5 @@ func (sdb *SgxLevelDB) Get(key []byte) ([]byte, error) {
 
 func (sdb *SgxLevelDB) NewBatch() tmdb.Batch {
 	batch := sdb.GoLevelDB.NewBatch()
-	return &sgxLevelDBBatch{batch}
+	return &sgxLevelDBBatch{sdb.sgx, batch}
 }

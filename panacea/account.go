@@ -22,18 +22,14 @@ func NewOracleAccount(mnemonic string, accNum, index uint32) (*OracleAccount, er
 		return nil, fmt.Errorf("mnemonic is empty")
 	}
 
-	key, err := crypto.GeneratePrivateKeyFromMnemonic(mnemonic, CoinType, accNum, index)
+	key, err := GetPrivateKeyFromMnemonic(mnemonic, accNum, index)
 	if err != nil {
 		return nil, err
 	}
 
-	pk := &secp256k1.PrivKey{
-		Key: key.Bytes(),
-	}
-
 	return &OracleAccount{
-		privKey: pk,
-		pubKey:  pk.PubKey(),
+		privKey: &key,
+		pubKey:  key.PubKey(),
 	}, nil
 }
 
@@ -47,7 +43,7 @@ func (oa OracleAccount) GetAddress() string {
 }
 
 func (oa OracleAccount) AccAddressFromBech32() sdk.AccAddress {
-	return oa.pubKey.Bytes()
+	return oa.pubKey.Address().Bytes()
 }
 
 func (oa OracleAccount) GetPrivKey() cryptotypes.PrivKey {
@@ -60,4 +56,31 @@ func (oa OracleAccount) GetPubKey() cryptotypes.PubKey {
 
 func GetAccAddressFromBech32(address string) (addr sdk.AccAddress, err error) {
 	return sdk.GetFromBech32(address, prefix)
+}
+
+func GetAddressFromMnemonic(mnemonic string, accNum, index uint32) string {
+	key, err := GetPrivateKeyFromMnemonic(mnemonic, accNum, index)
+	if err != nil {
+		log.Panic(err)
+	}
+
+	return GetAddressFromPrivateKey(key)
+}
+
+func GetAddressFromPrivateKey(key secp256k1.PrivKey) string {
+	addr, err := bech32.ConvertAndEncode(prefix, key.PubKey().Address().Bytes())
+	if err != nil {
+		log.Panic(err)
+	}
+	return addr
+}
+
+func GetPrivateKeyFromMnemonic(mnemonic string, accNum, index uint32) (secp256k1.PrivKey, error) {
+	key, err := crypto.GeneratePrivateKeyFromMnemonic(mnemonic, CoinType, accNum, index)
+	if err != nil {
+		return secp256k1.PrivKey{}, err
+	}
+	return secp256k1.PrivKey{
+		Key: key,
+	}, nil
 }

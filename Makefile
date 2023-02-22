@@ -7,7 +7,13 @@ BUILD_FLAGS := -tags "$(build_tags)"
 
 OUT_DIR = ./build
 
-.PHONY: all build test sign-prod clean
+MODULE=github.com/medibloc/panacea-oracle
+
+PROTO_DIR=proto
+PROTOBUF_DIR=pb
+PROTO_OUT_DIR=./
+
+.PHONY: all build test sign-prod clean proto-gen
 
 all: build test
 
@@ -31,3 +37,7 @@ sign-prod:
 clean:
 	$(GO) clean
 	rm -rf $(OUT_DIR)
+
+proto-gen:
+	rm -rfv $(PROTO_OUT_DIR)$(PROTOBUF_DIR)
+	cd $(PROTO_DIR) && buf mod update && buf build && buf generate; cd -

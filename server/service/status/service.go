@@ -1,18 +1,24 @@
 package status
 
 import (
-	"net/http"
+	"context"
 
-	"github.com/gorilla/mux"
-	serverservice "github.com/medibloc/panacea-oracle/server/service"
+	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
+	status "github.com/medibloc/panacea-oracle/pb/status/v0"
+	"github.com/medibloc/panacea-oracle/service"
+	"google.golang.org/grpc"
 )
 
 type statusService struct {
-	serverservice.Service
+	status.UnimplementedStatusServiceServer
+
+	service.Service
 }
 
-func RegisterHandlers(svc serverservice.Service, router *mux.Router) {
-	s := &statusService{svc}
+func RegisterService(svc service.Service, svr *grpc.Server) {
+	status.RegisterStatusServiceServer(svr, &statusService{Service: svc})
+}
 
-	router.HandleFunc("/v0/status", s.GetStatus).Methods(http.MethodGet)
+func RegisterServiceHandler(ctx context.Context, mux *runtime.ServeMux, conn *grpc.ClientConn) error {
+	return status.RegisterStatusServiceHandler(ctx, mux, conn)
 }
