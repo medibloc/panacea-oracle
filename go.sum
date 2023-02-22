@@ -1600,8 +1600,6 @@ github.com/medibloc/cosmos-sdk v0.45.12-panacea.1 h1:6+rtbpT4vBhrFDaT4AWUet5oKRQ
 github.com/medibloc/cosmos-sdk v0.45.12-panacea.1/go.mod h1:ZAdIs09zttoA3aSwQCTK9gecOThUVNnzBSVj3DiS6UY=
 github.com/medibloc/panacea-core/v2 v2.1.0-alpha.3.0.20230217061749-d8bc8233f6bc h1:b8NV36hXtxh0VzPmc9T87ocQ8dhnm2RsqI8dwVrZE1I=
 github.com/medibloc/panacea-core/v2 v2.1.0-alpha.3.0.20230217061749-d8bc8233f6bc/go.mod h1:qeIJYNOZpg8wdW2HvFfEmRKPuw1zc+uOZjbQtAlWBYg=
-github.com/medibloc/vc-sdk v0.0.3-0.20230217065527-f220bab490bb h1:q7iEiTAPZPZ4ulVPGgdTQnaUxYN5i17LNgsfZWb9vKc=
-github.com/medibloc/vc-sdk v0.0.3-0.20230217065527-f220bab490bb/go.mod h1:tRRHXQ8u68b3ztXPu+cHUJOHAbGtuZUW7rlTAtMWH2M=
 github.com/medibloc/vc-sdk v0.0.3-0.20230220072858-a856f62087d7 h1:TYDmu04sblh5Gk0S3lFJA5nCi4ZCMMK6XrlG9zgUIFE=
 github.com/medibloc/vc-sdk v0.0.3-0.20230220072858-a856f62087d7/go.mod h1:C7e0olZs2noyGZ3SrwsZ6iN4DziISfWr7oX3JqGHl7s=
 github.com/mgechev/dots v0.0.0-20210922191527-e955255bf517/go.mod h1:KQ7+USdGKfpPjXk4Ga+5XxQM4Lm4e3gAogrreFAYpOg=
