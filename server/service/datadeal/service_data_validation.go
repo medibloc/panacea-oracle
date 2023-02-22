@@ -88,11 +88,10 @@ func (s *dataDealServiceServer) ValidateData(ctx context.Context, req *datadeal.
 		return nil, fmt.Errorf("data hash mismatch")
 	}
 
-	//if err := validation.ValidateJSONSchemata(decryptedData, deal.DataSchema); err != nil {
-	//	log.Debugf("failed to validate data: %s", err.Error())
-	//	return nil, fmt.Errorf("failed to validate data")
-	//}
-	//
+	if err := validation.ValidateJSONSchemata(decryptedData, deal.DataSchema); err != nil {
+		log.Debugf("failed to validate data: %s", err.Error())
+		return nil, fmt.Errorf("failed to validate data")
+	}
 
 	if err := validation.ValidateVerifiablePresentation(decryptedData, providerPubKeyBytes); err != nil {
 		log.Errorf("failed to validate verifiable presentation: %s", err.Error())
