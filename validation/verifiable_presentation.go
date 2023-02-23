@@ -1,21 +1,23 @@
 package validation
 
 import (
+	"fmt"
+
+	"github.com/hyperledger/aries-framework-go/pkg/framework/aries/api/vdr"
+
 	"github.com/medibloc/vc-sdk/pkg/vc"
 )
 
-func ValidateVerifiablePresentation(vpBytes, pubKey []byte) error {
-	framework, err := vc.NewFramework()
+// ValidateVP validates verifiable presentation
+func ValidateVP(vdr vdr.Registry, vpBytes, pdBytes []byte) error {
+	f, err := vc.NewFramework(vdr)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to create a framework for VP verification: %w", err)
 	}
 
-	err = framework.VerifyPresentation(vpBytes, pubKey, "EcdsaSecp256k1VerificationKey2019")
-	if err != nil {
-		return err
+	if _, err := f.VerifyPresentation(vpBytes, vc.WithPresentationDefinition(pdBytes)); err != nil {
+		return fmt.Errorf("invalid VP: %w", err)
 	}
-
-	// TODO: validate VP with the PresentationDefinition
 
 	return nil
 }
