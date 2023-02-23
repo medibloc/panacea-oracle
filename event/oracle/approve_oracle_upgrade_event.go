@@ -45,7 +45,7 @@ func (e ApproveOracleUpgradeEvent) EventHandler(ctx context.Context, _ ctypes.Re
 		e.doneChan <- fmt.Errorf("failed to get oracle upgrade: %w", err)
 	}
 
-	e.doneChan <- key.RetrieveAndStoreOraclePrivKey(ctx, e.service, oracleUpgrade.EncryptedOraclePrivKey)
+	e.doneChan <- key.DecryptAndStoreOraclePrivKey(ctx, e.service, oracleUpgrade.EncryptedOraclePrivKey)
 
 	return nil
 }

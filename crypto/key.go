@@ -43,3 +43,11 @@ func KDFSHA256(in []byte) []byte {
 	out := sha256.Sum256(in)
 	return out[:]
 }
+
+func NewMnemonic() (string, error) {
+	entropy, err := bip39.NewEntropy(256)
+	if err != nil {
+		return "", err
+	}
+	return bip39.NewMnemonic(entropy)
+}

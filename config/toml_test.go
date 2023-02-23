@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TestWriteAndReadConfigTOML tests creating a basic Config and writing and reading it to a file.
 func TestWriteAndReadConfigTOML(t *testing.T) {
 	path := "./config.toml"
 

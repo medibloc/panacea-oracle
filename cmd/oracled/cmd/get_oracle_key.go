@@ -6,7 +6,9 @@ import (
 
 	"github.com/medibloc/panacea-oracle/client/flags"
 	"github.com/medibloc/panacea-oracle/key"
+	"github.com/medibloc/panacea-oracle/panacea"
 	"github.com/medibloc/panacea-oracle/service"
+	"github.com/medibloc/panacea-oracle/sgx"
 	"github.com/spf13/cobra"
 )
 
@@ -25,10 +27,19 @@ func getOracleKeyCmd() *cobra.Command {
 				return err
 			}
 
-			svc, err := service.New(conf)
+			sgx := sgx.NewOracleSGX()
+
+			queryClient, err := panacea.LoadVerifiedQueryClient(context.Background(), conf, sgx)
+			if err != nil {
+				return fmt.Errorf("failed to load query client: %w", err)
+			}
+			defer queryClient.Close()
+
+			svc, err := service.New(conf, sgx, queryClient)
 			if err != nil {
 				return err
 			}
+			defer svc.Close()
 
 			ctx := context.Background()
 
@@ -50,7 +61,7 @@ func getOracleKeyCmd() *cobra.Command {
 				if len(oracleRegistration.EncryptedOraclePrivKey) == 0 {
 					return fmt.Errorf("the encrypted oracle private key has not set yet. please try again later")
 				}
-				return key.RetrieveAndStoreOraclePrivKey(ctx, svc, oracleRegistration.EncryptedOraclePrivKey)
+				return key.DecryptAndStoreOraclePrivKey(ctx, svc, oracleRegistration.EncryptedOraclePrivKey)
 
 			case fromUpgrade:
 				oracleUpgrade, err := svc.QueryClient().GetOracleUpgrade(ctx, uniqueID, oracleAddress)
@@ -60,7 +71,7 @@ func getOracleKeyCmd() *cobra.Command {
 				if len(oracleUpgrade.EncryptedOraclePrivKey) == 0 {
 					return fmt.Errorf("the encrypted oracle private key has not set yet. please try again later")
 				}
-				return key.RetrieveAndStoreOraclePrivKey(ctx, svc, oracleUpgrade.EncryptedOraclePrivKey)
+				return key.DecryptAndStoreOraclePrivKey(ctx, svc, oracleUpgrade.EncryptedOraclePrivKey)
 
 			default:
 				return fmt.Errorf("invalid --from flag input. please put \"registration\" or \"upgrade\"")

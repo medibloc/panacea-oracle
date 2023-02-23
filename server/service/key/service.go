@@ -1,18 +1,28 @@
 package key
 
 import (
-	"net/http"
+	"context"
 
-	"github.com/gorilla/mux"
-	serverservice "github.com/medibloc/panacea-oracle/server/service"
+	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
+	key "github.com/medibloc/panacea-oracle/pb/key/v0"
+	"github.com/medibloc/panacea-oracle/service"
+	"google.golang.org/grpc"
 )
 
-type combinedKeyService struct {
-	serverservice.Service
+var _ service.Service = &secretKeyService{}
+
+type secretKeyService struct {
+	key.UnimplementedKeyServiceServer
+
+	service.Service
 }
 
-func RegisterHandlers(svc serverservice.Service, router *mux.Router) {
-	s := &combinedKeyService{svc}
+func RegisterService(svc service.Service, svr *grpc.Server) {
+	key.RegisterKeyServiceServer(svr, &secretKeyService{
+		Service: svc,
+	})
+}
 
-	router.HandleFunc("/secret-key", s.GetSecretKey).Methods(http.MethodGet)
+func RegisterServiceHandler(ctx context.Context, mux *runtime.ServeMux, conn *grpc.ClientConn) error {
+	return key.RegisterKeyServiceHandler(ctx, mux, conn)
 }

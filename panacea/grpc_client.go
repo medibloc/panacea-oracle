@@ -15,13 +15,23 @@ import (
 	"google.golang.org/grpc/credentials"
 )
 
-type GRPCClient struct {
+type GRPCClient interface {
+	Close() error
+	BroadcastTx(txBytes []byte) (*tx.BroadcastTxResponse, error)
+	GetCdc() *codec.ProtoCodec
+	GetChainID() string
+	GetAccount(address string) (authtypes.AccountI, error)
+}
+
+var _ GRPCClient = &grpcClient{}
+
+type grpcClient struct {
 	conn    *grpc.ClientConn
 	cdc     *codec.ProtoCodec
 	chainID string
 }
 
-func NewGRPCClient(grpcAddr, chainID string) (*GRPCClient, error) {
+func NewGRPCClient(grpcAddr, chainID string) (GRPCClient, error) {
 	log.Infof("dialing to Panacea gRPC endpoint: %s", grpcAddr)
 
 	parsedUrl, err := url.Parse(grpcAddr)
@@ -42,19 +52,19 @@ func NewGRPCClient(grpcAddr, chainID string) (*GRPCClient, error) {
 		return nil, fmt.Errorf("failed to connect to Panacea: %w", err)
 	}
 
-	return &GRPCClient{
+	return &grpcClient{
 		conn:    conn,
 		cdc:     codec.NewProtoCodec(makeInterfaceRegistry()),
 		chainID: chainID,
 	}, nil
 }
 
-func (c *GRPCClient) Close() error {
+func (c *grpcClient) Close() error {
 	log.Info("closing Panacea gRPC connection")
 	return c.conn.Close()
 }
 
-func (c *GRPCClient) BroadcastTx(txBytes []byte) (*tx.BroadcastTxResponse, error) {
+func (c *grpcClient) BroadcastTx(txBytes []byte) (*tx.BroadcastTxResponse, error) {
 	txClient := tx.NewServiceClient(c.conn)
 
 	return txClient.BroadcastTx(
@@ -66,15 +76,15 @@ func (c *GRPCClient) BroadcastTx(txBytes []byte) (*tx.BroadcastTxResponse, error
 	)
 }
 
-func (c *GRPCClient) GetCdc() *codec.ProtoCodec {
+func (c *grpcClient) GetCdc() *codec.ProtoCodec {
 	return c.cdc
 }
 
-func (c *GRPCClient) GetChainID() string {
+func (c *grpcClient) GetChainID() string {
 	return c.chainID
 }
 
-func (c *GRPCClient) GetAccount(address string) (authtypes.AccountI, error) {
+func (c *grpcClient) GetAccount(address string) (authtypes.AccountI, error) {
 	client := authtypes.NewQueryClient(c.conn)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
