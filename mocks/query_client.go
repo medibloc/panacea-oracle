@@ -2,6 +2,7 @@ package mocks
 
 import (
 	"context"
+	didtypes "github.com/medibloc/panacea-core/v2/x/did/types"
 
 	"github.com/btcsuite/btcd/btcec"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -26,6 +27,7 @@ type MockQueryClient struct {
 	OracleUpgrade               *oracletypes.OracleUpgrade
 	OracleUpgradeInfo           *oracletypes.OracleUpgradeInfo
 	VerifyTrustedBlockInfoError error
+	DidDocWithSeq               *didtypes.DIDDocumentWithSeq
 }
 
 var _ panacea.QueryClient = &MockQueryClient{}
@@ -36,6 +38,10 @@ func (q MockQueryClient) Close() error {
 
 func (q MockQueryClient) GetAccount(ctx context.Context, s string) (authtypes.AccountI, error) {
 	return q.Account, q.AccountError
+}
+
+func (q MockQueryClient) GetDID(_ context.Context, _ string) (*didtypes.DIDDocumentWithSeq, error) {
+	return q.DidDocWithSeq, nil
 }
 
 func (q MockQueryClient) GetOracleRegistration(ctx context.Context, s string, s2 string) (*oracletypes.OracleRegistration, error) {
