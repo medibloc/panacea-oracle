@@ -20,7 +20,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/std"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
-	"github.com/cosmos/ibc-go/v2/modules/core/23-commitment/types"
+	"github.com/cosmos/ibc-go/v4/modules/core/23-commitment/types"
 	datadealtypes "github.com/medibloc/panacea-core/v2/x/datadeal/types"
 	didtypes "github.com/medibloc/panacea-core/v2/x/did/types"
 	oracletypes "github.com/medibloc/panacea-core/v2/x/oracle/types"
