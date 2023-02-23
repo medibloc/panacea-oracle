@@ -53,7 +53,7 @@ func (s *secretKeyService) GetSecretKey(ctx context.Context, req *key.GetSecretK
 
 	dataHashBz, err := hex.DecodeString(req.DataHash)
 	if err != nil {
-		fmt.Errorf("failed to decode dataHash(%s). %w", req.DataHash, err)
+		return nil, fmt.Errorf("failed to decode dataHash(%s). %w", req.DataHash, err)
 	}
 	secretKey := GetSecretKey(oraclePrivKey.Serialize(), dealID, dataHashBz)
 	encryptedSecretKey, err := crypto.Encrypt(sharedKey, nil, secretKey)
