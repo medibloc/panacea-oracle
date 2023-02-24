@@ -56,7 +56,7 @@ type QueryClient interface {
 }
 
 const (
-	trustedPeriod = 2 * 365 * 24 * time.Hour
+	trustedPeriod = 2 * 7 * 24 * time.Hour
 )
 
 type TrustedBlockInfo struct {
