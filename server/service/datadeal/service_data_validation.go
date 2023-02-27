@@ -99,7 +99,7 @@ func (s *dataDealServiceServer) ValidateData(ctx context.Context, req *datadeal.
 
 	if deal.PresentationDefinition != nil {
 		panaceaVDR := vdr.NewPanaceaVDR(queryClient)
-		if err := validation.ValidateVP(panaceaVDR, decryptedData, providerPubKeyBytes); err != nil {
+		if err := validation.ValidateVP(panaceaVDR, decryptedData, deal.PresentationDefinition); err != nil {
 			log.Errorf("failed to validate verifiable presentation: %s", err.Error())
 			return nil, fmt.Errorf("failed to validate VP")
 		}
