@@ -17,7 +17,7 @@ func (s *secretKeyService) GetSecretKey(ctx context.Context, req *key.GetSecretK
 	oraclePrivKey := s.OraclePrivKey()
 
 	dealID := req.DealId
-	dataHashStr := hex.EncodeToString(req.DataHash)
+	dataHash := req.DataHash
 
 	requesterAddress, err := auth.GetRequestAddress(ctx)
 	if err != nil {
@@ -34,9 +34,9 @@ func (s *secretKeyService) GetSecretKey(ctx context.Context, req *key.GetSecretK
 		return nil, fmt.Errorf("only consumer request secret key")
 	}
 
-	_, err = queryClient.GetConsent(ctx, dealID, dataHashStr)
+	_, err = queryClient.GetConsent(ctx, dealID, dataHash)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get consent(dealID: %d, dataHash %s). %w", dealID, dataHashStr, err)
+		return nil, fmt.Errorf("failed to get consent(dealID: %d, dataHash %s). %w", dealID, dataHash, err)
 	}
 
 	consumerAcc, err := queryClient.GetAccount(ctx, deal.ConsumerAddress)
@@ -51,7 +51,11 @@ func (s *secretKeyService) GetSecretKey(ctx context.Context, req *key.GetSecretK
 
 	sharedKey := crypto.DeriveSharedKey(oraclePrivKey, consumerPubKey, crypto.KDFSHA256)
 
-	secretKey := GetSecretKey(oraclePrivKey.Serialize(), dealID, req.DataHash)
+	dataHashBz, err := hex.DecodeString(req.DataHash)
+	if err != nil {
+		return nil, fmt.Errorf("failed to decode dataHash(%s). %w", req.DataHash, err)
+	}
+	secretKey := GetSecretKey(oraclePrivKey.Serialize(), dealID, dataHashBz)
 	encryptedSecretKey, err := crypto.Encrypt(sharedKey, nil, secretKey)
 	if err != nil {
 		return nil, fmt.Errorf("failed to encrypt secret key with shared key: %w", err)
