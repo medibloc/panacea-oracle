@@ -443,6 +443,8 @@ github.com/medibloc/panacea-core/v2 v2.1.0-alpha.3.0.20230220084629-938910c7e927
 github.com/medibloc/panacea-core/v2 v2.1.0-alpha.3.0.20230220084629-938910c7e927/go.mod h1:qeIJYNOZpg8wdW2HvFfEmRKPuw1zc+uOZjbQtAlWBYg=
 github.com/medibloc/vc-sdk v0.0.3-0.20230224073913-8f1ea9c45f68 h1:9WTqbZE5TCEtS99ewjOQpbL4T3RwPVMIy3z8lUqDef4=
 github.com/medibloc/vc-sdk v0.0.3-0.20230224073913-8f1ea9c45f68/go.mod h1:0nXJ743Cr1Yn2mtu1iFH7PaehYTDPfQqMgG0zoxaKf0=
+github.com/medibloc/vc-sdk v0.0.3-0.20230227072534-c1ad84a8537a h1:SBpSaq/xD5LWwH1BFC3n/f+iypDoaVDFr+q45cdM+gU=
+github.com/medibloc/vc-sdk v0.0.3-0.20230227072534-c1ad84a8537a/go.mod h1:ZvZ6u7N4IG5itiDAM3bXd8FkobVX2kMebfJSmYU5bxM=
 github.com/mimoo/StrobeGo v0.0.0-20181016162300-f8f6d4d2b643/go.mod h1:43+3pMjjKimDBf5Kr4ZFNGbLql1zKkbImw+fZbw3geM=
 github.com/mimoo/StrobeGo v0.0.0-20210601165009-122bf33a46e0 h1:QRUSJEgZn2Snx0EmT/QLXibWjSUDjKWvXIT19NBVp94=
 github.com/mimoo/StrobeGo v0.0.0-20210601165009-122bf33a46e0/go.mod h1:43+3pMjjKimDBf5Kr4ZFNGbLql1zKkbImw+fZbw3geM=
