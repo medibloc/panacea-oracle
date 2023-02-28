@@ -2,6 +2,7 @@ package key
 
 import (
 	"context"
+	"encoding/hex"
 	"testing"
 
 	"github.com/btcsuite/btcd/btcec"
@@ -45,7 +46,8 @@ func (suite *secretKeyServiceTestSuite) BeforeTest(_, _ string) {
 func (suite *secretKeyServiceTestSuite) TestGetSecretKey() {
 	combinedKeyService := secretKeyService{Service: suite.Svc}
 	data := "my_data"
-	dataHash := crypto.KDFSHA256([]byte(data))
+	dataHashBz := crypto.KDFSHA256([]byte(data))
+	dataHash := hex.EncodeToString(dataHashBz)
 
 	suite.QueryClient.Deal.ConsumerAddress = suite.consumerAddress
 
@@ -75,7 +77,7 @@ func (suite *secretKeyServiceTestSuite) TestGetSecretKey() {
 	suite.Require().NoError(err)
 
 	suite.Require().Equal(
-		GetSecretKey(suite.OraclePrivKey.Serialize(), req.DealId, req.DataHash),
+		GetSecretKey(suite.OraclePrivKey.Serialize(), req.DealId, dataHashBz),
 		secretKey,
 	)
 }
@@ -83,7 +85,8 @@ func (suite *secretKeyServiceTestSuite) TestGetSecretKey() {
 func (suite *secretKeyServiceTestSuite) TestGetSecretKeyNotExistAuthentication() {
 	combinedKeyService := secretKeyService{Service: suite.Svc}
 	data := "my_data"
-	dataHash := crypto.KDFSHA256([]byte(data))
+	dataHashBz := crypto.KDFSHA256([]byte(data))
+	dataHash := hex.EncodeToString(dataHashBz)
 
 	suite.QueryClient.Deal.ConsumerAddress = suite.consumerAddress
 
@@ -102,7 +105,8 @@ func (suite *secretKeyServiceTestSuite) TestGetSecretKeyNotExistAuthentication()
 func (suite *secretKeyServiceTestSuite) TestGetSecretKeyNotSameRequesterAndDealsConsumer() {
 	combinedKeyService := secretKeyService{Service: suite.Svc}
 	data := "my_data"
-	dataHash := crypto.KDFSHA256([]byte(data))
+	dataHashBz := crypto.KDFSHA256([]byte(data))
+	dataHash := hex.EncodeToString(dataHashBz)
 
 	suite.QueryClient.Deal.ConsumerAddress = suite.consumerAddress
 

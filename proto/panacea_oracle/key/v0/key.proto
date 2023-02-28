@@ -8,14 +8,14 @@ import "google/api/annotations.proto";
 service KeyService {
   rpc GetSecretKey(GetSecretKeyRequest) returns (GetSecretKeyResponse) {
     option (google.api.http) = {
-      get: "/v0/secret-key"
+      get: "/v0/data-deal/secret-key"
     };
   }
 }
 
 message GetSecretKeyRequest {
   uint64 deal_id = 1 [json_name = "deal_id"];
-  bytes data_hash = 2 [json_name = "data_hash"];
+  string data_hash = 2 [json_name = "data_hash"];
 }
 
 message GetSecretKeyResponse {
