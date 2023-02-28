@@ -2,9 +2,9 @@ package validation
 
 import (
 	"fmt"
-	"github.com/hyperledger/aries-framework-go/pkg/doc/did"
-	"github.com/hyperledger/aries-framework-go/pkg/framework/aries/api/vdr"
 	"testing"
+
+	"github.com/medibloc/panacea-oracle/mocks"
 
 	"github.com/btcsuite/btcd/btcec"
 	"github.com/medibloc/vc-sdk/pkg/vc"
@@ -31,7 +31,7 @@ func TestValidateVerifiablePresentation(t *testing.T) {
 	privKey, err := btcec.NewPrivateKey(btcec.S256())
 	require.NoError(t, err)
 
-	mockVDR := NewMockVDR(privKey.PubKey().SerializeUncompressed(), "EcdsaSecp256k1VerificationKey2019")
+	mockVDR := mocks.NewMockVDR(privKey.PubKey().SerializeUncompressed(), "EcdsaSecp256k1VerificationKey2019")
 	frameWork, err := vc.NewFramework(mockVDR)
 	require.NoError(t, err)
 
@@ -75,49 +75,4 @@ func TestValidateVerifiablePresentation(t *testing.T) {
 
 	err = ValidateVP(mockVDR, vpBytes, nil)
 	require.NoError(t, err)
-}
-
-type MockVDR struct {
-	pubKeyBz   []byte
-	pubKeyType string
-}
-
-func NewMockVDR(pubKeyBz []byte, pubKeyType string) *MockVDR {
-	return &MockVDR{
-		pubKeyBz:   pubKeyBz,
-		pubKeyType: pubKeyType,
-	}
-}
-
-func (v *MockVDR) Resolve(didID string, _ ...vdr.DIDMethodOption) (*did.DocResolution, error) {
-	signingKey := did.VerificationMethod{
-		ID:         didID + "#key1",
-		Type:       v.pubKeyType,
-		Controller: didID,
-		Value:      v.pubKeyBz,
-	}
-
-	return &did.DocResolution{
-		DIDDocument: &did.Doc{
-			Context:            []string{"https://w3id.org/did/v1"},
-			ID:                 didID,
-			VerificationMethod: []did.VerificationMethod{signingKey},
-		},
-	}, nil
-}
-
-func (v *MockVDR) Create(_ string, _ *did.Doc, _ ...vdr.DIDMethodOption) (*did.DocResolution, error) {
-	return nil, nil
-}
-
-func (v *MockVDR) Update(_ *did.Doc, _ ...vdr.DIDMethodOption) error {
-	return nil
-}
-
-func (v *MockVDR) Deactivate(_ string, _ ...vdr.DIDMethodOption) error {
-	return nil
-}
-
-func (v *MockVDR) Close() error {
-	return nil
 }
