@@ -10,7 +10,6 @@ import (
 	"github.com/btcsuite/btcd/btcec"
 	"github.com/medibloc/panacea-oracle/config"
 	"github.com/medibloc/panacea-oracle/event"
-	"github.com/medibloc/panacea-oracle/ipfs"
 	"github.com/medibloc/panacea-oracle/panacea"
 	"github.com/medibloc/panacea-oracle/sgx"
 	log "github.com/sirupsen/logrus"
@@ -24,7 +23,6 @@ type Service interface {
 	OraclePrivKey() *btcec.PrivateKey
 	Config() *config.Config
 	QueryClient() panacea.QueryClient
-	IPFS() ipfs.IPFS
 	BroadcastTx(...sdk.Msg) (int64, string, error)
 	StartSubscriptions(...event.Event) error
 	Close() error
@@ -42,7 +40,6 @@ type service struct {
 	grpcClient  panacea.GRPCClient
 	subscriber  *event.PanaceaSubscriber
 	txBuilder   *panacea.TxBuilder
-	ipfs        ipfs.IPFS
 }
 
 func New(conf *config.Config, sgx sgx.Sgx, queryClient panacea.QueryClient) (Service, error) {
@@ -63,11 +60,6 @@ func New(conf *config.Config, sgx sgx.Sgx, queryClient panacea.QueryClient) (Ser
 	selfEnclaveInfo, err := sgx.GenerateSelfEnclaveInfo()
 	if err != nil {
 		return nil, fmt.Errorf("failed to set self-enclave info: %w", err)
-	}
-
-	newIpfs, err := ipfs.NewIPFS(conf.IPFS.IPFSNodeAddr)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create connection to IPFS node(%s): %w", conf.IPFS.IPFSNodeAddr, err)
 	}
 
 	grpcClient, err := panacea.NewGRPCClient(conf.Panacea.GRPCAddr, conf.Panacea.ChainID)
@@ -92,7 +84,6 @@ func New(conf *config.Config, sgx sgx.Sgx, queryClient panacea.QueryClient) (Ser
 		grpcClient:    grpcClient,
 		txBuilder:     txBuilder,
 		subscriber:    subscriber,
-		ipfs:          newIpfs,
 	}, nil
 }
 
@@ -163,8 +154,4 @@ func (s *service) BroadcastTx(msg ...sdk.Msg) (int64, string, error) {
 	}
 
 	return resp.TxResponse.Height, resp.TxResponse.TxHash, nil
-}
-
-func (s *service) IPFS() ipfs.IPFS {
-	return s.ipfs
 }

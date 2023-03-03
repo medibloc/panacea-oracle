@@ -1,9 +1,11 @@
 package datadeal
 
 import (
+	"bytes"
 	"context"
 	"encoding/hex"
 	"fmt"
+	"net/http"
 
 	"github.com/btcsuite/btcd/btcec"
 	"github.com/gogo/protobuf/proto"
@@ -101,16 +103,26 @@ func (s *dataDealServiceServer) ValidateData(ctx context.Context, req *datadeal.
 		return nil, fmt.Errorf("failed to re-encrypt data with the combined key")
 	}
 
-	// Put data into IPFS
-	cid, err := s.IPFS().Add(reEncryptedData)
+	// Post reEncryptedData to consumer service
+	buff := bytes.NewBuffer(reEncryptedData)
+
+	dataUrl := deal.ConsumerServiceEndpoint + "/" + dataHash
+
+	resp, err := http.Post(dataUrl, "application/octet-stream", buff)
 	if err != nil {
-		log.Errorf("failed to store data to IPFS: %s", err.Error())
-		return nil, fmt.Errorf("failed to store data to IPFS")
+		log.Errorf("failed to post request: %s", err.Error())
+		return nil, fmt.Errorf("failed to post request: %s", err.Error())
+	}
+
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("request failed with status code %d", resp.StatusCode)
 	}
 
 	// Issue a certificate to the client
 	unsignedDataCert := &datadealtypes.UnsignedCertificate{
-		Cid:             cid,
+		DataEndpoint:    dataUrl,
 		UniqueId:        s.EnclaveInfo().UniqueIDHex(),
 		OracleAddress:   s.OracleAcc().GetAddress(),
 		DealId:          dealID,

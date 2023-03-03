@@ -39,9 +39,10 @@ func (suite *dataDealServiceServerTestSuite) BeforeTest(_, _ string) {
 	suite.Initialize()
 
 	suite.deal = &datadealtypes.Deal{
-		Id:         1,
-		DataSchema: []string{"https://json.schemastore.org/github-issue-forms.json"},
-		Status:     datadealtypes.DEAL_STATUS_ACTIVE,
+		Id:                      1,
+		DataSchema:              []string{"https://json.schemastore.org/github-issue-forms.json"},
+		Status:                  datadealtypes.DEAL_STATUS_ACTIVE,
+		ConsumerServiceEndpoint: "http://localhost:8080",
 	}
 	suite.providerAccPrivKey = *secp256k1.GenPrivKey()
 	suite.providerAccPubKey = suite.providerAccPrivKey.PubKey()
@@ -49,10 +50,11 @@ func (suite *dataDealServiceServerTestSuite) BeforeTest(_, _ string) {
 	suite.QueryClient.Account = suite.providerAcc
 	suite.QueryClient.Deal = suite.deal
 
+	go suite.ConsumerService.Run()
 }
 
 func (suite *dataDealServiceServerTestSuite) AfterTest(_, _ string) {
-	mocks.RemoveMockIPFSData()
+	mocks.RemoveMockData()
 }
 
 func (suite *dataDealServiceServerTestSuite) TestValidateDataSuccess() {
@@ -113,7 +115,7 @@ func (suite *dataDealServiceServerTestSuite) TestValidateDataSuccess() {
 	suite.Require().True(signature.Verify(marshal, suite.OraclePrivKey.PubKey()))
 
 	// decrypt re-encrypted provider's data
-	reEncryptedData, err := suite.IPFS.Get(unsignedCertificate.Cid)
+	reEncryptedData, err := suite.ConsumerService.Get(unsignedCertificate.DataEndpoint)
 	suite.Require().NoError(err)
 	combinedKey := key.GetSecretKey(suite.OraclePrivKey.Serialize(), req.DealId, dataHash[:])
 	decryptedData, err := crypto.Decrypt(combinedKey[:], nil, reEncryptedData)

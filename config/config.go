@@ -13,8 +13,6 @@ type Config struct {
 
 	Panacea PanaceaConfig `mapstructure:"panacea"`
 
-	IPFS IPFSConfig `mapstructure:"ipfs"`
-
 	GRPC GRPCConfig `mapstructure:"grpc"`
 
 	API APIConfig `mapstructure:"api"`
@@ -44,10 +42,6 @@ type PanaceaConfig struct {
 	LightClientPrimaryAddr  string   `mapstructure:"light-client-primary-addr"`
 	LightClientWitnessAddrs []string `mapstructure:"light-client-witness-addrs"`
 	LightClientLogLevel     string   `mapstructure:"light-client-log-level"`
-}
-
-type IPFSConfig struct {
-	IPFSNodeAddr string `mapstructure:"ipfs-node-addr"`
 }
 
 type APIConfig struct {
@@ -96,9 +90,6 @@ func DefaultConfig() *Config {
 			LightClientPrimaryAddr:  "tcp://127.0.0.1:26657",
 			LightClientWitnessAddrs: []string{"tcp://127.0.0.1:26657"},
 			LightClientLogLevel:     "error",
-		},
-		IPFS: IPFSConfig{
-			IPFSNodeAddr: "127.0.0.1:5001",
 		},
 		GRPC: GRPCConfig{
 			ListenAddr:                     "tcp://127.0.0.1:9090",

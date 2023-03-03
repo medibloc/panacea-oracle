@@ -5,7 +5,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/medibloc/panacea-oracle/config"
 	"github.com/medibloc/panacea-oracle/event"
-	"github.com/medibloc/panacea-oracle/ipfs"
 	"github.com/medibloc/panacea-oracle/panacea"
 	"github.com/medibloc/panacea-oracle/service"
 	"github.com/medibloc/panacea-oracle/sgx"
@@ -19,7 +18,6 @@ type MockService struct {
 	grpcClient  *MockGrpcClient
 	queryClient *MockQueryClient
 	sgx         *MockSGX
-	ipfs        *MockIPFS
 
 	config *config.Config
 
@@ -38,7 +36,6 @@ func NewMockService(
 	grpcClient *MockGrpcClient,
 	queryClient *MockQueryClient,
 	sgx *MockSGX,
-	ipfs *MockIPFS,
 	conf *config.Config,
 	enclaveInfo *sgx.EnclaveInfo,
 	oracleAccount *panacea.OracleAccount,
@@ -49,7 +46,6 @@ func NewMockService(
 		grpcClient:    grpcClient,
 		queryClient:   queryClient,
 		sgx:           sgx,
-		ipfs:          ipfs,
 		config:        conf,
 		enclaveInfo:   enclaveInfo,
 		oracleAccount: oracleAccount,
@@ -98,10 +94,6 @@ func (m *MockService) Config() *config.Config {
 
 func (m *MockService) QueryClient() panacea.QueryClient {
 	return m.queryClient
-}
-
-func (m *MockService) IPFS() ipfs.IPFS {
-	return m.ipfs
 }
 
 func (m *MockService) BroadcastTx(msg ...sdk.Msg) (int64, string, error) {
