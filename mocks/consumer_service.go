@@ -43,7 +43,12 @@ func (u MockConsumerService) RunServer() {
 			http.Error(w, "Bad Request", http.StatusBadRequest)
 			return
 		}
-		file.Write(body)
+
+		_, err = file.Write(body)
+		if err != nil {
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			return
+		}
 	}).Methods("POST")
 
 	server := &http.Server{

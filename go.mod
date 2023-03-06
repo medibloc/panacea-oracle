@@ -15,7 +15,7 @@ require (
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.15.0
 	github.com/hyperledger/aries-framework-go v0.1.9-0.20230222063211-02f80847168a
 	github.com/lestrrat-go/jwx/v2 v2.0.8
-	github.com/medibloc/panacea-core/v2 v2.1.0-alpha.3.0.20230220084629-938910c7e927
+	github.com/medibloc/panacea-core/v2 v2.1.0-alpha.3.0.20230303022604-e5446b977d81
 	github.com/medibloc/vc-sdk v0.0.3-0.20230228035038-289c40e3b81c
 	github.com/ory/dockertest/v3 v3.9.1
 	github.com/sirupsen/logrus v1.9.0

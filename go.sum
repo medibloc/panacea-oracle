@@ -417,6 +417,8 @@ github.com/medibloc/cosmos-sdk v0.45.12-panacea.1 h1:6+rtbpT4vBhrFDaT4AWUet5oKRQ
 github.com/medibloc/cosmos-sdk v0.45.12-panacea.1/go.mod h1:ZAdIs09zttoA3aSwQCTK9gecOThUVNnzBSVj3DiS6UY=
 github.com/medibloc/panacea-core/v2 v2.1.0-alpha.3.0.20230220084629-938910c7e927 h1:WVpNPvw32BToVLIGc2sL7YhpdRadB8dhoejjJlyDyFQ=
 github.com/medibloc/panacea-core/v2 v2.1.0-alpha.3.0.20230220084629-938910c7e927/go.mod h1:qeIJYNOZpg8wdW2HvFfEmRKPuw1zc+uOZjbQtAlWBYg=
+github.com/medibloc/panacea-core/v2 v2.1.0-alpha.3.0.20230303022604-e5446b977d81 h1:rOZUuEp6aLaDBrmSGEms+qY08UYfdyUdLLQVPPPxP78=
+github.com/medibloc/panacea-core/v2 v2.1.0-alpha.3.0.20230303022604-e5446b977d81/go.mod h1:qeIJYNOZpg8wdW2HvFfEmRKPuw1zc+uOZjbQtAlWBYg=
 github.com/medibloc/vc-sdk v0.0.3-0.20230228035038-289c40e3b81c h1:nb7RYpV4rhZ9kUB8ttp3fDZWW7+Mp8xC3QtqqaL2Ouw=
 github.com/medibloc/vc-sdk v0.0.3-0.20230228035038-289c40e3b81c/go.mod h1:cNC4BWm2PXHWI4Ux7RPhNgdzpL3NyWgqOuqc8QFycPA=
 github.com/mimoo/StrobeGo v0.0.0-20181016162300-f8f6d4d2b643/go.mod h1:43+3pMjjKimDBf5Kr4ZFNGbLql1zKkbImw+fZbw3geM=
