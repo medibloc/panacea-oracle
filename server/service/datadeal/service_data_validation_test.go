@@ -24,6 +24,8 @@ import (
 type dataDealServiceServerTestSuite struct {
 	mocks.MockTestSuite
 
+	ConsumerService *mocks.MockConsumerService
+
 	deal *datadealtypes.Deal
 
 	providerAccPrivKey secp256k1.PrivKey
@@ -35,6 +37,11 @@ func TestDataDealServiceServer(t *testing.T) {
 	suite.Run(t, &dataDealServiceServerTestSuite{})
 }
 
+func (suite *dataDealServiceServerTestSuite) SetupSuite() {
+	suite.ConsumerService = &mocks.MockConsumerService{}
+	go suite.ConsumerService.RunServer()
+}
+
 func (suite *dataDealServiceServerTestSuite) BeforeTest(_, _ string) {
 	suite.Initialize()
 
@@ -42,7 +49,7 @@ func (suite *dataDealServiceServerTestSuite) BeforeTest(_, _ string) {
 		Id:                      1,
 		DataSchema:              []string{"https://json.schemastore.org/github-issue-forms.json"},
 		Status:                  datadealtypes.DEAL_STATUS_ACTIVE,
-		ConsumerServiceEndpoint: "http://localhost:8080",
+		ConsumerServiceEndpoint: "http://127.0.0.1:8080",
 	}
 	suite.providerAccPrivKey = *secp256k1.GenPrivKey()
 	suite.providerAccPubKey = suite.providerAccPrivKey.PubKey()
@@ -50,13 +57,11 @@ func (suite *dataDealServiceServerTestSuite) BeforeTest(_, _ string) {
 	suite.QueryClient.Account = suite.providerAcc
 	suite.QueryClient.Deal = suite.deal
 
-	go suite.ConsumerService.Run()
 }
 
 func (suite *dataDealServiceServerTestSuite) AfterTest(_, _ string) {
 	mocks.RemoveMockData()
 }
-
 func (suite *dataDealServiceServerTestSuite) TestValidateDataSuccess() {
 	// provide data
 	jsonDataBz := []byte(
@@ -115,7 +120,7 @@ func (suite *dataDealServiceServerTestSuite) TestValidateDataSuccess() {
 	suite.Require().True(signature.Verify(marshal, suite.OraclePrivKey.PubKey()))
 
 	// decrypt re-encrypted provider's data
-	reEncryptedData, err := suite.ConsumerService.Get(unsignedCertificate.DataEndpoint)
+	reEncryptedData, err := suite.ConsumerService.Get(unsignedCertificate.DataHash)
 	suite.Require().NoError(err)
 	combinedKey := key.GetSecretKey(suite.OraclePrivKey.Serialize(), req.DealId, dataHash[:])
 	decryptedData, err := crypto.Decrypt(combinedKey[:], nil, reEncryptedData)

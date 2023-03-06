@@ -106,7 +106,7 @@ func (s *dataDealServiceServer) ValidateData(ctx context.Context, req *datadeal.
 	// Post reEncryptedData to consumer service
 	buff := bytes.NewBuffer(reEncryptedData)
 
-	dataUrl := deal.ConsumerServiceEndpoint + "/" + dataHash
+	dataUrl := deal.ConsumerServiceEndpoint + "/" + req.DataHash
 
 	resp, err := http.Post(dataUrl, "application/octet-stream", buff)
 	if err != nil {

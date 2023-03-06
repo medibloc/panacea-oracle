@@ -16,13 +16,12 @@ type MockTestSuite struct {
 
 	UniqueID string
 
-	QueryClient     *MockQueryClient
-	GrpcClient      *MockGrpcClient
-	Svc             *MockService
-	SGX             *MockSGX
-	ConsumerService *MockConsumerService
-	Config          *config.Config
-	EnclaveInfo     *sgx.EnclaveInfo
+	QueryClient *MockQueryClient
+	GrpcClient  *MockGrpcClient
+	Svc         *MockService
+	SGX         *MockSGX
+	Config      *config.Config
+	EnclaveInfo *sgx.EnclaveInfo
 
 	OracleAcc     *panacea.OracleAccount
 	OraclePrivKey *btcec.PrivateKey
@@ -38,7 +37,6 @@ func (suite *MockTestSuite) Initialize() {
 	suite.QueryClient = &MockQueryClient{}
 	suite.GrpcClient = &MockGrpcClient{}
 	suite.SGX = &MockSGX{}
-	suite.ConsumerService = &MockConsumerService{}
 	suite.Config = config.DefaultConfig()
 	suite.EnclaveInfo = sgx.NewEnclaveInfo(nil, uniqueID)
 	suite.OracleAcc, _ = panacea.NewOracleAccount(mnemonic, 0, 0)
