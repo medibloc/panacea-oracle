@@ -9,6 +9,8 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/medibloc/vc-sdk/pkg/vdr"
+
 	"github.com/btcsuite/btcd/btcec"
 	"github.com/gogo/protobuf/proto"
 	"github.com/lestrrat-go/jwx/v2/jwa"
@@ -85,7 +87,7 @@ func (s *dataDealServiceServer) ValidateData(ctx context.Context, req *datadeal.
 		return nil, fmt.Errorf("failed to decrypt data")
 	}
 
-	// Validate data
+	// Validate data hash
 	dataHashBz := crypto.KDFSHA256(decryptedData)
 	dataHash := hex.EncodeToString(dataHashBz)
 
@@ -94,9 +96,19 @@ func (s *dataDealServiceServer) ValidateData(ctx context.Context, req *datadeal.
 		return nil, fmt.Errorf("data hash mismatch")
 	}
 
-	if err := validation.ValidateJSONSchemata(decryptedData, deal.DataSchema); err != nil {
-		log.Debugf("failed to validate data: %s", err.Error())
-		return nil, fmt.Errorf("failed to validate data")
+	if len(deal.DataSchema) > 0 {
+		if err := validation.ValidateJSONSchemata(decryptedData, deal.DataSchema); err != nil {
+			log.Debugf("failed to validate data: %s", err.Error())
+			return nil, fmt.Errorf("failed to validate data")
+		}
+	}
+
+	if deal.PresentationDefinition != nil {
+		panaceaVDR := vdr.NewPanaceaVDR(queryClient)
+		if err := validation.ValidateVP(panaceaVDR, decryptedData, deal.PresentationDefinition); err != nil {
+			log.Errorf("failed to validate verifiable presentation: %s", err.Error())
+			return nil, fmt.Errorf("failed to validate VP")
+		}
 	}
 
 	// Re-encrypt data using a combined key
