@@ -27,6 +27,8 @@ type MockTestSuite struct {
 	OraclePrivKey *btcec.PrivateKey
 	OraclePubKey  *btcec.PublicKey
 	NodePrivKey   *btcec.PrivateKey
+
+	ConsumerService *MockConsumerService
 }
 
 func (suite *MockTestSuite) Initialize() {
@@ -53,4 +55,6 @@ func (suite *MockTestSuite) Initialize() {
 		suite.OraclePrivKey,
 		suite.NodePrivKey,
 	)
+
+	suite.ConsumerService = &MockConsumerService{suite.OraclePubKey}
 }

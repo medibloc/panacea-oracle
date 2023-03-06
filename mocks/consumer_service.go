@@ -7,21 +7,24 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/btcsuite/btcd/btcec"
 	"github.com/gorilla/mux"
 )
 
 type MockConsumerService struct {
+	oraclePubKey *btcec.PublicKey
 }
 
 var defaultPath = "./uploads/"
 
 func (u MockConsumerService) RunServer() {
 	r := mux.NewRouter()
-	r.HandleFunc("/{dataHash}", func(w http.ResponseWriter, r *http.Request) {
+	r.HandleFunc("/v1/data/{dealID}/{dataHash}", func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		dealID := vars["dealID"]
+		dataHash := vars["dataHash"]
 
-		dataHash := mux.Vars(r)["dataHash"]
-
-		filename := filepath.Join(defaultPath, dataHash)
+		filename := filepath.Join(defaultPath, dealID+"_"+dataHash)
 		err := os.MkdirAll(defaultPath, os.ModePerm)
 		if err != nil {
 			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
@@ -53,8 +56,8 @@ func (u MockConsumerService) RunServer() {
 	}
 }
 
-func (u MockConsumerService) Get(dataHash string) ([]byte, error) {
-	return os.ReadFile(filepath.Join(defaultPath, dataHash))
+func (u MockConsumerService) Get(dealID, dataHash string) ([]byte, error) {
+	return os.ReadFile(filepath.Join(defaultPath, dealID+"_"+dataHash))
 }
 
 func RemoveMockData() {

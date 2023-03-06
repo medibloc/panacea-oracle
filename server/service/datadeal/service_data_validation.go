@@ -6,9 +6,13 @@ import (
 	"encoding/hex"
 	"fmt"
 	"net/http"
+	"strconv"
+	"time"
 
 	"github.com/btcsuite/btcd/btcec"
 	"github.com/gogo/protobuf/proto"
+	"github.com/lestrrat-go/jwx/v2/jwa"
+	"github.com/lestrrat-go/jwx/v2/jwt"
 	datadealtypes "github.com/medibloc/panacea-core/v2/x/datadeal/types"
 	"github.com/medibloc/panacea-oracle/crypto"
 	"github.com/medibloc/panacea-oracle/panacea"
@@ -104,20 +108,13 @@ func (s *dataDealServiceServer) ValidateData(ctx context.Context, req *datadeal.
 	}
 
 	// Post reEncryptedData to consumer service
-	buff := bytes.NewBuffer(reEncryptedData)
-
-	dataUrl := deal.ConsumerServiceEndpoint + "/" + req.DataHash
-
-	resp, err := http.Post(dataUrl, "application/octet-stream", buff)
+	dataUrl := deal.ConsumerServiceEndpoint + "/v1/data/" + strconv.FormatUint(req.DealId, 10) + "/" + req.DataHash
+	token, err := generateJWT(oraclePrivKey, 10*time.Second)
 	if err != nil {
-		log.Errorf("failed to post request: %s", err.Error())
-		return nil, fmt.Errorf("failed to post request: %s", err.Error())
+		return nil, fmt.Errorf("failed to generate jwt: %v", err.Error())
 	}
-
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("request failed with status code %d", resp.StatusCode)
+	if err := postData(reEncryptedData, dataUrl, token); err != nil {
+		return nil, fmt.Errorf("failed to post request: %s", err.Error())
 	}
 
 	// Issue a certificate to the client
@@ -167,4 +164,43 @@ func validateRequest(req *datadeal.ValidateDataRequest) error {
 	}
 
 	return nil
+}
+
+func postData(data []byte, dataUrl string, jwt []byte) error {
+	buff := bytes.NewBuffer(data)
+
+	request, err := http.NewRequest("POST", dataUrl, buff)
+	if err != nil {
+		return err
+	}
+	request.Header.Set("Authorization", "Bearer "+string(jwt))
+
+	client := http.Client{}
+	resp, err := client.Do(request)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("request failed with status code %d", resp.StatusCode)
+	}
+	return nil
+}
+
+func generateJWT(privKey *btcec.PrivateKey, expiration time.Duration) ([]byte, error) {
+	now := time.Now().Truncate(time.Second)
+	token, err := jwt.NewBuilder().
+		IssuedAt(now).
+		NotBefore(now).
+		Expiration(now.Add(expiration)).
+		Build()
+	if err != nil {
+		return nil, fmt.Errorf("build jwt error: %v", err)
+	}
+	signedJWT, err := jwt.Sign(token, jwt.WithKey(jwa.ES256K, privKey.ToECDSA()))
+	if err != nil {
+		return nil, fmt.Errorf("jwt signing error: %v", err)
+	}
+	return signedJWT, nil
 }

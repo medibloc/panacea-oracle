@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
+	"strconv"
 	"testing"
 
 	"github.com/btcsuite/btcd/btcec"
@@ -120,7 +121,7 @@ func (suite *dataDealServiceServerTestSuite) TestValidateDataSuccess() {
 	suite.Require().True(signature.Verify(marshal, suite.OraclePrivKey.PubKey()))
 
 	// decrypt re-encrypted provider's data
-	reEncryptedData, err := suite.ConsumerService.Get(unsignedCertificate.DataHash)
+	reEncryptedData, err := suite.ConsumerService.Get(strconv.FormatUint(unsignedCertificate.DealId, 10), unsignedCertificate.DataHash)
 	suite.Require().NoError(err)
 	combinedKey := key.GetSecretKey(suite.OraclePrivKey.Serialize(), req.DealId, dataHash[:])
 	decryptedData, err := crypto.Decrypt(combinedKey[:], nil, reEncryptedData)
