@@ -195,16 +195,14 @@ func newTMLogger(conf *config.Config) tmlog.Logger {
 // startSchedulingLastBlockCaching updates the LightClient with the last block information and stores the height of this block.
 func (q *verifiedQueryClient) startSchedulingLastBlockCaching() {
 	for {
-		block, err := q.lightClient.Update(context.Background(), time.Now())
+		lastHeight, err := q.GetLastBlockHeight(context.Background())
+
 		if err != nil {
 			log.Errorf("failed to refresh last block. %v", err)
 			return
 		}
-		if block != nil {
-			log.Debugf("Refresh last block. Height(%d)", block.Height)
-			q.cachedLastBlockHeight = block.Height
-		}
-		time.Sleep(refreshIntervalTime)
+		log.Debugf("Refresh last block. Height(%d)", lastHeight)
+		q.cachedLastBlockHeight = lastHeight
 	}
 }
 
@@ -502,6 +500,7 @@ func (q *verifiedQueryClient) GetOracleUpgradeInfo(ctx context.Context) (*oracle
 	return &oracleUpgradeInfo, nil
 }
 
+// GetLastBlockHeight updates the lightClient with the latest block and gets the height of that latest block.
 func (q *verifiedQueryClient) GetLastBlockHeight(ctx context.Context) (int64, error) {
 	// get recent light block
 	// if the latest block has already been updated, get LastTrustedHeight
