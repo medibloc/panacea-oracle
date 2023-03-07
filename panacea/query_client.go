@@ -48,6 +48,7 @@ type QueryClient interface {
 	GetDeal(context.Context, uint64) (*datadealtypes.Deal, error)
 	GetConsent(context.Context, uint64, string) (*datadealtypes.Consent, error)
 	GetLastBlockHeight(context.Context) (int64, error)
+	GetCachedLastBlockHeight() int64
 	GetOracleUpgrade(context.Context, string, string) (*oracletypes.OracleUpgrade, error)
 	GetOracleUpgradeInfo(context.Context) (*oracletypes.OracleUpgradeInfo, error)
 	GetOracle(context.Context, string) (*oracletypes.Oracle, error)
@@ -55,7 +56,8 @@ type QueryClient interface {
 }
 
 const (
-	trustedPeriod = 2 * 365 * 24 * time.Hour
+	trustedPeriod       = 2 * 365 * 24 * time.Hour
+	refreshIntervalTime = time.Second * 3
 )
 
 type TrustedBlockInfo struct {
@@ -64,12 +66,13 @@ type TrustedBlockInfo struct {
 }
 
 type verifiedQueryClient struct {
-	rpcClient   *rpchttp.HTTP
-	lightClient *light.Client
-	db          dbm.DB
-	mutex       *sync.Mutex
-	cdc         *codec.ProtoCodec
-	aminoCdc    *codec.AminoCodec
+	rpcClient             *rpchttp.HTTP
+	lightClient           *light.Client
+	db                    dbm.DB
+	mutex                 *sync.Mutex
+	cdc                   *codec.ProtoCodec
+	aminoCdc              *codec.AminoCodec
+	cachedLastBlockHeight int64
 }
 
 // makeInterfaceRegistry
@@ -160,24 +163,18 @@ func newVerifiedQueryClientWithDB(ctx context.Context, config *config.Config, in
 		return nil, err
 	}
 
-	// call refresh every minute
-	go func() {
-		for {
-			time.Sleep(1 * time.Minute)
-			if err := refresh(ctx, lc, trustedPeriod, &lcMutex); err != nil {
-				log.Errorf("light client refresh error: %v", err)
-			}
-		}
-	}()
-
-	return &verifiedQueryClient{
+	queryClient := &verifiedQueryClient{
 		rpcClient:   rpcClient,
 		lightClient: lc,
 		db:          db,
 		mutex:       &lcMutex,
 		cdc:         codec.NewProtoCodec(makeInterfaceRegistry()),
 		aminoCdc:    codec.NewAminoCodec(codec.NewLegacyAmino()),
-	}, nil
+	}
+
+	go queryClient.startSchedulingLastBlockCaching()
+
+	return queryClient, nil
 }
 
 func newTMLogger(conf *config.Config) tmlog.Logger {
@@ -193,6 +190,22 @@ func newTMLogger(conf *config.Config) tmlog.Logger {
 	}
 
 	return logger
+}
+
+// startSchedulingLastBlockCaching updates the LightClient with the last block information and stores the height of this block.
+func (q verifiedQueryClient) startSchedulingLastBlockCaching() {
+	for {
+		time.Sleep(refreshIntervalTime)
+		block, err := q.lightClient.Update(context.Background(), time.Now())
+		if err != nil {
+			log.Errorf("failed to refresh last block. %v", err)
+			return
+		}
+		if block != nil {
+			log.Debugf("Refresh last block. Height(%d)", block.Height)
+			q.cachedLastBlockHeight = block.Height
+		}
+	}
 }
 
 func (q verifiedQueryClient) safeUpdateLightClient(ctx context.Context) (*tmtypes.LightBlock, error) {
@@ -508,6 +521,10 @@ func (q verifiedQueryClient) GetLastBlockHeight(ctx context.Context) (int64, err
 	}
 
 	return trustedBlock.Height, nil
+}
+
+func (q verifiedQueryClient) GetCachedLastBlockHeight() int64 {
+	return q.cachedLastBlockHeight
 }
 
 func (q verifiedQueryClient) VerifyTrustedBlockInfo(height int64, blockHash []byte) error {
