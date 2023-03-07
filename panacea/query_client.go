@@ -302,7 +302,7 @@ func (q *verifiedQueryClient) GetStoreData(ctx context.Context, storeKey string,
 }
 
 func (q *verifiedQueryClient) getQueryBlockHeight() int64 {
-	return q.cachedLastBlockHeight - 1
+	return q.GetCachedLastBlockHeight() - 1
 }
 
 func (q *verifiedQueryClient) Close() error {
