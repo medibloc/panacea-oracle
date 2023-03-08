@@ -4,6 +4,7 @@ import (
 	"github.com/btcsuite/btcd/btcec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/medibloc/panacea-oracle/config"
+	"github.com/medibloc/panacea-oracle/consumer_service"
 	"github.com/medibloc/panacea-oracle/event"
 	"github.com/medibloc/panacea-oracle/panacea"
 	"github.com/medibloc/panacea-oracle/service"
@@ -15,9 +16,10 @@ var _ service.Service = &MockService{}
 // MockService is a very simple mock structure.
 // It is implemented to return the value as it is declared in this mock structure.
 type MockService struct {
-	grpcClient  *MockGrpcClient
-	queryClient *MockQueryClient
-	sgx         *MockSGX
+	grpcClient      *MockGrpcClient
+	queryClient     *MockQueryClient
+	consumerService *MockConsumerService
+	sgx             *MockSGX
 
 	config *config.Config
 
@@ -35,6 +37,7 @@ type MockService struct {
 func NewMockService(
 	grpcClient *MockGrpcClient,
 	queryClient *MockQueryClient,
+	consumerService *MockConsumerService,
 	sgx *MockSGX,
 	conf *config.Config,
 	enclaveInfo *sgx.EnclaveInfo,
@@ -43,15 +46,16 @@ func NewMockService(
 	nodePrivKey *btcec.PrivateKey,
 ) *MockService {
 	return &MockService{
-		grpcClient:    grpcClient,
-		queryClient:   queryClient,
-		sgx:           sgx,
-		config:        conf,
-		enclaveInfo:   enclaveInfo,
-		oracleAccount: oracleAccount,
-		oraclePrivKey: oraclePrivKey,
-		nodePrivKey:   nodePrivKey,
-		broadcastMsgs: make([]sdk.Msg, 0),
+		grpcClient:      grpcClient,
+		queryClient:     queryClient,
+		consumerService: consumerService,
+		sgx:             sgx,
+		config:          conf,
+		enclaveInfo:     enclaveInfo,
+		oracleAccount:   oracleAccount,
+		oraclePrivKey:   oraclePrivKey,
+		nodePrivKey:     nodePrivKey,
+		broadcastMsgs:   make([]sdk.Msg, 0),
 	}
 }
 
@@ -94,6 +98,10 @@ func (m *MockService) Config() *config.Config {
 
 func (m *MockService) QueryClient() panacea.QueryClient {
 	return m.queryClient
+}
+
+func (m *MockService) ConsumerService() consumer_service.FileStorage {
+	return m.consumerService
 }
 
 func (m *MockService) BroadcastTx(msg ...sdk.Msg) (int64, string, error) {

@@ -1,71 +1,41 @@
 package mocks
 
 import (
-	"fmt"
-	"io/ioutil"
-	"net/http"
+	"io/fs"
 	"os"
 	"path/filepath"
+	"strconv"
 
 	"github.com/btcsuite/btcd/btcec"
-	"github.com/gorilla/mux"
+	"github.com/medibloc/panacea-oracle/consumer_service"
 )
 
 type MockConsumerService struct {
-	oraclePubKey *btcec.PublicKey
+	oraclePrivKey *btcec.PrivateKey
 }
 
-var defaultPath = "./uploads/"
+var (
+	_           consumer_service.FileStorage = &MockConsumerService{}
+	defaultPath                              = "MockConsumerService"
+)
 
-func (u MockConsumerService) RunServer() {
-	r := mux.NewRouter()
-	r.HandleFunc("/v1/data/{dealID}/{dataHash}", func(w http.ResponseWriter, r *http.Request) {
-		vars := mux.Vars(r)
-		dealID := vars["dealID"]
-		dataHash := vars["dataHash"]
-
-		filename := filepath.Join(defaultPath, dealID+"_"+dataHash)
-		err := os.MkdirAll(defaultPath, os.ModePerm)
-		if err != nil {
-			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-			return
-		}
-
-		file, err := os.Create(filename)
-		if err != nil {
-			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-			return
-		}
-		defer file.Close()
-
-		body, err := ioutil.ReadAll(r.Body)
-		if err != nil {
-			http.Error(w, "Bad Request", http.StatusBadRequest)
-			return
-		}
-
-		_, err = file.Write(body)
-		if err != nil {
-			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-			return
-		}
-	}).Methods("POST")
-
-	server := &http.Server{
-		Addr:    ":8080",
-		Handler: r,
+func (u MockConsumerService) Add(endpoint string, dealID uint64, dataHash string, data []byte) error {
+	if err := os.MkdirAll(filepath.Join(defaultPath, strconv.FormatUint(dealID, 10)), fs.ModePerm); err != nil {
+		return err
 	}
 
-	if err := server.ListenAndServe(); err != nil {
-		fmt.Printf("listen: %s\n", err)
+	if err := os.WriteFile(filepath.Join(defaultPath, strconv.FormatUint(dealID, 10), dataHash), data, fs.ModePerm); err != nil {
+		return err
 	}
+
+	return nil
 }
 
-func (u MockConsumerService) Get(dealID, dataHash string) ([]byte, error) {
-	return os.ReadFile(filepath.Join(defaultPath, dealID+"_"+dataHash))
+func (u MockConsumerService) Get(dealID uint64, dataHash string) ([]byte, error) {
+	return os.ReadFile(filepath.Join(defaultPath, strconv.FormatUint(dealID, 10), dataHash))
 }
 
-func RemoveMockData() {
+func RemoveMockConsumerServiceData() {
 	if info, _ := os.Stat(defaultPath); info != nil {
 		os.RemoveAll(defaultPath)
 	}

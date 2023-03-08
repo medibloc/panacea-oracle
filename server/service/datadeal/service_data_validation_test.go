@@ -1,10 +1,8 @@
 package datadeal
 
-//TODO: This test will be changed to VP data validation.
+// TODO: This test will be changed to VP data validation.
 //type dataDealServiceServerTestSuite struct {
 //	mocks.MockTestSuite
-//
-//	ConsumerService *mocks.MockConsumerService
 //
 //	deal *datadealtypes.Deal
 //
@@ -15,11 +13,6 @@ package datadeal
 //
 //func TestDataDealServiceServer(t *testing.T) {
 //	suite.Run(t, &dataDealServiceServerTestSuite{})
-//}
-//
-//func (suite *dataDealServiceServerTestSuite) SetupSuite() {
-//	suite.ConsumerService = &mocks.MockConsumerService{}
-//	go suite.ConsumerService.RunServer()
 //}
 //
 //func (suite *dataDealServiceServerTestSuite) BeforeTest(_, _ string) {
@@ -40,7 +33,7 @@ package datadeal
 //}
 //
 //func (suite *dataDealServiceServerTestSuite) AfterTest(_, _ string) {
-//	mocks.RemoveMockData()
+//	mocks.RemoveMockConsumerServiceData()
 //}
 //func (suite *dataDealServiceServerTestSuite) TestValidateDataSuccess() {
 //	// provide data
@@ -100,7 +93,7 @@ package datadeal
 //	suite.Require().True(signature.Verify(marshal, suite.OraclePrivKey.PubKey()))
 //
 //	// decrypt re-encrypted provider's data
-//	reEncryptedData, err := suite.ConsumerService.Get(strconv.FormatUint(unsignedCertificate.DealId, 10), unsignedCertificate.DataHash)
+//	reEncryptedData, err := suite.ConsumerService.Get(unsignedCertificate.DealId, unsignedCertificate.DataHash)
 //	suite.Require().NoError(err)
 //	combinedKey := key.GetSecretKey(suite.OraclePrivKey.Serialize(), req.DealId, dataHash[:])
 //	decryptedData, err := crypto.Decrypt(combinedKey[:], nil, reEncryptedData)

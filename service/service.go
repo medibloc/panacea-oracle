@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/medibloc/panacea-oracle/consumer_service"
 	"github.com/medibloc/panacea-oracle/crypto"
 	"github.com/tendermint/tendermint/libs/os"
 
@@ -23,6 +24,7 @@ type Service interface {
 	OraclePrivKey() *btcec.PrivateKey
 	Config() *config.Config
 	QueryClient() panacea.QueryClient
+	ConsumerService() consumer_service.FileStorage
 	BroadcastTx(...sdk.Msg) (int64, string, error)
 	StartSubscriptions(...event.Event) error
 	Close() error
@@ -36,10 +38,11 @@ type service struct {
 	oracleAccount *panacea.OracleAccount
 	oraclePrivKey *btcec.PrivateKey
 
-	queryClient panacea.QueryClient
-	grpcClient  panacea.GRPCClient
-	subscriber  *event.PanaceaSubscriber
-	txBuilder   *panacea.TxBuilder
+	queryClient     panacea.QueryClient
+	grpcClient      panacea.GRPCClient
+	consumerService consumer_service.FileStorage
+	subscriber      *event.PanaceaSubscriber
+	txBuilder       *panacea.TxBuilder
 }
 
 func New(conf *config.Config, sgx sgx.Sgx, queryClient panacea.QueryClient) (Service, error) {
@@ -74,16 +77,19 @@ func New(conf *config.Config, sgx sgx.Sgx, queryClient panacea.QueryClient) (Ser
 		return nil, fmt.Errorf("failed to init subscriber: %w", err)
 	}
 
+	consumerService := consumer_service.NewConsumerService(oraclePrivKey)
+
 	return &service{
-		conf:          conf,
-		oracleAccount: oracleAccount,
-		oraclePrivKey: oraclePrivKey,
-		enclaveInfo:   selfEnclaveInfo,
-		sgx:           sgx,
-		queryClient:   queryClient,
-		grpcClient:    grpcClient,
-		txBuilder:     txBuilder,
-		subscriber:    subscriber,
+		conf:            conf,
+		oracleAccount:   oracleAccount,
+		oraclePrivKey:   oraclePrivKey,
+		enclaveInfo:     selfEnclaveInfo,
+		sgx:             sgx,
+		queryClient:     queryClient,
+		grpcClient:      grpcClient,
+		consumerService: consumerService,
+		txBuilder:       txBuilder,
+		subscriber:      subscriber,
 	}, nil
 }
 
@@ -129,6 +135,10 @@ func (s *service) GRPCClient() panacea.GRPCClient {
 
 func (s *service) QueryClient() panacea.QueryClient {
 	return s.queryClient
+}
+
+func (s *service) ConsumerService() consumer_service.FileStorage {
+	return s.consumerService
 }
 
 func (s *service) BroadcastTx(msg ...sdk.Msg) (int64, string, error) {

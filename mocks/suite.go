@@ -16,19 +16,18 @@ type MockTestSuite struct {
 
 	UniqueID string
 
-	QueryClient *MockQueryClient
-	GrpcClient  *MockGrpcClient
-	Svc         *MockService
-	SGX         *MockSGX
-	Config      *config.Config
-	EnclaveInfo *sgx.EnclaveInfo
+	QueryClient     *MockQueryClient
+	GrpcClient      *MockGrpcClient
+	ConsumerService *MockConsumerService
+	Svc             *MockService
+	SGX             *MockSGX
+	Config          *config.Config
+	EnclaveInfo     *sgx.EnclaveInfo
 
 	OracleAcc     *panacea.OracleAccount
 	OraclePrivKey *btcec.PrivateKey
 	OraclePubKey  *btcec.PublicKey
 	NodePrivKey   *btcec.PrivateKey
-
-	ConsumerService *MockConsumerService
 }
 
 func (suite *MockTestSuite) Initialize() {
@@ -45,9 +44,13 @@ func (suite *MockTestSuite) Initialize() {
 	suite.OraclePrivKey, _ = btcec.NewPrivateKey(btcec.S256())
 	suite.OraclePubKey = suite.OraclePrivKey.PubKey()
 	suite.NodePrivKey, _ = btcec.NewPrivateKey(btcec.S256())
+
+	suite.ConsumerService = &MockConsumerService{suite.OraclePrivKey}
+
 	suite.Svc = NewMockService(
 		suite.GrpcClient,
 		suite.QueryClient,
+		suite.ConsumerService,
 		suite.SGX,
 		suite.Config,
 		suite.EnclaveInfo,
@@ -56,5 +59,4 @@ func (suite *MockTestSuite) Initialize() {
 		suite.NodePrivKey,
 	)
 
-	suite.ConsumerService = &MockConsumerService{suite.OraclePubKey}
 }
