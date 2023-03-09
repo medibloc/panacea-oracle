@@ -203,6 +203,8 @@ func (q *verifiedQueryClient) startSchedulingLastBlockCaching() {
 		}
 		log.Debugf("Refresh last block. Height(%d)", lastHeight)
 		q.cachedLastBlockHeight = lastHeight
+
+		time.Sleep(refreshIntervalTime)
 	}
 }
 
@@ -218,32 +220,6 @@ func (q *verifiedQueryClient) safeVerifyLightBlockAtHeight(ctx context.Context, 
 	defer q.mutex.Unlock()
 
 	return q.lightClient.VerifyLightBlockAtHeight(ctx, height, time.Now())
-}
-
-// refresh update light block, if the last light block has been updated more than trustPeriod * 2/3 ago.
-func refresh(ctx context.Context, lc *light.Client, trustPeriod time.Duration, m *sync.Mutex) error {
-	log.Info("check latest light block")
-	lastBlockHeight, err := lc.LastTrustedHeight()
-	if err != nil {
-		return err
-	}
-	lastBlock, err := lc.TrustedLightBlock(lastBlockHeight)
-	if err != nil {
-		return err
-	}
-	lastBlockTime := lastBlock.Time
-	currentTime := time.Now()
-	timeDiff := currentTime.Sub(lastBlockTime)
-	if timeDiff > trustPeriod*2/3 {
-		log.Info("update latest light block")
-		m.Lock()
-		defer m.Unlock()
-		if _, err := lc.Update(ctx, time.Now()); err != nil {
-			return err
-		}
-	}
-
-	return nil
 }
 
 // GetStoreData get data from panacea with storeKey and key, then verify queried data with light client and merkle proof.
