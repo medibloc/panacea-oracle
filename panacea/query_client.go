@@ -203,6 +203,8 @@ func (q *verifiedQueryClient) startSchedulingLastBlockCaching() {
 		}
 		log.Debugf("Refresh last block. Height(%d)", lastHeight)
 		q.cachedLastBlockHeight = lastHeight
+
+		time.Sleep(refreshIntervalTime)
 	}
 }
 
