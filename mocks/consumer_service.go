@@ -19,20 +19,20 @@ var (
 	defaultPath                              = "MockConsumerService"
 )
 
-func (u MockConsumerService) Add(endpoint string, dealID uint64, dataHash string, data []byte) error {
-	if err := os.MkdirAll(filepath.Join(defaultPath, strconv.FormatUint(dealID, 10)), fs.ModePerm); err != nil {
+func (u MockConsumerService) Add(tempDir string, dealID uint64, dataHash string, data []byte) error {
+	if err := os.MkdirAll(filepath.Join(tempDir, strconv.FormatUint(dealID, 10)), fs.ModePerm); err != nil {
 		return err
 	}
 
-	if err := os.WriteFile(filepath.Join(defaultPath, strconv.FormatUint(dealID, 10), dataHash), data, fs.ModePerm); err != nil {
+	if err := os.WriteFile(filepath.Join(tempDir, strconv.FormatUint(dealID, 10), dataHash), data, fs.ModePerm); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (u MockConsumerService) Get(dealID uint64, dataHash string) ([]byte, error) {
-	return os.ReadFile(filepath.Join(defaultPath, strconv.FormatUint(dealID, 10), dataHash))
+func (u MockConsumerService) Get(tempDir string, dealID uint64, dataHash string) ([]byte, error) {
+	return os.ReadFile(filepath.Join(tempDir, strconv.FormatUint(dealID, 10), dataHash))
 }
 
 func RemoveMockConsumerServiceData() {
