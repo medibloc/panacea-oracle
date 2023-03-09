@@ -172,6 +172,12 @@ func newVerifiedQueryClientWithDB(ctx context.Context, config *config.Config, in
 		aminoCdc:    codec.NewAminoCodec(codec.NewLegacyAmino()),
 	}
 
+	// If the last height is not present when oracle initially start the server, all queries will fail.
+	// So if Oracle doesn't get the block information when it first starts the server, it will fail.
+	if err := queryClient.lastBlockCaching(); err != nil {
+		return nil, err
+	}
+
 	go queryClient.startSchedulingLastBlockCaching()
 
 	return queryClient, nil
@@ -192,18 +198,26 @@ func newTMLogger(conf *config.Config) tmlog.Logger {
 	return logger
 }
 
+func (q *verifiedQueryClient) lastBlockCaching() error {
+	lastHeight, err := q.GetLastBlockHeight(context.Background())
+
+	if err != nil {
+		return fmt.Errorf("failed to refresh last block. %w", err)
+	}
+	log.Debugf("Refresh last block. Height(%d)", lastHeight)
+	q.cachedLastBlockHeight = lastHeight
+
+	return nil
+}
+
 // startSchedulingLastBlockCaching updates the LightClient with the last block information and stores the height of this block.
 func (q *verifiedQueryClient) startSchedulingLastBlockCaching() {
 	for {
-		lastHeight, err := q.GetLastBlockHeight(context.Background())
-
-		if err != nil {
-			log.Errorf("failed to refresh last block. %v", err)
-		}
-		log.Debugf("Refresh last block. Height(%d)", lastHeight)
-		q.cachedLastBlockHeight = lastHeight
-
 		time.Sleep(refreshIntervalTime)
+
+		if err := q.lastBlockCaching(); err != nil {
+			log.Error(err)
+		}
 	}
 }
 
