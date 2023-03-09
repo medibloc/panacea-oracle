@@ -10,6 +10,7 @@ import (
 	"github.com/btcsuite/btcd/btcec"
 	"github.com/lestrrat-go/jwx/v2/jwa"
 	"github.com/lestrrat-go/jwx/v2/jwt"
+	"github.com/medibloc/panacea-oracle/panacea"
 )
 
 type FileStorage interface {
@@ -20,17 +21,20 @@ var _ FileStorage = &ConsumerServiceFileStorage{}
 
 type ConsumerServiceFileStorage struct {
 	oraclePrivKey *btcec.PrivateKey
+	oracleAcc     *panacea.OracleAccount
 }
 
-func NewConsumerService(oraclePrivKey *btcec.PrivateKey) FileStorage {
+func NewConsumerService(oraclePrivKey *btcec.PrivateKey, oracleAcc *panacea.OracleAccount) FileStorage {
 	return &ConsumerServiceFileStorage{
 		oraclePrivKey: oraclePrivKey,
+		oracleAcc:     oracleAcc,
 	}
 }
 
 func (s *ConsumerServiceFileStorage) Add(endpoint string, dealID uint64, dataHash string, data []byte) error {
-	dataUrl := endpoint + "/v0/data/" + strconv.FormatUint(dealID, 10) + "/" + dataHash
-	token, err := generateJWT(s.oraclePrivKey, 10*time.Second)
+	/// dataUrl is v1/deals/{dealId}/data/{dataHash}
+	dataUrl := endpoint + "/v1/deals/" + strconv.FormatUint(dealID, 10) + "/data/" + dataHash
+	token, err := generateJWT(s.oraclePrivKey, s.oracleAcc, 10*time.Second)
 	if err != nil {
 		return fmt.Errorf("failed to generate jwt: %v", err)
 	}
@@ -50,7 +54,9 @@ func postData(data []byte, dataUrl string, jwt []byte) error {
 	}
 	request.Header.Set("Authorization", "Bearer "+string(jwt))
 
-	client := http.Client{}
+	client := http.Client{
+		Timeout: time.Second * 5,
+	}
 	resp, err := client.Do(request)
 	if err != nil {
 		return err
@@ -63,9 +69,10 @@ func postData(data []byte, dataUrl string, jwt []byte) error {
 	return nil
 }
 
-func generateJWT(privKey *btcec.PrivateKey, expiration time.Duration) ([]byte, error) {
+func generateJWT(privKey *btcec.PrivateKey, oracleAcc *panacea.OracleAccount, expiration time.Duration) ([]byte, error) {
 	now := time.Now().Truncate(time.Second)
 	token, err := jwt.NewBuilder().
+		Issuer(oracleAcc.GetAddress()).
 		IssuedAt(now).
 		NotBefore(now).
 		Expiration(now.Add(expiration)).
