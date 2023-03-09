@@ -160,7 +160,7 @@ type mockQueryClient struct {
 }
 
 // GetCachedLastBlockHeight implements panacea.QueryClient
-func (*mockQueryClient) GetCachedLastBlockHeight() int64 {
+func (c *mockQueryClient) GetCachedLastBlockHeight() int64 {
 	return 0
 }
 
