@@ -159,6 +159,10 @@ type mockQueryClient struct {
 	account authtypes.AccountI
 }
 
+func (c *mockQueryClient) GetCachedLastBlockHeight() int64 {
+	return 0
+}
+
 func (c *mockQueryClient) GetConsent(_ context.Context, _ uint64, _ string) (*datadealtypes.Consent, error) {
 	return nil, nil
 }
