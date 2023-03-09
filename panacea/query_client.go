@@ -199,7 +199,6 @@ func (q *verifiedQueryClient) startSchedulingLastBlockCaching() {
 
 		if err != nil {
 			log.Errorf("failed to refresh last block. %v", err)
-			return
 		}
 		log.Debugf("Refresh last block. Height(%d)", lastHeight)
 		q.cachedLastBlockHeight = lastHeight
