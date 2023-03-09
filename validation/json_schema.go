@@ -3,9 +3,22 @@ package validation
 import (
 	"fmt"
 	"strings"
+	"time"
 
+	"github.com/bluele/gcache"
 	"github.com/xeipuuv/gojsonschema"
 )
+
+type JSONSchema struct {
+	cache gcache.Cache
+}
+
+func NewJSONSchema() {
+	gc := gcache.New(1000).
+		LRU().
+		Expiration(time.Second * 2).
+		Build()
+}
 
 // ValidateJSONSchemata gets data from desiredSchemaURI list one by one and calls ValidateJSONSchema.
 func ValidateJSONSchemata(jsonInput []byte, desiredSchemaURIs []string) error {
