@@ -32,8 +32,8 @@ func NewConsumerService(oraclePrivKey *btcec.PrivateKey, oracleAcc *panacea.Orac
 }
 
 func (s *ConsumerServiceFileStorage) Add(endpoint string, dealID uint64, dataHash string, data []byte) error {
-	/// dataUrl is v1/deals/{dealId}/data/{dataHash}
-	dataUrl := endpoint + "/v1/deals/" + strconv.FormatUint(dealID, 10) + "/data/" + dataHash
+	// dataUrl is /v0/deals/{dealId}/data/{dataHash}
+	dataUrl := endpoint + "/v0/deals/" + strconv.FormatUint(dealID, 10) + "/data/" + dataHash
 	token, err := generateJWT(s.oraclePrivKey, s.oracleAcc, 10*time.Second)
 	if err != nil {
 		return fmt.Errorf("failed to generate jwt: %v", err)
