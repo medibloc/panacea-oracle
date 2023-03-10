@@ -15,8 +15,7 @@ type MockConsumerService struct {
 }
 
 var (
-	_           consumer_service.FileStorage = &MockConsumerService{}
-	defaultPath                              = "MockConsumerService"
+	_ consumer_service.FileStorage = &MockConsumerService{}
 )
 
 func (u MockConsumerService) Add(tempDir string, dealID uint64, dataHash string, data []byte) error {
@@ -33,10 +32,4 @@ func (u MockConsumerService) Add(tempDir string, dealID uint64, dataHash string,
 
 func (u MockConsumerService) Get(tempDir string, dealID uint64, dataHash string) ([]byte, error) {
 	return os.ReadFile(filepath.Join(tempDir, strconv.FormatUint(dealID, 10), dataHash))
-}
-
-func RemoveMockConsumerServiceData() {
-	if info, _ := os.Stat(defaultPath); info != nil {
-		os.RemoveAll(defaultPath)
-	}
 }

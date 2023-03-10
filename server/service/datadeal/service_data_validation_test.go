@@ -52,10 +52,6 @@ func (suite *dataDealServiceServerTestSuite) BeforeTest(_, _ string) {
 	suite.QueryClient.Deal = suite.deal
 
 }
-
-func (suite *dataDealServiceServerTestSuite) AfterTest(_, _ string) {
-	mocks.RemoveMockConsumerServiceData()
-}
 func (suite *dataDealServiceServerTestSuite) TestValidateDataSuccess() {
 	// provide data
 	jsonDataBz := []byte(
