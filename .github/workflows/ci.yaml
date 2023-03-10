@@ -31,7 +31,6 @@ jobs:
         env:
           GO: ego-go
         run: |
-          docker pull ghcr.io/medibloc/panacea-core:main # since we use tha tag 'main'
           make test
 
 #      - name: Sign the binary with EGo for production
