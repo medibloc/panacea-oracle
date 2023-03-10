@@ -5,33 +5,33 @@ import (
 	"fmt"
 
 	shell "github.com/ipfs/go-ipfs-api"
-	log "github.com/sirupsen/logrus"
 )
 
 type IPFS struct {
-	sh *shell.Shell
+	url string
 }
 
 // NewIPFS generates an IPFS node with IPFS url.
 func NewIPFS(url string) (*IPFS, error) {
-	newShell := shell.NewShell(url)
-
-	if !newShell.IsUp() {
+	// As with the previous specification, when an IPFS object is initially created, it checks to see if IPFS can connect well.
+	if !shell.NewShell(url).IsUp() {
 		return nil, fmt.Errorf("IPFS is not connected")
 	}
 
-	log.Info("successfully connect to IPFS node")
-
 	return &IPFS{
-		sh: newShell,
+		url: url,
 	}, nil
+}
+
+func (i *IPFS) createShell() *shell.Shell {
+	return shell.NewShell(i.url)
 }
 
 // Add method adds a data and returns a CID.
 func (i *IPFS) Add(data []byte) (string, error) {
 	reader := bytes.NewReader(data)
 
-	cid, err := i.sh.Add(reader)
+	cid, err := i.createShell().Add(reader)
 	if err != nil {
 		return "", err
 	}
@@ -41,7 +41,7 @@ func (i *IPFS) Add(data []byte) (string, error) {
 
 // Get method gets a data and returns a bytes of Deal.
 func (i *IPFS) Get(cid string) ([]byte, error) {
-	data, err := i.sh.Cat(cid)
+	data, err := i.createShell().Cat(cid)
 	if err != nil {
 		return nil, err
 	}
