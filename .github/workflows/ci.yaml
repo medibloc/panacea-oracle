@@ -30,8 +30,7 @@ jobs:
       - name: Run unit tests
         env:
           GO: ego-go
-        run: |
-          make test
+        run: make test
 
 #      - name: Sign the binary with EGo for production
 #        run: make sign-prod
