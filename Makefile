@@ -21,7 +21,7 @@ build: go.sum
 	$(GO) build -mod=readonly $(BUILD_FLAGS) -o $(OUT_DIR)/oracled ./cmd/oracled
 
 test:
-	docker pull ghcr.io/medibloc/panacea-core:main # since we use tha tag 'main'
+	docker pull ghcr.io/medibloc/panacea-core:main # since we use the tag 'main'
 	$(GO) test -v ./...
 
 lint:
