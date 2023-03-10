@@ -113,16 +113,15 @@ func (s *dataDealServiceServer) ValidateData(ctx context.Context, req *datadeal.
 		return nil, fmt.Errorf("failed to re-encrypt data with the combined key")
 	}
 
-	// Put data into IPFS
-	cid, err := s.IPFS().Add(reEncryptedData)
-	if err != nil {
-		log.Errorf("failed to store data to IPFS: %s", err.Error())
-		return nil, fmt.Errorf("failed to store data to IPFS")
+	// Post reEncryptedData to consumer service
+	consumerService := s.ConsumerService()
+	if err := consumerService.Add(deal.ConsumerServiceEndpoint, req.DealId, req.DataHash, reEncryptedData); err != nil {
+		log.Errorf("failed to add data to consumer service: %s", err.Error())
+		return nil, fmt.Errorf("failed to add data to consumer service")
 	}
 
 	// Issue a certificate to the client
 	unsignedDataCert := &datadealtypes.UnsignedCertificate{
-		Cid:             cid,
 		UniqueId:        s.EnclaveInfo().UniqueIDHex(),
 		OracleAddress:   s.OracleAcc().GetAddress(),
 		DealId:          dealID,

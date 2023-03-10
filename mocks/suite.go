@@ -16,13 +16,13 @@ type MockTestSuite struct {
 
 	UniqueID string
 
-	QueryClient *MockQueryClient
-	GrpcClient  *MockGrpcClient
-	Svc         *MockService
-	IPFS        *MockIPFS
-	SGX         *MockSGX
-	Config      *config.Config
-	EnclaveInfo *sgx.EnclaveInfo
+	QueryClient     *MockQueryClient
+	GrpcClient      *MockGrpcClient
+	ConsumerService *MockConsumerService
+	Svc             *MockService
+	SGX             *MockSGX
+	Config          *config.Config
+	EnclaveInfo     *sgx.EnclaveInfo
 
 	OracleAcc     *panacea.OracleAccount
 	OraclePrivKey *btcec.PrivateKey
@@ -38,22 +38,25 @@ func (suite *MockTestSuite) Initialize() {
 	suite.QueryClient = &MockQueryClient{}
 	suite.GrpcClient = &MockGrpcClient{}
 	suite.SGX = &MockSGX{}
-	suite.IPFS = &MockIPFS{}
 	suite.Config = config.DefaultConfig()
 	suite.EnclaveInfo = sgx.NewEnclaveInfo(nil, uniqueID)
 	suite.OracleAcc, _ = panacea.NewOracleAccount(mnemonic, 0, 0)
 	suite.OraclePrivKey, _ = btcec.NewPrivateKey(btcec.S256())
 	suite.OraclePubKey = suite.OraclePrivKey.PubKey()
 	suite.NodePrivKey, _ = btcec.NewPrivateKey(btcec.S256())
+
+	suite.ConsumerService = &MockConsumerService{suite.OraclePrivKey}
+
 	suite.Svc = NewMockService(
 		suite.GrpcClient,
 		suite.QueryClient,
+		suite.ConsumerService,
 		suite.SGX,
-		suite.IPFS,
 		suite.Config,
 		suite.EnclaveInfo,
 		suite.OracleAcc,
 		suite.OraclePrivKey,
 		suite.NodePrivKey,
 	)
+
 }

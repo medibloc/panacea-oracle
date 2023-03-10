@@ -64,7 +64,7 @@ func (suite *TestSuite) SetupTest() {
 			Env:        suite.initScriptEnvs,
 		},
 		func(config *docker.HostConfig) {
-			config.AutoRemove = true // so that stopped containers are removed automatically
+			config.AutoRemove = false // so that stopped containers are removed automatically
 			config.Mounts = []docker.HostMount{
 				{
 					Source: suite.initScriptDir,

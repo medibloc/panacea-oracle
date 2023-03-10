@@ -1,106 +1,123 @@
 package datadeal
 
-//TODO: This test will be changed to VP data validation.
-//type dataDealServiceServerTestSuite struct {
-//	mocks.MockTestSuite
-//
-//	deal *datadealtypes.Deal
-//
-//	providerAccPrivKey secp256k1.PrivKey
-//	providerAccPubKey  cryptotypes.PubKey
-//	providerAcc        authtypes.AccountI
-//}
-//
-//func TestDataDealServiceServer(t *testing.T) {
-//	suite.Run(t, &dataDealServiceServerTestSuite{})
-//}
-//
-//func (suite *dataDealServiceServerTestSuite) BeforeTest(_, _ string) {
-//	suite.Initialize()
-//
-//	suite.deal = &datadealtypes.Deal{
-//		Id:         1,
-//		DataSchema: []string{"https://json.schemastore.org/github-issue-forms.json"},
-//		Status:     datadealtypes.DEAL_STATUS_ACTIVE,
-//	}
-//	suite.providerAccPrivKey = *secp256k1.GenPrivKey()
-//	suite.providerAccPubKey = suite.providerAccPrivKey.PubKey()
-//	suite.providerAcc = mocks.NewMockAccount(suite.providerAccPubKey)
-//	suite.QueryClient.Account = suite.providerAcc
-//	suite.QueryClient.Deal = suite.deal
-//
-//}
-//
-//func (suite *dataDealServiceServerTestSuite) AfterTest(_, _ string) {
-//	mocks.RemoveMockIPFSData()
-//}
-//
-//func (suite *dataDealServiceServerTestSuite) TestValidateDataSuccess() {
-//	// provide data
-//	jsonDataBz := []byte(
-//		`
-//		{
-//			"name": "name",
-//			"description": "description",
-//			"body": [{ "type": "markdown", "attributes": { "value": "val1" } }]
-//		}
-//		`)
-//
-//	// encrypted provider data with provider private key and oracle public key
-//	providerPrivKey, _ := btcec.PrivKeyFromBytes(btcec.S256(), suite.providerAccPrivKey.Bytes())
-//
-//	sharedKey := crypto.DeriveSharedKey(
-//		providerPrivKey,
-//		suite.OraclePrivKey.PubKey(),
-//		crypto.KDFSHA256,
-//	)
-//
-//	encryptedData, err := crypto.Encrypt(sharedKey, nil, jsonDataBz)
-//	suite.Require().NoError(err)
-//
-//	dataHash := sha256.Sum256(jsonDataBz)
-//
-//	req := &datadeal.ValidateDataRequest{
-//		DealId:          1,
-//		ProviderAddress: panacea.GetAddressFromPrivateKey(suite.providerAccPrivKey),
-//		EncryptedData:   encryptedData,
-//		DataHash:        hex.EncodeToString(dataHash[:]),
-//	}
-//
-//	// add authentication in header
-//	ctx := context.Background()
-//	ctx = context.WithValue(ctx, auth.ContextKeyAuthenticatedAccountAddress{}, req.ProviderAddress)
-//
-//	// request validation for provider data
-//	server := dataDealServiceServer{Service: suite.Svc}
-//	res, err := server.ValidateData(ctx, req)
-//	suite.Require().NoError(err)
-//
-//	// compare certificate
-//	unsignedCertificate := res.Certificate.UnsignedCertificate
-//	suite.Require().Equal(suite.UniqueID, unsignedCertificate.UniqueId)
-//	suite.Require().Equal(suite.OracleAcc.GetAddress(), unsignedCertificate.OracleAddress)
-//	suite.Require().Equal(req.DealId, unsignedCertificate.DealId)
-//	suite.Require().Equal(req.ProviderAddress, unsignedCertificate.ProviderAddress)
-//	suite.Require().Equal(req.DataHash, unsignedCertificate.DataHash)
-//	suite.Require().NotNil(res.Certificate.Signature)
-//
-//	// verify certificate
-//	marshal, err := unsignedCertificate.Marshal()
-//	suite.Require().NoError(err)
-//	signature, err := btcec.ParseSignature(res.Certificate.Signature, btcec.S256())
-//	suite.Require().NoError(err)
-//	suite.Require().True(signature.Verify(marshal, suite.OraclePrivKey.PubKey()))
-//
-//	// decrypt re-encrypted provider's data
-//	reEncryptedData, err := suite.IPFS.Get(unsignedCertificate.Cid)
-//	suite.Require().NoError(err)
-//	combinedKey := key.GetSecretKey(suite.OraclePrivKey.Serialize(), req.DealId, dataHash[:])
-//	decryptedData, err := crypto.Decrypt(combinedKey[:], nil, reEncryptedData)
-//	suite.Require().NoError(err)
-//	suite.Require().Equal(jsonDataBz, decryptedData)
-//}
-//
+import (
+	"context"
+	"crypto/sha256"
+	"encoding/hex"
+	"testing"
+
+	"github.com/btcsuite/btcd/btcec"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	datadealtypes "github.com/medibloc/panacea-core/v2/x/datadeal/types"
+	"github.com/medibloc/panacea-oracle/crypto"
+	"github.com/medibloc/panacea-oracle/mocks"
+	"github.com/medibloc/panacea-oracle/panacea"
+	datadeal "github.com/medibloc/panacea-oracle/pb/datadeal/v0"
+	"github.com/medibloc/panacea-oracle/server/rpc/interceptor/auth"
+	"github.com/medibloc/panacea-oracle/server/service/key"
+	"github.com/stretchr/testify/suite"
+)
+
+// TODO: This test will be changed to VP data validation.
+type dataDealServiceServerTestSuite struct {
+	mocks.MockTestSuite
+
+	deal *datadealtypes.Deal
+
+	providerAccPrivKey secp256k1.PrivKey
+	providerAccPubKey  cryptotypes.PubKey
+	providerAcc        authtypes.AccountI
+}
+
+func TestDataDealServiceServer(t *testing.T) {
+	suite.Run(t, &dataDealServiceServerTestSuite{})
+}
+
+func (suite *dataDealServiceServerTestSuite) BeforeTest(_, _ string) {
+	suite.Initialize()
+	tempDir := suite.T().TempDir()
+
+	suite.deal = &datadealtypes.Deal{
+		Id:                      1,
+		DataSchema:              []string{"https://json.schemastore.org/github-issue-forms.json"},
+		Status:                  datadealtypes.DEAL_STATUS_ACTIVE,
+		ConsumerServiceEndpoint: tempDir,
+	}
+	suite.providerAccPrivKey = *secp256k1.GenPrivKey()
+	suite.providerAccPubKey = suite.providerAccPrivKey.PubKey()
+	suite.providerAcc = mocks.NewMockAccount(suite.providerAccPubKey)
+	suite.QueryClient.Account = suite.providerAcc
+	suite.QueryClient.Deal = suite.deal
+
+}
+func (suite *dataDealServiceServerTestSuite) TestValidateDataSuccess() {
+	// provide data
+	jsonDataBz := []byte(
+		`
+		{
+			"name": "name",
+			"description": "description",
+			"body": [{ "type": "markdown", "attributes": { "value": "val1" } }]
+		}
+		`)
+
+	// encrypted provider data with provider private key and oracle public key
+	providerPrivKey, _ := btcec.PrivKeyFromBytes(btcec.S256(), suite.providerAccPrivKey.Bytes())
+
+	sharedKey := crypto.DeriveSharedKey(
+		providerPrivKey,
+		suite.OraclePrivKey.PubKey(),
+		crypto.KDFSHA256,
+	)
+
+	encryptedData, err := crypto.Encrypt(sharedKey, nil, jsonDataBz)
+	suite.Require().NoError(err)
+
+	dataHash := sha256.Sum256(jsonDataBz)
+
+	req := &datadeal.ValidateDataRequest{
+		DealId:          1,
+		ProviderAddress: panacea.GetAddressFromPrivateKey(suite.providerAccPrivKey),
+		EncryptedData:   encryptedData,
+		DataHash:        hex.EncodeToString(dataHash[:]),
+	}
+
+	// add authentication in header
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, auth.ContextKeyAuthenticatedAccountAddress{}, req.ProviderAddress)
+
+	// request validation for provider data
+	server := dataDealServiceServer{Service: suite.Svc}
+	res, err := server.ValidateData(ctx, req)
+	suite.Require().NoError(err)
+
+	// compare certificate
+	unsignedCertificate := res.Certificate.UnsignedCertificate
+	suite.Require().Equal(suite.UniqueID, unsignedCertificate.UniqueId)
+	suite.Require().Equal(suite.OracleAcc.GetAddress(), unsignedCertificate.OracleAddress)
+	suite.Require().Equal(req.DealId, unsignedCertificate.DealId)
+	suite.Require().Equal(req.ProviderAddress, unsignedCertificate.ProviderAddress)
+	suite.Require().Equal(req.DataHash, unsignedCertificate.DataHash)
+	suite.Require().NotNil(res.Certificate.Signature)
+
+	// verify certificate
+	marshal, err := unsignedCertificate.Marshal()
+	suite.Require().NoError(err)
+	signature, err := btcec.ParseSignature(res.Certificate.Signature, btcec.S256())
+	suite.Require().NoError(err)
+	suite.Require().True(signature.Verify(marshal, suite.OraclePrivKey.PubKey()))
+
+	// decrypt re-encrypted provider's data
+	reEncryptedData, err := suite.ConsumerService.Get(suite.deal.ConsumerServiceEndpoint, unsignedCertificate.DealId, unsignedCertificate.DataHash)
+	suite.Require().NoError(err)
+	combinedKey := key.GetSecretKey(suite.OraclePrivKey.Serialize(), req.DealId, dataHash[:])
+	decryptedData, err := crypto.Decrypt(combinedKey[:], nil, reEncryptedData)
+	suite.Require().NoError(err)
+	suite.Require().Equal(jsonDataBz, decryptedData)
+}
+
 //func (suite *dataDealServiceServerTestSuite) TestValidateDataInvalidRequest() {
 //	req := &datadeal.ValidateDataRequest{
 //		DealId:          1,
@@ -292,5 +309,5 @@ package datadeal
 //	server := dataDealServiceServer{Service: suite.Svc}
 //	res, err := server.ValidateData(ctx, req)
 //	suite.Require().Nil(res)
-//	suite.Require().ErrorContains(err, "failed to validate VP")
+//	suite.Require().ErrorContains(err, "failed to validate data")
 //}
