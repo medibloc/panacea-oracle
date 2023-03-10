@@ -30,7 +30,9 @@ jobs:
       - name: Run unit tests
         env:
           GO: ego-go
-        run: make test
+        run: |
+          docker pull ghcr.io/medibloc/panacea-core:main # since we use tha tag 'main'
+          make test
 
 #      - name: Sign the binary with EGo for production
 #        run: make sign-prod
