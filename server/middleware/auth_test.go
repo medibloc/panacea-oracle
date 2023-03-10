@@ -159,7 +159,6 @@ type mockQueryClient struct {
 	account authtypes.AccountI
 }
 
-// GetCachedLastBlockHeight implements panacea.QueryClient
 func (c *mockQueryClient) GetCachedLastBlockHeight() int64 {
 	return 0
 }
