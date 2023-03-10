@@ -7,12 +7,12 @@ import (
 )
 
 type JSONSchema struct {
-	cache *SchemaCache
+	cache *schemaCache
 }
 
 func NewJSONSchema() *JSONSchema {
 	return &JSONSchema{
-		NewSchemaCache(),
+		newSchemaCache(),
 	}
 }
 

@@ -14,7 +14,6 @@ import (
 	"github.com/medibloc/panacea-oracle/crypto"
 	"github.com/medibloc/panacea-oracle/server/middleware"
 	"github.com/medibloc/panacea-oracle/server/service/key"
-	"github.com/medibloc/panacea-oracle/validation"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -110,7 +109,7 @@ func (s *dataDealService) ValidateData(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := validation.ValidateJSONSchemata(decryptedData, deal.DataSchema); err != nil {
+	if err := s.schema.ValidateJSONSchemata(decryptedData, deal.DataSchema); err != nil {
 		log.Errorf("failed to validate data: %s", err.Error())
 		http.Error(w, "failed to validate data", http.StatusBadRequest)
 		return
