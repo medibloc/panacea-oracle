@@ -22,21 +22,18 @@ func TestSingleSchema(t *testing.T) {
 
 func TestTwoSchema(t *testing.T) {
 	schemaURIs := []string{
-		"https://oracle-testnet.s3.ap-northeast-2.amazonaws.com/performance_schema.json",
 		"https://json.schemastore.org/cdk.json",
+		"https://json.schemastore.org/vsconfig.json",
 	}
 
 	schema := NewJSONSchema()
 	jsonInput := []byte(`{
-		"id": "This is a ID",
-		"name": "This is a name",
-		"age": 39,
-		"title": "This is a title",
-		"description": "This is a description",
-		"versionReporting": "Reporting!"
+		"version":"1.0.0",
+		"components": "",
+		"versionReporting": true
 	}`)
 	err := schema.ValidateJSONSchemata(jsonInput, schemaURIs)
-	require.ErrorContains(t, err, "Invalid type. Expected: boolean, given: string")
+	require.ErrorContains(t, err, "components: Invalid type. Expected: array, given: string")
 
 	require.Equal(t, 2, schema.cache.Size())
 }
