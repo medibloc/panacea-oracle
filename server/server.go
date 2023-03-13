@@ -1,10 +1,8 @@
 package server
 
 import (
-	"fmt"
 	"net"
 	"net/http"
-	"net/url"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -52,11 +50,11 @@ func New(svc service.Service) *Server {
 }
 
 func (srv *Server) Run() error {
-	listenURL, err := url.Parse(srv.Addr)
-	if err != nil {
-		return fmt.Errorf("failed to parse api address. address: %s, %w", srv.Addr, err)
+	addr := srv.Addr
+	if addr == "" {
+		addr = ":http"
 	}
-	lis, err := net.Listen(listenURL.Scheme, listenURL.Host)
+	lis, err := net.Listen("tcp", addr)
 	if err != nil {
 		return err
 	}

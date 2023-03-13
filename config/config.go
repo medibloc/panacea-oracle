@@ -83,7 +83,7 @@ func DefaultConfig() *Config {
 			IPFSNodeAddr: "127.0.0.1:5001",
 		},
 		API: APIConfig{
-			ListenAddr:         "http://127.0.0.1:8080",
+			ListenAddr:         "127.0.0.1:8080",
 			WriteTimeout:       60,
 			ReadTimeout:        15,
 			MaxConnections:     50,

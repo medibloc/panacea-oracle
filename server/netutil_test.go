@@ -1,4 +1,4 @@
-package service_test
+package server_test
 
 import (
 	"io"
