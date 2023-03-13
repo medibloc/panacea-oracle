@@ -57,7 +57,9 @@ func TestDifferentBodySizeAndHeaderContentSize(t *testing.T) {
 
 func newRandomBody(size int) []byte {
 	body := make([]byte, size)
-	rand.Read(body)
+	if _, err := rand.Read(body); err != nil {
+		panic(err)
+	}
 
 	return body
 }
