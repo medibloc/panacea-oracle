@@ -48,9 +48,11 @@ type IPFSConfig struct {
 }
 
 type APIConfig struct {
-	ListenAddr   string `mapstructure:"listen-addr"`
-	WriteTimeout int64  `mapstructure:"write-timeout"`
-	ReadTimeout  int64  `mapstructure:"read-timeout"`
+	ListenAddr         string `mapstructure:"listen-addr"`
+	WriteTimeout       int64  `mapstructure:"write-timeout"`
+	ReadTimeout        int64  `mapstructure:"read-timeout"`
+	MaxConnections     int    `mapstructure:"max-connections"`
+	MaxRequestBodySize int64  `mapstructure:"max-request-body-size"`
 }
 
 func DefaultConfig() *Config {
@@ -81,9 +83,11 @@ func DefaultConfig() *Config {
 			IPFSNodeAddr: "127.0.0.1:5001",
 		},
 		API: APIConfig{
-			ListenAddr:   "127.0.0.1:8080",
-			WriteTimeout: 60,
-			ReadTimeout:  15,
+			ListenAddr:         "127.0.0.1:8080",
+			WriteTimeout:       60,
+			ReadTimeout:        15,
+			MaxConnections:     50,
+			MaxRequestBodySize: 4 << (10 * 2), // 4MB
 		},
 	}
 }
