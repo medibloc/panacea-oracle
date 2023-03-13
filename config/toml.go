@@ -54,14 +54,6 @@ light-client-witness-addrs= "{{ StringsJoin .Panacea.LightClientWitnessAddrs ","
 light-client-log-level = "{{ .Panacea.LightClientLogLevel }}"
 
 ###############################################################################
-###                         IPFS Configuration                           ###
-###############################################################################
-
-[ipfs]
-
-ipfs-node-addr = "{{ .IPFS.IPFSNodeAddr }}"
-
-###############################################################################
 ###                         GRPC Configuration                           ###
 ###############################################################################
 

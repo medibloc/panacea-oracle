@@ -4,13 +4,13 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/medibloc/panacea-oracle/consumer_service"
 	"github.com/medibloc/panacea-oracle/crypto"
 	"github.com/tendermint/tendermint/libs/os"
 
 	"github.com/btcsuite/btcd/btcec"
 	"github.com/medibloc/panacea-oracle/config"
 	"github.com/medibloc/panacea-oracle/event"
-	"github.com/medibloc/panacea-oracle/ipfs"
 	"github.com/medibloc/panacea-oracle/panacea"
 	"github.com/medibloc/panacea-oracle/sgx"
 	log "github.com/sirupsen/logrus"
@@ -24,7 +24,7 @@ type Service interface {
 	OraclePrivKey() *btcec.PrivateKey
 	Config() *config.Config
 	QueryClient() panacea.QueryClient
-	IPFS() ipfs.IPFS
+	ConsumerService() consumer_service.FileStorage
 	BroadcastTx(...sdk.Msg) (int64, string, error)
 	StartSubscriptions(...event.Event) error
 	Close() error
@@ -38,11 +38,11 @@ type service struct {
 	oracleAccount *panacea.OracleAccount
 	oraclePrivKey *btcec.PrivateKey
 
-	queryClient panacea.QueryClient
-	grpcClient  panacea.GRPCClient
-	subscriber  *event.PanaceaSubscriber
-	txBuilder   *panacea.TxBuilder
-	ipfs        ipfs.IPFS
+	queryClient     panacea.QueryClient
+	grpcClient      panacea.GRPCClient
+	consumerService consumer_service.FileStorage
+	subscriber      *event.PanaceaSubscriber
+	txBuilder       *panacea.TxBuilder
 }
 
 func New(conf *config.Config, sgx sgx.Sgx, queryClient panacea.QueryClient) (Service, error) {
@@ -65,11 +65,6 @@ func New(conf *config.Config, sgx sgx.Sgx, queryClient panacea.QueryClient) (Ser
 		return nil, fmt.Errorf("failed to set self-enclave info: %w", err)
 	}
 
-	newIpfs, err := ipfs.NewIPFS(conf.IPFS.IPFSNodeAddr)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create connection to IPFS node(%s): %w", conf.IPFS.IPFSNodeAddr, err)
-	}
-
 	grpcClient, err := panacea.NewGRPCClient(conf.Panacea.GRPCAddr, conf.Panacea.ChainID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create a new gRPC client: %w", err)
@@ -82,17 +77,19 @@ func New(conf *config.Config, sgx sgx.Sgx, queryClient panacea.QueryClient) (Ser
 		return nil, fmt.Errorf("failed to init subscriber: %w", err)
 	}
 
+	consumerService := consumer_service.NewConsumerService(oraclePrivKey, oracleAccount)
+
 	return &service{
-		conf:          conf,
-		oracleAccount: oracleAccount,
-		oraclePrivKey: oraclePrivKey,
-		enclaveInfo:   selfEnclaveInfo,
-		sgx:           sgx,
-		queryClient:   queryClient,
-		grpcClient:    grpcClient,
-		txBuilder:     txBuilder,
-		subscriber:    subscriber,
-		ipfs:          newIpfs,
+		conf:            conf,
+		oracleAccount:   oracleAccount,
+		oraclePrivKey:   oraclePrivKey,
+		enclaveInfo:     selfEnclaveInfo,
+		sgx:             sgx,
+		queryClient:     queryClient,
+		grpcClient:      grpcClient,
+		consumerService: consumerService,
+		txBuilder:       txBuilder,
+		subscriber:      subscriber,
 	}, nil
 }
 
@@ -140,6 +137,10 @@ func (s *service) QueryClient() panacea.QueryClient {
 	return s.queryClient
 }
 
+func (s *service) ConsumerService() consumer_service.FileStorage {
+	return s.consumerService
+}
+
 func (s *service) BroadcastTx(msg ...sdk.Msg) (int64, string, error) {
 	defaultFeeAmount, _ := sdk.ParseCoinsNormalized(s.Config().Panacea.DefaultFeeAmount)
 
@@ -163,8 +164,4 @@ func (s *service) BroadcastTx(msg ...sdk.Msg) (int64, string, error) {
 	}
 
 	return resp.TxResponse.Height, resp.TxResponse.TxHash, nil
-}
-
-func (s *service) IPFS() ipfs.IPFS {
-	return s.ipfs
 }

@@ -56,13 +56,27 @@ func (suite *TestSuite) SetupSuite() {
 func (suite *TestSuite) SetupTest() {
 	var err error
 
-	suite.dktResource, err = suite.dktPool.RunWithOptions(
-		&dockertest.RunOptions{
-			Repository: "ghcr.io/medibloc/panacea-core",
-			Tag:        "main",
-			Cmd:        []string{"bash", fmt.Sprintf("/scripts/%s", suite.initScriptFilename)},
-			Env:        suite.initScriptEnvs,
+	opt := &dockertest.RunOptions{
+		Repository: "ghcr.io/medibloc/panacea-core",
+		Tag:        "main",
+		Cmd:        []string{"bash", fmt.Sprintf("/scripts/%s", suite.initScriptFilename)},
+		Env:        suite.initScriptEnvs,
+	}
+
+	err = suite.dktPool.Client.PullImage(
+		docker.PullImageOptions{
+			Repository: opt.Repository,
+			Tag:        opt.Tag,
+			Platform:   opt.Platform,
 		},
+		opt.Auth,
+	)
+	if err != nil {
+		log.Panicf("Could not pull image: %v", err)
+	}
+
+	suite.dktResource, err = suite.dktPool.RunWithOptions(
+		opt,
 		func(config *docker.HostConfig) {
 			config.AutoRemove = true // so that stopped containers are removed automatically
 			config.Mounts = []docker.HostMount{

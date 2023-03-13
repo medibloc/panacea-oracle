@@ -5,6 +5,8 @@ import (
 	"encoding/hex"
 	"fmt"
 
+	"github.com/medibloc/vc-sdk/pkg/vdr"
+
 	"github.com/btcsuite/btcd/btcec"
 	"github.com/gogo/protobuf/proto"
 	datadealtypes "github.com/medibloc/panacea-core/v2/x/datadeal/types"
@@ -79,7 +81,7 @@ func (s *dataDealServiceServer) ValidateData(ctx context.Context, req *datadeal.
 		return nil, fmt.Errorf("failed to decrypt data")
 	}
 
-	// Validate data
+	// Validate data hash
 	dataHashBz := crypto.KDFSHA256(decryptedData)
 	dataHash := hex.EncodeToString(dataHashBz)
 
@@ -88,9 +90,19 @@ func (s *dataDealServiceServer) ValidateData(ctx context.Context, req *datadeal.
 		return nil, fmt.Errorf("data hash mismatch")
 	}
 
-	if err := validation.ValidateJSONSchemata(decryptedData, deal.DataSchema); err != nil {
-		log.Debugf("failed to validate data: %s", err.Error())
-		return nil, fmt.Errorf("failed to validate data")
+	if len(deal.DataSchema) > 0 {
+		if err := validation.ValidateJSONSchemata(decryptedData, deal.DataSchema); err != nil {
+			log.Debugf("failed to validate data: %s", err.Error())
+			return nil, fmt.Errorf("failed to validate data")
+		}
+	}
+
+	if deal.PresentationDefinition != nil {
+		panaceaVDR := vdr.NewPanaceaVDR(queryClient)
+		if err := validation.ValidateVP(panaceaVDR, decryptedData, deal.PresentationDefinition); err != nil {
+			log.Errorf("failed to validate verifiable presentation: %s", err.Error())
+			return nil, fmt.Errorf("failed to validate VP")
+		}
 	}
 
 	// Re-encrypt data using a combined key
@@ -101,16 +113,15 @@ func (s *dataDealServiceServer) ValidateData(ctx context.Context, req *datadeal.
 		return nil, fmt.Errorf("failed to re-encrypt data with the combined key")
 	}
 
-	// Put data into IPFS
-	cid, err := s.IPFS().Add(reEncryptedData)
-	if err != nil {
-		log.Errorf("failed to store data to IPFS: %s", err.Error())
-		return nil, fmt.Errorf("failed to store data to IPFS")
+	// Post reEncryptedData to consumer service
+	consumerService := s.ConsumerService()
+	if err := consumerService.Add(deal.ConsumerServiceEndpoint, req.DealId, req.DataHash, reEncryptedData); err != nil {
+		log.Errorf("failed to add data to consumer service: %s", err.Error())
+		return nil, fmt.Errorf("failed to add data to consumer service")
 	}
 
 	// Issue a certificate to the client
 	unsignedDataCert := &datadealtypes.UnsignedCertificate{
-		Cid:             cid,
 		UniqueId:        s.EnclaveInfo().UniqueIDHex(),
 		OracleAddress:   s.OracleAcc().GetAddress(),
 		DealId:          dealID,
