@@ -70,6 +70,8 @@ ipfs-node-addr = "{{ .IPFS.IPFSNodeAddr }}"
 listen-addr = "{{ .API.ListenAddr }}"
 write-timeout = "{{ .API.WriteTimeout }}"
 read-timeout = "{{ .API.ReadTimeout }}"
+max-connections = "{{ .API.MaxConnections }}"
+max-request-body-size = "{{ .API.MaxRequestBodySize }}"
 `
 
 var configTemplate *template.Template
