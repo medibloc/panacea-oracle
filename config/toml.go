@@ -49,7 +49,7 @@ light-client-primary-addr = "{{ .Panacea.LightClientPrimaryAddr }}"
 
 light-client-witness-addrs= "{{ StringsJoin .Panacea.LightClientWitnessAddrs "," }}"
 
-# Setting log information for light client
+# Log level for light client
 
 light-client-log-level = "{{ .Panacea.LightClientLogLevel }}"
 
@@ -66,29 +66,29 @@ ipfs-node-addr = "{{ .IPFS.IPFSNodeAddr }}"
 ###############################################################################
 
 [grpc]
-# It is address of the gRPC server. 
+# TCP or UNIX socket address for the gRPC server to listen on
 listen-addr = "{{ .GRPC.ListenAddr }}"
 
-# It is a set the timeout for connection establishment for all new connections.
+# Timeout for connection establishment for all new connections.
 connection-timeout = "{{ .GRPC.ConnectionTimeout }}"
 
-# It is the maximum number of connections to the server.
+# Maximum number of simultaneous connections that the gRPC server can handle
 max-connections = "{{ .GRPC.MaxConnections }}"
 
-# It will be apply a limit on the number of concurrent streams to each ServerTransport.
+# Maximum number of concurrent streams that each gRPC connection can handle
 max-concurrent-streams = "{{ .GRPC.MaxConcurrentStreams }}"
 
-# It is the max message size in bytes the server can receive.
+# Max message size in bytes the server can receive.
 max-recv-msg-size = "{{ .GRPC.MaxRecvMsgSize }}"
 
-# It is a duration for the amount of time after which an idle connection would be closed by sending a GoAway
+# Duration for the amount of time after which an idle connection would be closed by sending a GoAway.
 # Idleness duration is defined since the most recent time the number of outstanding RPCs became zero or the connection establishment.
 keepalive-max-connection-idle = "{{ .GRPC.KeepaliveMaxConnectionIdle }}"
 
-# It is a duration for the maximum amount of time a connection may exist before it will be closed by sending a GoAway.
+# Duration for the maximum amount of time a connection may exist before it will be closed by sending a GoAway.
 keepalive-max-connection-age = "{{ .GRPC.KeepaliveMaxConnectionAge }}"
 
-# It is an additive period after keepalive-max-connection-age after which the connection will be forcibly closed.
+# Additive period after keepalive-max-connection-age after which the connection will be forcibly closed.
 keepalive-max-connection-age-grace = "{{ .GRPC.KeepaliveMaxConnectionAgeGrace }}"
 
 # After a duration of this time if the server doesn't see any activity it pings the client to see if the transport is still alive.
@@ -97,11 +97,11 @@ keepalive-time = "{{ .GRPC.KeepaliveTime }}"
 # After having pinged for keepalive check, the server waits for a duration of Timeout and if no activity is seen even after that the connection is closed.
 keepalive-timeout = "{{ .GRPC.KeepaliveTimeout }}"
 
-# It is a set the throughput per second.
-# If the throughput per second is exceeded, the client waits for 'rate-limit-wait-timeout' time and receives a failure response.
+# Max throughput per second that the server can handle.
+# If the throughput per second is exceeded, the request is blocked for up to 'rate-limit-wait-timeout'. If the request is not processed after that, an error is returned to the client.
 rate-limits = "{{ .GRPC.RateLimits }}"
 
-# It is a set the waiting time when the throughput per second is exceeded (in seconds).
+# Timeout to wait if a request is blocked due to rate limiting.
 rate-limit-wait-timeout = "{{ .GRPC.RateLimitWaitTimeout }}"
 
 ###############################################################################
@@ -110,19 +110,19 @@ rate-limit-wait-timeout = "{{ .GRPC.RateLimitWaitTimeout }}"
 
 [api]
 
-# It is only available if grpc server is enabled.
+# Enable the REST API server (gRPC gateway)
 enabled = "{{ .API.Enabled }}"
 
-# It is the address of the API server.
+# TCP or UNIX socket address for the API server to listen on
 listen-addr = "{{ .API.ListenAddr }}"
 
-# It is the connection timeout setting of the client used for proxy with grpc.
+# Timeout for the API server to establish connections with the underlying gRPC server
 grpc-connect-timeout = "{{ .API.GrpcConnectTimeout }}"
 
-# It is the maximum duration before timing out writes of the response.
+# Maximum duration before timing out writes of the response.
 write-timeout = "{{ .API.WriteTimeout }}"
 
-# It is the maximum duration for reading the entire request, including the body.
+# Maximum duration for reading the entire request, including the body.
 read-timeout = "{{ .API.ReadTimeout }}"
 `
 
