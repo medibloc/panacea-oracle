@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"net/url"
 	"time"
 
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
@@ -58,16 +57,11 @@ func (s *GatewayServer) Run() error {
 }
 
 func createGrpcConnection(cfg *config.Config) (*grpc.ClientConn, error) {
-	grpcListenURL, err := url.Parse(cfg.GRPC.ListenAddr)
-	if err != nil {
-		return nil, fmt.Errorf("failed to parsing rest URL: %w", err)
-	}
-
-	log.Infof("Dial gateway to gRPC server > %s", grpcListenURL.Host)
+	log.Infof("Dial gateway to gRPC server > %s", cfg.GRPC.ListenAddr)
 
 	return grpc.DialContext(
 		context.Background(),
-		grpcListenURL.Host,
+		cfg.GRPC.ListenAddr,
 		grpc.WithConnectParams(grpc.ConnectParams{
 			Backoff:           backoff.DefaultConfig,
 			MinConnectTimeout: cfg.API.GrpcConnectTimeout,

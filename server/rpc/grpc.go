@@ -3,7 +3,6 @@ package rpc
 import (
 	"fmt"
 	"net"
-	"net/url"
 
 	"github.com/medibloc/panacea-oracle/server/rpc/interceptor/auth"
 	"github.com/medibloc/panacea-oracle/server/rpc/interceptor/limit"
@@ -91,14 +90,10 @@ func (s *GrpcServer) registerServices(registerServices ...func(service.Service, 
 
 func (s *GrpcServer) listenAndServe() error {
 	cfg := s.svc.Config().GRPC
-	grpcListenURL, err := url.Parse(cfg.ListenAddr)
-	if err != nil {
-		return fmt.Errorf("failed to parsing rest URL: %w", err)
-	}
 
-	log.Infof("gRPC server is started: %s", grpcListenURL.Host)
+	log.Infof("gRPC server is started: %s", cfg.ListenAddr)
 
-	lis, err := net.Listen(grpcListenURL.Scheme, grpcListenURL.Host)
+	lis, err := net.Listen("tcp", cfg.ListenAddr)
 	if err != nil {
 		return fmt.Errorf("failed to listen port for RPC: %w", err)
 	}
