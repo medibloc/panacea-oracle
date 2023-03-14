@@ -1,14 +1,12 @@
-package validation_test
+package validation
 
 import (
 	"testing"
 
-	"github.com/medibloc/panacea-oracle/validation"
 	"github.com/stretchr/testify/require"
 )
 
-// TestValidateJSONSchema tests for JSONSchema validation success
-func TestValidateJSONSchema(t *testing.T) {
+func TestSingleSchema(t *testing.T) {
 	schemaURI := "https://json.schemastore.org/github-issue-forms.json"
 	jsonInput := []byte(`{
 		"name": "This is a name",
@@ -16,8 +14,29 @@ func TestValidateJSONSchema(t *testing.T) {
 		"body": [{ "type": "markdown", "attributes": { "value": "val1" } }]
 	}`)
 
-	err := validation.ValidateJSONSchema(jsonInput, schemaURI)
+	schema := NewJSONSchema()
+	err := schema.ValidateJSONSchema(jsonInput, schemaURI)
 	require.NoError(t, err)
+
+	require.Equal(t, 1, schema.cache.Size())
+}
+
+func TestTwoSchema(t *testing.T) {
+	schemaURIs := []string{
+		"https://json.schemastore.org/cdk.json",
+		"https://json.schemastore.org/vsconfig.json",
+	}
+
+	schema := NewJSONSchema()
+	jsonInput := []byte(`{
+		"version":"1.0.0",
+		"components": "",
+		"versionReporting": true
+	}`)
+	err := schema.ValidateJSONSchemata(jsonInput, schemaURIs)
+	require.ErrorContains(t, err, "components: Invalid type. Expected: array, given: string")
+
+	require.Equal(t, 2, schema.cache.Size())
 }
 
 // TestValidateJSONSchemaInvalidDoc tests for document invalidation
@@ -27,7 +46,8 @@ func TestValidateJSONSchemaInvalidDoc(t *testing.T) {
 		"name": "This is a name"
 	}`) // the required fields `description` and `body` are missing
 
-	err := validation.ValidateJSONSchema(jsonInput, schemaURI)
+	schema := NewJSONSchema()
+	err := schema.ValidateJSONSchema(jsonInput, schemaURI)
 	require.Error(t, err)
 }
 
@@ -38,7 +58,8 @@ func TestValidateJSONSchemaInvalidJSON(t *testing.T) {
 		"name": "This JSON is messy",,,,,
 	}`)
 
-	err := validation.ValidateJSONSchema(jsonInput, schemaURI)
+	schema := NewJSONSchema()
+	err := schema.ValidateJSONSchema(jsonInput, schemaURI)
 	require.Error(t, err)
 }
 
@@ -51,6 +72,7 @@ func TestValidateJSONSchemaUnknownSchemaURI(t *testing.T) {
 		"body": [{ "type": "markdown", "attributes": { "value": "val1" } }]
 	}`)
 
-	err := validation.ValidateJSONSchema(jsonInput, schemaURI)
+	schema := NewJSONSchema()
+	err := schema.ValidateJSONSchema(jsonInput, schemaURI)
 	require.Error(t, err)
 }

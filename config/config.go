@@ -92,7 +92,7 @@ func DefaultConfig() *Config {
 			LightClientLogLevel:     "error",
 		},
 		GRPC: GRPCConfig{
-			ListenAddr:                     "tcp://127.0.0.1:9090",
+			ListenAddr:                     "127.0.0.1:9090",
 			ConnectionTimeout:              time.Minute * 2,
 			MaxConnections:                 50,
 			MaxConcurrentStreams:           0,
@@ -107,7 +107,7 @@ func DefaultConfig() *Config {
 		},
 		API: APIConfig{
 			Enabled:            true,
-			ListenAddr:         "http://127.0.0.1:8080",
+			ListenAddr:         "127.0.0.1:8080",
 			GrpcConnectTimeout: time.Second * 10,
 			WriteTimeout:       time.Second * 60,
 			ReadTimeout:        time.Second * 15,

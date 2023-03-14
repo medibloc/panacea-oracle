@@ -40,15 +40,10 @@ func NewGatewayServer(cfg *config.Config) (*GatewayServer, error) {
 		return nil, fmt.Errorf("failed to register service handlers: %w", err)
 	}
 
-	restListenURL, err := url.Parse(cfg.API.ListenAddr)
-	if err != nil {
-		return nil, fmt.Errorf("failed to parsing rest URL: %w", err)
-	}
-
 	return &GatewayServer{
 		Server: &http.Server{
 			Handler:      mux,
-			Addr:         restListenURL.Host,
+			Addr:         cfg.API.ListenAddr,
 			WriteTimeout: cfg.API.WriteTimeout,
 			ReadTimeout:  cfg.API.ReadTimeout,
 		},

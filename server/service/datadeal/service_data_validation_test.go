@@ -9,6 +9,7 @@ import (
 	"github.com/btcsuite/btcd/btcec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	datadealtypes "github.com/medibloc/panacea-core/v2/x/datadeal/types"
 	"github.com/medibloc/panacea-oracle/crypto"
@@ -17,6 +18,7 @@ import (
 	datadeal "github.com/medibloc/panacea-oracle/pb/datadeal/v0"
 	"github.com/medibloc/panacea-oracle/server/rpc/interceptor/auth"
 	"github.com/medibloc/panacea-oracle/server/service/key"
+	"github.com/medibloc/panacea-oracle/validation"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -89,7 +91,7 @@ func (suite *dataDealServiceServerTestSuite) TestValidateDataSuccess() {
 	ctx = context.WithValue(ctx, auth.ContextKeyAuthenticatedAccountAddress{}, req.ProviderAddress)
 
 	// request validation for provider data
-	server := dataDealServiceServer{Service: suite.Svc}
+	server := dataDealServiceServer{Service: suite.Svc, schema: validation.NewJSONSchema()}
 	res, err := server.ValidateData(ctx, req)
 	suite.Require().NoError(err)
 
@@ -118,196 +120,196 @@ func (suite *dataDealServiceServerTestSuite) TestValidateDataSuccess() {
 	suite.Require().Equal(jsonDataBz, decryptedData)
 }
 
-//func (suite *dataDealServiceServerTestSuite) TestValidateDataInvalidRequest() {
-//	req := &datadeal.ValidateDataRequest{
-//		DealId:          1,
-//		ProviderAddress: "invalid_provider_address",
-//		EncryptedData:   nil,
-//		DataHash:        "",
-//	}
-//
-//	ctx := context.Background()
-//
-//	// request validation for provider data
-//	server := dataDealServiceServer{Service: suite.Svc}
-//	res, err := server.ValidateData(ctx, req)
-//	suite.Require().Nil(res)
-//	suite.Require().ErrorContains(err, "invalid provider address:")
-//
-//	req.ProviderAddress = panacea.GetAddressFromPrivateKey(suite.providerAccPrivKey)
-//	res, err = server.ValidateData(ctx, req)
-//	suite.Require().Nil(res)
-//	suite.Require().ErrorContains(err, "encrypted data is empty in request")
-//
-//	req.EncryptedData = []byte("encryptedData") // only check length
-//	res, err = server.ValidateData(ctx, req)
-//	suite.Require().Nil(res)
-//	suite.Require().ErrorContains(err, "data hash is empty in request")
-//
-//	req.DataHash = "dataHash"
-//	res, err = server.ValidateData(ctx, req)
-//	suite.Require().Nil(res)
-//	suite.Require().ErrorContains(err, "failed to get request address")
-//
-//	ctx = context.WithValue(ctx, auth.ContextKeyAuthenticatedAccountAddress{}, "invalid provider address")
-//	res, err = server.ValidateData(ctx, req)
-//	suite.Require().Nil(res)
-//	suite.Require().ErrorContains(err, "data provider and token issuer do not matched")
-//}
-//
-//func (suite *dataDealServiceServerTestSuite) TestValidateDataDealStatusIsNotActive() {
-//	// set deal
-//	suite.deal.Status = datadealtypes.DEAL_STATUS_INACTIVE
-//
-//	req := &datadeal.ValidateDataRequest{
-//		DealId:          1,
-//		ProviderAddress: panacea.GetAddressFromPrivateKey(suite.providerAccPrivKey),
-//		EncryptedData:   []byte("encryptedData"),
-//		DataHash:        "dataHash",
-//	}
-//
-//	// add authentication in header
-//	ctx := context.Background()
-//	ctx = context.WithValue(ctx, auth.ContextKeyAuthenticatedAccountAddress{}, req.ProviderAddress)
-//
-//	// request validation for provider data
-//	server := dataDealServiceServer{Service: suite.Svc}
-//	res, err := server.ValidateData(ctx, req)
-//	suite.Require().Nil(res)
-//	suite.Require().ErrorContains(err, "cannot provide data to INACTIVE/COMPLETED deal")
-//
-//	suite.deal.Status = datadealtypes.DEAL_STATUS_COMPLETED
-//	res, err = server.ValidateData(ctx, req)
-//	suite.Require().Nil(res)
-//	suite.Require().ErrorContains(err, "cannot provide data to INACTIVE/COMPLETED deal")
-//}
-//
-//func (suite *dataDealServiceServerTestSuite) TestValidateDataNotFoundProviderPublicKey() {
-//	req := &datadeal.ValidateDataRequest{
-//		DealId:          1,
-//		ProviderAddress: panacea.GetAddressFromPrivateKey(suite.providerAccPrivKey),
-//		EncryptedData:   []byte("encryptedData"),
-//		DataHash:        "dataHash",
-//	}
-//
-//	// add authentication in header
-//	ctx := context.Background()
-//	ctx = context.WithValue(ctx, auth.ContextKeyAuthenticatedAccountAddress{}, req.ProviderAddress)
-//
-//	// set provider public key to nil
-//	suite.QueryClient.Account = authtypes.NewBaseAccount(
-//		sdk.AccAddress(suite.providerAccPubKey.Address()),
-//		nil,
-//		1,
-//		1,
-//	)
-//
-//	// request validation for provider data
-//	server := dataDealServiceServer{Service: suite.Svc}
-//	res, err := server.ValidateData(ctx, req)
-//	suite.Require().Nil(res)
-//	suite.Require().ErrorContains(err, "failed to get public key of provider's account")
-//}
-//
-//func (suite *dataDealServiceServerTestSuite) TestValidateDataInvalidProviderEncryptedData() {
-//	req := &datadeal.ValidateDataRequest{
-//		DealId:          1,
-//		ProviderAddress: panacea.GetAddressFromPrivateKey(suite.providerAccPrivKey),
-//		EncryptedData:   []byte("encryptedData"),
-//		DataHash:        "dataHash",
-//	}
-//
-//	// add authentication in header
-//	ctx := context.Background()
-//	ctx = context.WithValue(ctx, auth.ContextKeyAuthenticatedAccountAddress{}, req.ProviderAddress)
-//
-//	// request validation for provider data
-//	server := dataDealServiceServer{Service: suite.Svc}
-//	res, err := server.ValidateData(ctx, req)
-//	suite.Require().Nil(res)
-//	suite.Require().ErrorContains(err, "failed to decrypt data")
-//}
-//
-//func (suite *dataDealServiceServerTestSuite) TestValidateDataNotMatchedDataHash() {
-//	// provide data
-//	jsonDataBz := []byte(
-//		`
-//		{
-//			"name": "name",
-//			"description": "description",
-//			"body": [{ "type": "markdown", "attributes": { "value": "val1" } }]
-//		}
-//		`)
-//
-//	// encrypted provider data with provider private key and oracle public key
-//	providerPrivKey, _ := btcec.PrivKeyFromBytes(btcec.S256(), suite.providerAccPrivKey.Bytes())
-//
-//	sharedKey := crypto.DeriveSharedKey(
-//		providerPrivKey,
-//		suite.OraclePubKey,
-//		crypto.KDFSHA256,
-//	)
-//
-//	encryptedData, err := crypto.Encrypt(sharedKey, nil, jsonDataBz)
-//	suite.Require().NoError(err)
-//
-//	req := &datadeal.ValidateDataRequest{
-//		DealId:          1,
-//		ProviderAddress: panacea.GetAddressFromPrivateKey(suite.providerAccPrivKey),
-//		EncryptedData:   encryptedData,
-//		DataHash:        "invalid data hash",
-//	}
-//
-//	// add authentication in header
-//	ctx := context.Background()
-//	ctx = context.WithValue(ctx, auth.ContextKeyAuthenticatedAccountAddress{}, req.ProviderAddress)
-//
-//	// request validation for provider data
-//	server := dataDealServiceServer{Service: suite.Svc}
-//	res, err := server.ValidateData(ctx, req)
-//	suite.Require().Nil(res)
-//	suite.Require().ErrorContains(err, "data hash mismatch")
-//}
-//
-//func (suite *dataDealServiceServerTestSuite) TestValidateDataInvalidJSONSchema() {
-//	// provide data
-//	jsonDataBz := []byte(
-//		`
-//		{
-//			"invalid_key_name": "name",
-//			"invalid_key_description": "description",
-//			"invalid_key_body": [{ "type": "markdown", "attributes": { "value": "val1" } }]
-//		}
-//		`)
-//
-//	// encrypted provider data with provider private key and oracle public key
-//	providerPrivKey, _ := btcec.PrivKeyFromBytes(btcec.S256(), suite.providerAccPrivKey.Bytes())
-//
-//	sharedKey := crypto.DeriveSharedKey(
-//		providerPrivKey,
-//		suite.OraclePrivKey.PubKey(),
-//		crypto.KDFSHA256,
-//	)
-//
-//	encryptedData, err := crypto.Encrypt(sharedKey, nil, jsonDataBz)
-//	suite.Require().NoError(err)
-//
-//	dataHash := sha256.Sum256(jsonDataBz)
-//
-//	req := &datadeal.ValidateDataRequest{
-//		DealId:          1,
-//		ProviderAddress: panacea.GetAddressFromPrivateKey(suite.providerAccPrivKey),
-//		EncryptedData:   encryptedData,
-//		DataHash:        hex.EncodeToString(dataHash[:]),
-//	}
-//
-//	// add authentication in header
-//	ctx := context.Background()
-//	ctx = context.WithValue(ctx, auth.ContextKeyAuthenticatedAccountAddress{}, req.ProviderAddress)
-//
-//	// request validation for provider data
-//	server := dataDealServiceServer{Service: suite.Svc}
-//	res, err := server.ValidateData(ctx, req)
-//	suite.Require().Nil(res)
-//	suite.Require().ErrorContains(err, "failed to validate data")
-//}
+func (suite *dataDealServiceServerTestSuite) TestValidateDataInvalidRequest() {
+	req := &datadeal.ValidateDataRequest{
+		DealId:          1,
+		ProviderAddress: "invalid_provider_address",
+		EncryptedData:   nil,
+		DataHash:        "",
+	}
+
+	ctx := context.Background()
+
+	// request validation for provider data
+	server := dataDealServiceServer{Service: suite.Svc, schema: validation.NewJSONSchema()}
+	res, err := server.ValidateData(ctx, req)
+	suite.Require().Nil(res)
+	suite.Require().ErrorContains(err, "invalid provider address:")
+
+	req.ProviderAddress = panacea.GetAddressFromPrivateKey(suite.providerAccPrivKey)
+	res, err = server.ValidateData(ctx, req)
+	suite.Require().Nil(res)
+	suite.Require().ErrorContains(err, "encrypted data is empty in request")
+
+	req.EncryptedData = []byte("encryptedData") // only check length
+	res, err = server.ValidateData(ctx, req)
+	suite.Require().Nil(res)
+	suite.Require().ErrorContains(err, "data hash is empty in request")
+
+	req.DataHash = "dataHash"
+	res, err = server.ValidateData(ctx, req)
+	suite.Require().Nil(res)
+	suite.Require().ErrorContains(err, "failed to get request address")
+
+	ctx = context.WithValue(ctx, auth.ContextKeyAuthenticatedAccountAddress{}, "invalid provider address")
+	res, err = server.ValidateData(ctx, req)
+	suite.Require().Nil(res)
+	suite.Require().ErrorContains(err, "data provider and token issuer do not matched")
+}
+
+func (suite *dataDealServiceServerTestSuite) TestValidateDataDealStatusIsNotActive() {
+	// set deal
+	suite.deal.Status = datadealtypes.DEAL_STATUS_INACTIVE
+
+	req := &datadeal.ValidateDataRequest{
+		DealId:          1,
+		ProviderAddress: panacea.GetAddressFromPrivateKey(suite.providerAccPrivKey),
+		EncryptedData:   []byte("encryptedData"),
+		DataHash:        "dataHash",
+	}
+
+	// add authentication in header
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, auth.ContextKeyAuthenticatedAccountAddress{}, req.ProviderAddress)
+
+	// request validation for provider data
+	server := dataDealServiceServer{Service: suite.Svc, schema: validation.NewJSONSchema()}
+	res, err := server.ValidateData(ctx, req)
+	suite.Require().Nil(res)
+	suite.Require().ErrorContains(err, "cannot provide data to INACTIVE/COMPLETED deal")
+
+	suite.deal.Status = datadealtypes.DEAL_STATUS_COMPLETED
+	res, err = server.ValidateData(ctx, req)
+	suite.Require().Nil(res)
+	suite.Require().ErrorContains(err, "cannot provide data to INACTIVE/COMPLETED deal")
+}
+
+func (suite *dataDealServiceServerTestSuite) TestValidateDataNotFoundProviderPublicKey() {
+	req := &datadeal.ValidateDataRequest{
+		DealId:          1,
+		ProviderAddress: panacea.GetAddressFromPrivateKey(suite.providerAccPrivKey),
+		EncryptedData:   []byte("encryptedData"),
+		DataHash:        "dataHash",
+	}
+
+	// add authentication in header
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, auth.ContextKeyAuthenticatedAccountAddress{}, req.ProviderAddress)
+
+	// set provider public key to nil
+	suite.QueryClient.Account = authtypes.NewBaseAccount(
+		sdk.AccAddress(suite.providerAccPubKey.Address()),
+		nil,
+		1,
+		1,
+	)
+
+	// request validation for provider data
+	server := dataDealServiceServer{Service: suite.Svc, schema: validation.NewJSONSchema()}
+	res, err := server.ValidateData(ctx, req)
+	suite.Require().Nil(res)
+	suite.Require().ErrorContains(err, "failed to get public key of provider's account")
+}
+
+func (suite *dataDealServiceServerTestSuite) TestValidateDataInvalidProviderEncryptedData() {
+	req := &datadeal.ValidateDataRequest{
+		DealId:          1,
+		ProviderAddress: panacea.GetAddressFromPrivateKey(suite.providerAccPrivKey),
+		EncryptedData:   []byte("encryptedData"),
+		DataHash:        "dataHash",
+	}
+
+	// add authentication in header
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, auth.ContextKeyAuthenticatedAccountAddress{}, req.ProviderAddress)
+
+	// request validation for provider data
+	server := dataDealServiceServer{Service: suite.Svc, schema: validation.NewJSONSchema()}
+	res, err := server.ValidateData(ctx, req)
+	suite.Require().Nil(res)
+	suite.Require().ErrorContains(err, "failed to decrypt data")
+}
+
+func (suite *dataDealServiceServerTestSuite) TestValidateDataNotMatchedDataHash() {
+	// provide data
+	jsonDataBz := []byte(
+		`
+		{
+			"name": "name",
+			"description": "description",
+			"body": [{ "type": "markdown", "attributes": { "value": "val1" } }]
+		}
+		`)
+
+	// encrypted provider data with provider private key and oracle public key
+	providerPrivKey, _ := btcec.PrivKeyFromBytes(btcec.S256(), suite.providerAccPrivKey.Bytes())
+
+	sharedKey := crypto.DeriveSharedKey(
+		providerPrivKey,
+		suite.OraclePubKey,
+		crypto.KDFSHA256,
+	)
+
+	encryptedData, err := crypto.Encrypt(sharedKey, nil, jsonDataBz)
+	suite.Require().NoError(err)
+
+	req := &datadeal.ValidateDataRequest{
+		DealId:          1,
+		ProviderAddress: panacea.GetAddressFromPrivateKey(suite.providerAccPrivKey),
+		EncryptedData:   encryptedData,
+		DataHash:        "invalid data hash",
+	}
+
+	// add authentication in header
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, auth.ContextKeyAuthenticatedAccountAddress{}, req.ProviderAddress)
+
+	// request validation for provider data
+	server := dataDealServiceServer{Service: suite.Svc}
+	res, err := server.ValidateData(ctx, req)
+	suite.Require().Nil(res)
+	suite.Require().ErrorContains(err, "data hash mismatch")
+}
+
+func (suite *dataDealServiceServerTestSuite) TestValidateDataInvalidJSONSchema() {
+	// provide data
+	jsonDataBz := []byte(
+		`
+		{
+			"invalid_key_name": "name",
+			"invalid_key_description": "description",
+			"invalid_key_body": [{ "type": "markdown", "attributes": { "value": "val1" } }]
+		}
+		`)
+
+	// encrypted provider data with provider private key and oracle public key
+	providerPrivKey, _ := btcec.PrivKeyFromBytes(btcec.S256(), suite.providerAccPrivKey.Bytes())
+
+	sharedKey := crypto.DeriveSharedKey(
+		providerPrivKey,
+		suite.OraclePrivKey.PubKey(),
+		crypto.KDFSHA256,
+	)
+
+	encryptedData, err := crypto.Encrypt(sharedKey, nil, jsonDataBz)
+	suite.Require().NoError(err)
+
+	dataHash := sha256.Sum256(jsonDataBz)
+
+	req := &datadeal.ValidateDataRequest{
+		DealId:          1,
+		ProviderAddress: panacea.GetAddressFromPrivateKey(suite.providerAccPrivKey),
+		EncryptedData:   encryptedData,
+		DataHash:        hex.EncodeToString(dataHash[:]),
+	}
+
+	// add authentication in header
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, auth.ContextKeyAuthenticatedAccountAddress{}, req.ProviderAddress)
+
+	// request validation for provider data
+	server := dataDealServiceServer{Service: suite.Svc, schema: validation.NewJSONSchema()}
+	res, err := server.ValidateData(ctx, req)
+	suite.Require().Nil(res)
+	suite.Require().ErrorContains(err, "failed to validate data")
+}

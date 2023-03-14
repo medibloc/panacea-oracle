@@ -91,7 +91,7 @@ func (s *dataDealServiceServer) ValidateData(ctx context.Context, req *datadeal.
 	}
 
 	if len(deal.DataSchema) > 0 {
-		if err := validation.ValidateJSONSchemata(decryptedData, deal.DataSchema); err != nil {
+		if err := s.schema.ValidateJSONSchemata(decryptedData, deal.DataSchema); err != nil {
 			log.Debugf("failed to validate data: %s", err.Error())
 			return nil, fmt.Errorf("failed to validate data")
 		}

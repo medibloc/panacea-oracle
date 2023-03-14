@@ -2,6 +2,7 @@ package server
 
 import (
 	"github.com/medibloc/panacea-oracle/server/rpc"
+
 	"github.com/medibloc/panacea-oracle/service"
 	log "github.com/sirupsen/logrus"
 )
