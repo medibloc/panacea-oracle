@@ -3,6 +3,8 @@ package rpc
 import (
 	"context"
 	"fmt"
+	"golang.org/x/net/netutil"
+	"net"
 	"net/http"
 	"time"
 
@@ -18,13 +20,14 @@ import (
 
 type GatewayServer struct {
 	*http.Server
-	grpcConn *grpc.ClientConn
+	grpcConn       *grpc.ClientConn
+	maxConnections int
 }
 
-func NewGatewayServer(cfg *config.Config) (*GatewayServer, error) {
+func NewGatewayServer(conf *config.Config) (*GatewayServer, error) {
 	mux := runtime.NewServeMux()
 
-	conn, err := createGrpcConnection(cfg)
+	conn, err := createGrpcConnection(conf)
 	if err != nil {
 		return nil, err
 	}
@@ -41,30 +44,25 @@ func NewGatewayServer(cfg *config.Config) (*GatewayServer, error) {
 
 	return &GatewayServer{
 		Server: &http.Server{
-			Handler:      mux,
-			Addr:         cfg.API.ListenAddr,
-			WriteTimeout: cfg.API.WriteTimeout,
-			ReadTimeout:  cfg.API.ReadTimeout,
+			Handler:      appendPreHandlers(mux, conf),
+			Addr:         conf.API.ListenAddr,
+			WriteTimeout: conf.API.WriteTimeout,
+			ReadTimeout:  conf.API.ReadTimeout,
 		},
-		grpcConn: conn,
+		grpcConn:       conn,
+		maxConnections: conf.API.MaxConnections,
 	}, nil
 }
 
-func (s *GatewayServer) Run() error {
-	log.Infof("API server is started: %s", s.Addr)
-
-	return s.ListenAndServe()
-}
-
-func createGrpcConnection(cfg *config.Config) (*grpc.ClientConn, error) {
-	log.Infof("Dial gateway to gRPC server > %s", cfg.GRPC.ListenAddr)
+func createGrpcConnection(conf *config.Config) (*grpc.ClientConn, error) {
+	log.Infof("Dial gateway to gRPC server > %s", conf.GRPC.ListenAddr)
 
 	return grpc.DialContext(
 		context.Background(),
-		cfg.GRPC.ListenAddr,
+		conf.GRPC.ListenAddr,
 		grpc.WithConnectParams(grpc.ConnectParams{
 			Backoff:           backoff.DefaultConfig,
-			MinConnectTimeout: cfg.API.GrpcConnectTimeout,
+			MinConnectTimeout: conf.API.GrpcConnectTimeout,
 		}),
 		grpc.WithInsecure(),
 	)
@@ -80,6 +78,37 @@ func registerServiceHandlers(mux *runtime.ServeMux, conn *grpc.ClientConn, handl
 		}
 	}
 	return nil
+}
+
+// appendPreHandlers implements handlers that should be processed before every request
+func appendPreHandlers(handler http.Handler, conf *config.Config) http.Handler {
+	return appendLimitRequestBodySizeHandler(handler, conf.API.MaxRequestBodySize)
+}
+
+// appendLimitRequestBodySizeHandler limits the request body size.
+// This is done by first constraining to the ContentLength of the request header,
+// and then reading the actual Body to constraint it.
+func appendLimitRequestBodySizeHandler(handler http.Handler, maxRequestBodySize int64) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.ContentLength > maxRequestBodySize {
+			http.Error(w, "request body too large", http.StatusBadRequest)
+			return
+		}
+		r.Body = http.MaxBytesReader(w, r.Body, maxRequestBodySize)
+		defer r.Body.Close()
+
+		handler.ServeHTTP(w, r)
+	})
+}
+
+func (s *GatewayServer) Run() error {
+	lis, err := net.Listen("tcp", s.Addr)
+	if err != nil {
+		return err
+	}
+
+	log.Infof("API server is started: %s", s.Addr)
+	return s.Serve(netutil.LimitListener(lis, s.maxConnections))
 }
 
 func (s *GatewayServer) Close() error {

@@ -22,22 +22,22 @@ type GrpcServer struct {
 }
 
 func NewGrpcServer(svc service.Service) *GrpcServer {
-	cfg := svc.Config().GRPC
+	conf := svc.Config().GRPC
 
 	unaryInterceptor, streamInterceptor := createInterceptors(svc)
 
 	grpcSvr := grpc.NewServer(
 		unaryInterceptor,
 		streamInterceptor,
-		grpc.ConnectionTimeout(cfg.ConnectionTimeout),
-		grpc.MaxConcurrentStreams(uint32(cfg.MaxConcurrentStreams)),
-		grpc.MaxRecvMsgSize(cfg.MaxRecvMsgSize),
+		grpc.ConnectionTimeout(conf.ConnectionTimeout),
+		grpc.MaxConcurrentStreams(uint32(conf.MaxConcurrentStreams)),
+		grpc.MaxRecvMsgSize(conf.MaxRecvMsgSize),
 		grpc.KeepaliveParams(keepalive.ServerParameters{
-			MaxConnectionIdle:     cfg.KeepaliveMaxConnectionIdle,
-			MaxConnectionAge:      cfg.KeepaliveMaxConnectionAge,
-			MaxConnectionAgeGrace: cfg.KeepaliveMaxConnectionAgeGrace,
-			Time:                  cfg.KeepaliveTime,
-			Timeout:               cfg.KeepaliveTimeout,
+			MaxConnectionIdle:     conf.KeepaliveMaxConnectionIdle,
+			MaxConnectionAge:      conf.KeepaliveMaxConnectionAge,
+			MaxConnectionAgeGrace: conf.KeepaliveMaxConnectionAgeGrace,
+			Time:                  conf.KeepaliveTime,
+			Timeout:               conf.KeepaliveTimeout,
 		}),
 	)
 
@@ -89,14 +89,14 @@ func (s *GrpcServer) registerServices(registerServices ...func(service.Service, 
 }
 
 func (s *GrpcServer) listenAndServe() error {
-	cfg := s.svc.Config().GRPC
+	conf := s.svc.Config().GRPC
 
-	log.Infof("gRPC server is started: %s", cfg.ListenAddr)
+	log.Infof("gRPC server is started: %s", conf.ListenAddr)
 
-	lis, err := net.Listen("tcp", cfg.ListenAddr)
+	lis, err := net.Listen("tcp", conf.ListenAddr)
 	if err != nil {
 		return fmt.Errorf("failed to listen port for RPC: %w", err)
 	}
 
-	return s.grpcServer.Serve(netutil.LimitListener(lis, cfg.MaxConnections))
+	return s.grpcServer.Serve(netutil.LimitListener(lis, conf.MaxConnections))
 }

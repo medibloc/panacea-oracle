@@ -15,7 +15,6 @@ require (
 	github.com/hyperledger/aries-framework-go v0.1.9-0.20230222063211-02f80847168a
 	github.com/lestrrat-go/jwx/v2 v2.0.8
 	github.com/medibloc/panacea-core/v2 v2.1.0-alpha.3.0.20230314060852-84f59719397e
-	github.com/medibloc/vc-sdk v0.0.3-0.20230228035038-289c40e3b81c
 	github.com/ory/dockertest/v3 v3.9.1
 	github.com/sirupsen/logrus v1.9.0
 	github.com/spf13/cobra v1.6.1
@@ -111,6 +110,7 @@ require (
 	github.com/magiconair/properties v1.8.6 // indirect
 	github.com/mattn/go-isatty v0.0.16 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.2-0.20181231171920-c182affec369 // indirect
+	github.com/medibloc/vc-sdk v0.0.3-0.20230314060916-98d76bb515e4 // indirect
 	github.com/mimoo/StrobeGo v0.0.0-20210601165009-122bf33a46e0 // indirect
 	github.com/minio/blake2b-simd v0.0.0-20160723061019-3f5f724cb5b1 // indirect
 	github.com/minio/sha256-simd v0.1.1 // indirect
