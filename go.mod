@@ -14,7 +14,7 @@ require (
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.15.0
 	github.com/hyperledger/aries-framework-go v0.1.9-0.20230222063211-02f80847168a
 	github.com/lestrrat-go/jwx/v2 v2.0.8
-	github.com/medibloc/panacea-core/v2 v2.1.0-alpha.3.0.20230309074453-651a94b4a998
+	github.com/medibloc/panacea-core/v2 v2.1.0-alpha.3.0.20230314060852-84f59719397e
 	github.com/medibloc/vc-sdk v0.0.3-0.20230228035038-289c40e3b81c
 	github.com/ory/dockertest/v3 v3.9.1
 	github.com/sirupsen/logrus v1.9.0
@@ -177,7 +177,6 @@ require (
 
 replace (
 	github.com/cosmos/cosmos-sdk => github.com/medibloc/cosmos-sdk v0.45.12-panacea.1
-	github.com/cosmos/ledger-go => github.com/cosmos/ledger-go v0.9.3
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 	github.com/tendermint/tendermint => github.com/informalsystems/tendermint v0.34.24
 	google.golang.org/grpc => google.golang.org/grpc v1.33.2

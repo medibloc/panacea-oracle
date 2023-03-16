@@ -123,7 +123,8 @@ func (suite *TestSuite) PanaceaEndpoint(scheme string, port int) string {
 }
 
 func (suite *TestSuite) Prepare(chainID string) (*panacea.TrustedBlockInfo, *config.Config) {
-	hash, height, err := rest.QueryLatestBlock(suite.PanaceaEndpoint("http", 1317))
+	// Wait until height 3. The reason for this is that queryHeight must be at least 2.
+	hash, height, err := suite.waitAndGetBlock(3)
 	require.NoError(suite.T(), err)
 
 	trustedBlockInfo := &panacea.TrustedBlockInfo{
@@ -142,4 +143,18 @@ func (suite *TestSuite) Prepare(chainID string) (*panacea.TrustedBlockInfo, *con
 	}
 
 	return trustedBlockInfo, conf
+}
+
+func (suite *TestSuite) waitAndGetBlock(waitHeight int64) ([]byte, int64, error) {
+	for {
+		hash, height, err := rest.QueryLatestBlock(suite.PanaceaEndpoint("http", 1317))
+		if err != nil {
+			return nil, 0, err
+		}
+		if height < waitHeight {
+			time.Sleep(time.Second * 1)
+			continue
+		}
+		return hash, height, nil
+	}
 }

@@ -3,11 +3,9 @@ package rpc
 import (
 	"fmt"
 	"net"
-	"net/url"
 
 	"github.com/medibloc/panacea-oracle/server/rpc/interceptor/auth"
 	"github.com/medibloc/panacea-oracle/server/rpc/interceptor/limit"
-	"github.com/medibloc/panacea-oracle/server/rpc/interceptor/query"
 	"github.com/medibloc/panacea-oracle/server/service/datadeal"
 	"github.com/medibloc/panacea-oracle/server/service/key"
 	"github.com/medibloc/panacea-oracle/server/service/status"
@@ -51,18 +49,15 @@ func NewGrpcServer(svc service.Service) *GrpcServer {
 
 func createInterceptors(svc service.Service) (grpc.ServerOption, grpc.ServerOption) {
 	jwtAuthInterceptor := auth.NewJWTAuthInterceptor(svc.QueryClient())
-	queryInterceptor := query.NewQueryInterceptor(svc.QueryClient())
 	rateLimitInterceptor := limit.NewRateLimitInterceptor(svc.Config().GRPC)
 
 	return grpc.ChainUnaryInterceptor(
 			rateLimitInterceptor.UnaryServerInterceptor(),
 			jwtAuthInterceptor.UnaryServerInterceptor(),
-			queryInterceptor.UnaryServerInterceptor(),
 		),
 		grpc.ChainStreamInterceptor(
 			rateLimitInterceptor.StreamServerInterceptor(),
 			jwtAuthInterceptor.StreamServerInterceptor(),
-			queryInterceptor.StreamServerInterceptor(),
 		)
 
 }
@@ -95,14 +90,10 @@ func (s *GrpcServer) registerServices(registerServices ...func(service.Service, 
 
 func (s *GrpcServer) listenAndServe() error {
 	cfg := s.svc.Config().GRPC
-	grpcListenURL, err := url.Parse(cfg.ListenAddr)
-	if err != nil {
-		return fmt.Errorf("failed to parsing rest URL: %w", err)
-	}
 
-	log.Infof("gRPC server is started: %s", grpcListenURL.Host)
+	log.Infof("gRPC server is started: %s", cfg.ListenAddr)
 
-	lis, err := net.Listen(grpcListenURL.Scheme, grpcListenURL.Host)
+	lis, err := net.Listen("tcp", cfg.ListenAddr)
 	if err != nil {
 		return fmt.Errorf("failed to listen port for RPC: %w", err)
 	}

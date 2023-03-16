@@ -51,6 +51,7 @@ type QueryClient interface {
 	GetDeal(context.Context, uint64) (*datadealtypes.Deal, error)
 	GetConsent(context.Context, uint64, string) (*datadealtypes.Consent, error)
 	GetLastBlockHeight(context.Context) (int64, error)
+	GetCachedLastBlockHeight() int64
 	GetOracleUpgrade(context.Context, string, string) (*oracletypes.OracleUpgrade, error)
 	GetOracleUpgradeInfo(context.Context) (*oracletypes.OracleUpgradeInfo, error)
 	GetOracle(context.Context, string) (*oracletypes.Oracle, error)
@@ -58,7 +59,8 @@ type QueryClient interface {
 }
 
 const (
-	trustedPeriod = 2 * 7 * 24 * time.Hour
+	trustedPeriod       = 2 * 7 * 24 * time.Hour
+	refreshIntervalTime = time.Second * 3
 )
 
 type TrustedBlockInfo struct {
@@ -69,12 +71,13 @@ type TrustedBlockInfo struct {
 var _ QueryClient = &verifiedQueryClient{}
 
 type verifiedQueryClient struct {
-	rpcClient   *rpchttp.HTTP
-	lightClient *light.Client
-	db          dbm.DB
-	mutex       *sync.Mutex
-	cdc         *codec.ProtoCodec
-	aminoCdc    *codec.AminoCodec
+	rpcClient             *rpchttp.HTTP
+	lightClient           *light.Client
+	db                    dbm.DB
+	mutex                 *sync.Mutex
+	cdc                   *codec.ProtoCodec
+	aminoCdc              *codec.AminoCodec
+	cachedLastBlockHeight int64
 }
 
 // makeInterfaceRegistry
@@ -165,24 +168,24 @@ func NewVerifiedQueryClientWithDB(ctx context.Context, config *config.Config, in
 		return nil, err
 	}
 
-	// call refresh every minute
-	go func() {
-		for {
-			time.Sleep(1 * time.Minute)
-			if err := refresh(ctx, lc, trustedPeriod, &lcMutex); err != nil {
-				log.Errorf("light client refresh error: %v", err)
-			}
-		}
-	}()
-
-	return &verifiedQueryClient{
+	queryClient := &verifiedQueryClient{
 		rpcClient:   rpcClient,
 		lightClient: lc,
 		db:          db,
 		mutex:       &lcMutex,
 		cdc:         codec.NewProtoCodec(makeInterfaceRegistry()),
 		aminoCdc:    codec.NewAminoCodec(codec.NewLegacyAmino()),
-	}, nil
+	}
+
+	// If the last height is not present when oracle initially start the server, all queries will fail.
+	// So if Oracle doesn't get the block information when it first starts the server, it will fail.
+	if err := queryClient.lastBlockCaching(); err != nil {
+		return nil, err
+	}
+
+	go queryClient.startSchedulingLastBlockCaching()
+
+	return queryClient, nil
 }
 
 func newTMLogger(conf *config.Config) tmlog.Logger {
@@ -200,53 +203,47 @@ func newTMLogger(conf *config.Config) tmlog.Logger {
 	return logger
 }
 
-func (q verifiedQueryClient) safeUpdateLightClient(ctx context.Context) (*tmtypes.LightBlock, error) {
+func (q *verifiedQueryClient) lastBlockCaching() error {
+	lastHeight, err := q.GetLastBlockHeight(context.Background())
+
+	if err != nil {
+		return fmt.Errorf("failed to refresh last block. %w", err)
+	}
+	log.Debugf("Refresh last block. Height(%d)", lastHeight)
+	q.cachedLastBlockHeight = lastHeight
+
+	return nil
+}
+
+// startSchedulingLastBlockCaching updates the LightClient with the last block information and stores the height of this block.
+func (q *verifiedQueryClient) startSchedulingLastBlockCaching() {
+	for {
+		time.Sleep(refreshIntervalTime)
+
+		if err := q.lastBlockCaching(); err != nil {
+			log.Error(err)
+		}
+	}
+}
+
+func (q *verifiedQueryClient) safeUpdateLightClient(ctx context.Context) (*tmtypes.LightBlock, error) {
 	q.mutex.Lock()
 	defer q.mutex.Unlock()
 
 	return q.lightClient.Update(ctx, time.Now())
 }
 
-func (q verifiedQueryClient) safeVerifyLightBlockAtHeight(ctx context.Context, height int64) (*tmtypes.LightBlock, error) {
+func (q *verifiedQueryClient) safeVerifyLightBlockAtHeight(ctx context.Context, height int64) (*tmtypes.LightBlock, error) {
 	q.mutex.Lock()
 	defer q.mutex.Unlock()
 
 	return q.lightClient.VerifyLightBlockAtHeight(ctx, height, time.Now())
 }
 
-// refresh update light block, if the last light block has been updated more than trustPeriod * 2/3 ago.
-func refresh(ctx context.Context, lc *light.Client, trustPeriod time.Duration, m *sync.Mutex) error {
-	log.Info("check latest light block")
-	lastBlockHeight, err := lc.LastTrustedHeight()
-	if err != nil {
-		return err
-	}
-	lastBlock, err := lc.TrustedLightBlock(lastBlockHeight)
-	if err != nil {
-		return err
-	}
-	lastBlockTime := lastBlock.Time
-	currentTime := time.Now()
-	timeDiff := currentTime.Sub(lastBlockTime)
-	if timeDiff > trustPeriod*2/3 {
-		log.Info("update latest light block")
-		m.Lock()
-		defer m.Unlock()
-		if _, err := lc.Update(ctx, time.Now()); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
 // GetStoreData get data from panacea with storeKey and key, then verify queried data with light client and merkle proof.
 // the returned data type is ResponseQuery.value ([]byte), so recommend to convert to expected type
-func (q verifiedQueryClient) GetStoreData(ctx context.Context, storeKey string, key []byte) ([]byte, error) {
-	queryHeight, err := q.getQueryBlockHeight(ctx)
-	if err != nil {
-		return nil, err
-	}
+func (q *verifiedQueryClient) GetStoreData(ctx context.Context, storeKey string, key []byte) ([]byte, error) {
+	queryHeight := q.getQueryBlockHeight()
 
 	//set queryOption prove to true
 	option := client.ABCIQueryOptions{
@@ -296,20 +293,17 @@ func (q verifiedQueryClient) GetStoreData(ctx context.Context, storeKey string, 
 	return result.Response.Value, nil
 }
 
-func (q verifiedQueryClient) getQueryBlockHeight(ctx context.Context) (int64, error) {
-	if height := ctx.Value(ContextKeyQueryBlockHeight{}); height != nil {
-		return height.(int64), nil
-	}
-	return q.GetLastBlockHeight(ctx)
+func (q *verifiedQueryClient) getQueryBlockHeight() int64 {
+	return q.GetCachedLastBlockHeight() - 1
 }
 
-func (q verifiedQueryClient) Close() error {
+func (q *verifiedQueryClient) Close() error {
 	return q.db.Close()
 }
 
 // abciQueryWithOptions is a wrapper of rpcClient.ABCIQueryWithOptions,
 // but validates the details of result.Response even if rpcClient.ABCIQueryWithOptions returns no error.
-func (q verifiedQueryClient) abciQueryWithOptions(ctx context.Context, path string, data tmbytes.HexBytes, opts client.ABCIQueryOptions) (*ctypes.ResultABCIQuery, error) {
+func (q *verifiedQueryClient) abciQueryWithOptions(ctx context.Context, path string, data tmbytes.HexBytes, opts client.ABCIQueryOptions) (*ctypes.ResultABCIQuery, error) {
 	res, err := q.rpcClient.ABCIQueryWithOptions(ctx, path, data, opts)
 	if err != nil {
 		return nil, err
@@ -336,7 +330,7 @@ func (q verifiedQueryClient) abciQueryWithOptions(ctx context.Context, path stri
 	return res, nil
 }
 
-func (q verifiedQueryClient) GetLightBlock(height int64) (*tmtypes.LightBlock, error) {
+func (q *verifiedQueryClient) GetLightBlock(height int64) (*tmtypes.LightBlock, error) {
 	return q.safeVerifyLightBlockAtHeight(context.Background(), height)
 }
 
@@ -344,7 +338,7 @@ func (q verifiedQueryClient) GetLightBlock(height int64) (*tmtypes.LightBlock, e
 // Need to set storeKey and key inside the query function, and change type to expected type.
 
 // GetAccount returns account from address.
-func (q verifiedQueryClient) GetAccount(ctx context.Context, address string) (authtypes.AccountI, error) {
+func (q *verifiedQueryClient) GetAccount(ctx context.Context, address string) (authtypes.AccountI, error) {
 	acc, err := GetAccAddressFromBech32(address)
 	if err != nil {
 		return nil, err
@@ -365,7 +359,7 @@ func (q verifiedQueryClient) GetAccount(ctx context.Context, address string) (au
 	return account, nil
 }
 
-func (q verifiedQueryClient) GetDID(ctx context.Context, did string) (*didtypes.DIDDocumentWithSeq, error) {
+func (q *verifiedQueryClient) GetDID(ctx context.Context, did string) (*didtypes.DIDDocumentWithSeq, error) {
 	key := append(didtypes.DIDKeyPrefix, []byte(did)...)
 	bz, err := q.GetStoreData(ctx, didtypes.StoreKey, key)
 	if err != nil {
@@ -380,7 +374,7 @@ func (q verifiedQueryClient) GetDID(ctx context.Context, did string) (*didtypes.
 	return &didDoc, nil
 }
 
-func (q verifiedQueryClient) GetDeal(ctx context.Context, dealID uint64) (*datadealtypes.Deal, error) {
+func (q *verifiedQueryClient) GetDeal(ctx context.Context, dealID uint64) (*datadealtypes.Deal, error) {
 	key := datadealtypes.GetDealKey(dealID)
 
 	bz, err := q.GetStoreData(ctx, datadealtypes.StoreKey, key)
@@ -396,7 +390,7 @@ func (q verifiedQueryClient) GetDeal(ctx context.Context, dealID uint64) (*datad
 	return &deal, nil
 }
 
-func (q verifiedQueryClient) GetConsent(ctx context.Context, dealID uint64, dataHash string) (*datadealtypes.Consent, error) {
+func (q *verifiedQueryClient) GetConsent(ctx context.Context, dealID uint64, dataHash string) (*datadealtypes.Consent, error) {
 
 	key := datadealtypes.GetConsentKey(dealID, dataHash)
 
@@ -414,7 +408,7 @@ func (q verifiedQueryClient) GetConsent(ctx context.Context, dealID uint64, data
 	return &consent, nil
 }
 
-func (q verifiedQueryClient) GetOracleRegistration(ctx context.Context, uniqueID, oracleAddr string) (*oracletypes.OracleRegistration, error) {
+func (q *verifiedQueryClient) GetOracleRegistration(ctx context.Context, uniqueID, oracleAddr string) (*oracletypes.OracleRegistration, error) {
 	acc, err := GetAccAddressFromBech32(oracleAddr)
 	if err != nil {
 		return nil, err
@@ -436,7 +430,7 @@ func (q verifiedQueryClient) GetOracleRegistration(ctx context.Context, uniqueID
 	return &oracleRegistration, nil
 }
 
-func (q verifiedQueryClient) GetOracle(ctx context.Context, oracleAddr string) (*oracletypes.Oracle, error) {
+func (q *verifiedQueryClient) GetOracle(ctx context.Context, oracleAddr string) (*oracletypes.Oracle, error) {
 	acc, err := GetAccAddressFromBech32(oracleAddr)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get AccAddr from Bech32 address(%s): %w", oracleAddr, err)
@@ -455,7 +449,7 @@ func (q verifiedQueryClient) GetOracle(ctx context.Context, oracleAddr string) (
 	return &oracle, nil
 }
 
-func (q verifiedQueryClient) GetOracleParamsPublicKey(ctx context.Context) (*btcec.PublicKey, error) {
+func (q *verifiedQueryClient) GetOracleParamsPublicKey(ctx context.Context) (*btcec.PublicKey, error) {
 	pubKeyBase64Bz, err := q.GetStoreData(ctx, paramstypes.StoreKey, append(append([]byte(oracletypes.StoreKey), '/'), oracletypes.KeyOraclePublicKey...))
 	if err != nil {
 		return nil, err
@@ -480,7 +474,7 @@ func (q verifiedQueryClient) GetOracleParamsPublicKey(ctx context.Context) (*btc
 	return btcec.ParsePubKey(pubKeyBz, btcec.S256())
 }
 
-func (q verifiedQueryClient) GetOracleUpgrade(ctx context.Context, uniqueID, oracleAddr string) (*oracletypes.OracleUpgrade, error) {
+func (q *verifiedQueryClient) GetOracleUpgrade(ctx context.Context, uniqueID, oracleAddr string) (*oracletypes.OracleUpgrade, error) {
 	acc, err := GetAccAddressFromBech32(oracleAddr)
 	if err != nil {
 		return nil, fmt.Errorf("failed to convert Bech32 address: %w", err)
@@ -501,7 +495,7 @@ func (q verifiedQueryClient) GetOracleUpgrade(ctx context.Context, uniqueID, ora
 	return &oracleUpgrade, nil
 }
 
-func (q verifiedQueryClient) GetOracleUpgradeInfo(ctx context.Context) (*oracletypes.OracleUpgradeInfo, error) {
+func (q *verifiedQueryClient) GetOracleUpgradeInfo(ctx context.Context) (*oracletypes.OracleUpgradeInfo, error) {
 	bz, err := q.GetStoreData(ctx, oracletypes.StoreKey, oracletypes.OracleUpgradeInfoKey)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get oracle upgrade info from panacea: %w", err)
@@ -515,7 +509,8 @@ func (q verifiedQueryClient) GetOracleUpgradeInfo(ctx context.Context) (*oraclet
 	return &oracleUpgradeInfo, nil
 }
 
-func (q verifiedQueryClient) GetLastBlockHeight(ctx context.Context) (int64, error) {
+// GetLastBlockHeight updates the lightClient with the latest block and gets the height of that latest block.
+func (q *verifiedQueryClient) GetLastBlockHeight(ctx context.Context) (int64, error) {
 	// get recent light block
 	// if the latest block has already been updated, get LastTrustedHeight
 	trustedBlock, err := q.safeUpdateLightClient(ctx)
@@ -530,7 +525,11 @@ func (q verifiedQueryClient) GetLastBlockHeight(ctx context.Context) (int64, err
 	return trustedBlock.Height, nil
 }
 
-func (q verifiedQueryClient) VerifyTrustedBlockInfo(height int64, blockHash []byte) error {
+func (q *verifiedQueryClient) GetCachedLastBlockHeight() int64 {
+	return q.cachedLastBlockHeight
+}
+
+func (q *verifiedQueryClient) VerifyTrustedBlockInfo(height int64, blockHash []byte) error {
 	block, err := q.GetLightBlock(height)
 	if err != nil {
 		switch err {
@@ -550,8 +549,4 @@ func (q verifiedQueryClient) VerifyTrustedBlockInfo(height int64, blockHash []by
 	}
 
 	return nil
-}
-
-func SetQueryBlockHeightToContext(ctx context.Context, height int64) context.Context {
-	return context.WithValue(ctx, ContextKeyQueryBlockHeight{}, height)
 }

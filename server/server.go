@@ -2,6 +2,7 @@ package server
 
 import (
 	"github.com/medibloc/panacea-oracle/server/rpc"
+
 	"github.com/medibloc/panacea-oracle/service"
 	log "github.com/sirupsen/logrus"
 )
@@ -26,7 +27,7 @@ func Serve(svc service.Service) ([]Server, chan error) {
 	if cfg.API.Enabled {
 		svr, err := rpc.NewGatewayServer(cfg)
 		if err != nil {
-			errCh <- err
+			go func() { errCh <- err }()
 		} else {
 			servers = append(servers, svr)
 			go runServer(svr, errCh)

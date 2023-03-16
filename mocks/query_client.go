@@ -2,6 +2,7 @@ package mocks
 
 import (
 	"context"
+
 	didtypes "github.com/medibloc/panacea-core/v2/x/did/types"
 
 	"github.com/btcsuite/btcd/btcec"
@@ -28,6 +29,10 @@ type MockQueryClient struct {
 	OracleUpgradeInfo           *oracletypes.OracleUpgradeInfo
 	VerifyTrustedBlockInfoError error
 	DidDocWithSeq               *didtypes.DIDDocumentWithSeq
+}
+
+func (q MockQueryClient) GetCachedLastBlockHeight() int64 {
+	return q.LastBlockHeight
 }
 
 var _ panacea.QueryClient = &MockQueryClient{}
