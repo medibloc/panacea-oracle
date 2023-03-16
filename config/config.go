@@ -50,6 +50,8 @@ type APIConfig struct {
 	GrpcConnectTimeout time.Duration `mapstructure:"grpc-connect-timeout"`
 	WriteTimeout       time.Duration `mapstructure:"write-timeout"`
 	ReadTimeout        time.Duration `mapstructure:"read-timeout"`
+	MaxConnections     int           `mapstructure:"max-connections"`
+	MaxRequestBodySize int64         `mapstructure:"max-request-body-size"`
 }
 
 type GRPCConfig struct {
@@ -111,6 +113,8 @@ func DefaultConfig() *Config {
 			GrpcConnectTimeout: time.Second * 10,
 			WriteTimeout:       time.Second * 60,
 			ReadTimeout:        time.Second * 15,
+			MaxConnections:     50,
+			MaxRequestBodySize: 4 << (10 * 2), // 4MB
 		},
 	}
 }

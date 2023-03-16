@@ -116,6 +116,12 @@ write-timeout = "{{ .API.WriteTimeout }}"
 
 # Maximum duration for reading the entire request, including the body.
 read-timeout = "{{ .API.ReadTimeout }}"
+
+# Maximum number of simultaneous connections that the API server can handle
+max-connections = "{{ .API.MaxConnections }}"
+
+# Max request body size in bytes the server can receive.
+max-request-body-size = "{{ .API.MaxRequestBodySize }}"
 `
 
 var configTemplate *template.Template
