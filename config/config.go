@@ -16,6 +16,8 @@ type Config struct {
 	GRPC GRPCConfig `mapstructure:"grpc"`
 
 	API APIConfig `mapstructure:"api"`
+
+	Consumer ConsumerConfig `mapstructure:"consumer"`
 }
 
 type BaseConfig struct {
@@ -69,6 +71,10 @@ type GRPCConfig struct {
 	RateLimitWaitTimeout           time.Duration `mapstructure:"rate-limit-wait-timeout"`
 }
 
+type ConsumerConfig struct {
+	Timeout time.Duration `mapstructure:"timeout"`
+}
+
 func DefaultConfig() *Config {
 	return &Config{
 		BaseConfig: BaseConfig{
@@ -115,6 +121,9 @@ func DefaultConfig() *Config {
 			ReadTimeout:        time.Second * 15,
 			MaxConnections:     50,
 			MaxRequestBodySize: 4 << (10 * 2), // 4MB
+		},
+		Consumer: ConsumerConfig{
+			Timeout: time.Second * 5,
 		},
 	}
 }

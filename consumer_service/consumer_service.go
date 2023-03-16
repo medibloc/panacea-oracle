@@ -22,12 +22,14 @@ var _ FileStorage = &ConsumerServiceFileStorage{}
 type ConsumerServiceFileStorage struct {
 	oraclePrivKey *btcec.PrivateKey
 	oracleAcc     *panacea.OracleAccount
+	timeout       time.Duration
 }
 
-func NewConsumerService(oraclePrivKey *btcec.PrivateKey, oracleAcc *panacea.OracleAccount) FileStorage {
+func NewConsumerService(oraclePrivKey *btcec.PrivateKey, oracleAcc *panacea.OracleAccount, timeout time.Duration) FileStorage {
 	return &ConsumerServiceFileStorage{
 		oraclePrivKey: oraclePrivKey,
 		oracleAcc:     oracleAcc,
+		timeout:       timeout,
 	}
 }
 
@@ -38,14 +40,14 @@ func (s *ConsumerServiceFileStorage) Add(endpoint string, dealID uint64, dataHas
 	if err != nil {
 		return fmt.Errorf("failed to generate jwt: %v", err)
 	}
-	if err := postData(data, dataUrl, token); err != nil {
+	if err := s.postData(data, dataUrl, token); err != nil {
 		return fmt.Errorf("failed to post request: %v", err)
 	}
 
 	return nil
 }
 
-func postData(data []byte, dataUrl string, jwt []byte) error {
+func (s *ConsumerServiceFileStorage) postData(data []byte, dataUrl string, jwt []byte) error {
 	buff := bytes.NewBuffer(data)
 
 	request, err := http.NewRequest("POST", dataUrl, buff)
@@ -55,7 +57,7 @@ func postData(data []byte, dataUrl string, jwt []byte) error {
 	request.Header.Set("Authorization", "Bearer "+string(jwt))
 
 	client := http.Client{
-		Timeout: time.Second * 5,
+		Timeout: s.timeout,
 	}
 	resp, err := client.Do(request)
 	if err != nil {

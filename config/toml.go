@@ -97,7 +97,7 @@ rate-limits = "{{ .GRPC.RateLimits }}"
 rate-limit-wait-timeout = "{{ .GRPC.RateLimitWaitTimeout }}"
 
 ###############################################################################
-###                         API Configuration                           ###
+###                           API Configuration                             ###
 ###############################################################################
 
 [api]
@@ -122,6 +122,15 @@ max-connections = "{{ .API.MaxConnections }}"
 
 # Max request body size in bytes the server can receive.
 max-request-body-size = "{{ .API.MaxRequestBodySize }}"
+
+###############################################################################
+###                          Consumer Configuration                         ###
+###############################################################################
+
+[consumer]
+
+# Maximum duration to transfer files to a consumer service
+timeout = "{{ .Consumer.Timeout }}"
 `
 
 var configTemplate *template.Template

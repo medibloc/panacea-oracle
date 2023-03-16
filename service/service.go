@@ -77,7 +77,11 @@ func New(conf *config.Config, sgx sgx.Sgx, queryClient panacea.QueryClient) (Ser
 		return nil, fmt.Errorf("failed to init subscriber: %w", err)
 	}
 
-	consumerService := consumer_service.NewConsumerService(oraclePrivKey, oracleAccount)
+	consumerService := consumer_service.NewConsumerService(
+		oraclePrivKey,
+		oracleAccount,
+		conf.Consumer.Timeout,
+	)
 
 	return &service{
 		conf:            conf,
