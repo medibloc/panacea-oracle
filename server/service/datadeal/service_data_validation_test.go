@@ -4,6 +4,8 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
+	"encoding/json"
+	"fmt"
 	"testing"
 
 	"github.com/btcsuite/btcd/btcec"
@@ -77,7 +79,15 @@ func (suite *dataDealServiceServerTestSuite) TestValidateDataSuccess() {
 	encryptedData, err := crypto.Encrypt(sharedKey, nil, jsonDataBz)
 	suite.Require().NoError(err)
 
-	dataHash := sha256.Sum256(jsonDataBz)
+	var jsonMap map[string]json.RawMessage
+
+	err = json.Unmarshal(jsonDataBz, &jsonMap)
+	suite.Require().NoError(err)
+
+	marshaledJSONBz, err := json.Marshal(jsonMap)
+	suite.Require().NoError(err)
+
+	dataHash := sha256.Sum256(marshaledJSONBz)
 
 	req := &datadeal.ValidateDataRequest{
 		DealId:          1,
@@ -282,6 +292,24 @@ func (suite *dataDealServiceServerTestSuite) TestValidateDataInvalidJSONSchema()
 		}
 		`)
 
+	jsonDataBz2 := []byte(
+		`
+		{
+			"invalid_key_name":  "name",
+			"invalid_key_description": "description",
+			"invalid_key_body": [{ "type": "markdown", "attributes": { "value": "val1" } }]
+		}
+		`)
+
+	jsonDataBz3 := []byte(
+		`
+		{
+			"invalid_key_description": "description",
+			"invalid_key_name": "name",
+			"invalid_key_body": [{ "type": "markdown", "attributes": { "value": "val1" } }]
+		}
+		`)
+
 	// encrypted provider data with provider private key and oracle public key
 	providerPrivKey, _ := btcec.PrivKeyFromBytes(btcec.S256(), suite.providerAccPrivKey.Bytes())
 
@@ -294,7 +322,31 @@ func (suite *dataDealServiceServerTestSuite) TestValidateDataInvalidJSONSchema()
 	encryptedData, err := crypto.Encrypt(sharedKey, nil, jsonDataBz)
 	suite.Require().NoError(err)
 
-	dataHash := sha256.Sum256(jsonDataBz)
+	var jsonMap map[string]json.RawMessage
+
+	err = json.Unmarshal(jsonDataBz, &jsonMap)
+	suite.Require().NoError(err)
+	marshaledJSONBz, err := json.Marshal(jsonMap)
+	suite.Require().NoError(err)
+	fmt.Println(string(marshaledJSONBz))
+	dataHash := sha256.Sum256(marshaledJSONBz)
+	fmt.Println("2: ", hex.EncodeToString(dataHash[:]))
+
+	err = json.Unmarshal(jsonDataBz2, &jsonMap)
+	suite.Require().NoError(err)
+	marshalJSONBz2, err := json.Marshal(jsonMap)
+	suite.Require().NoError(err)
+	fmt.Println(string(marshalJSONBz2))
+	dataHash2 := sha256.Sum256(marshalJSONBz2)
+	fmt.Println("2: ", hex.EncodeToString(dataHash2[:]))
+
+	err = json.Unmarshal(jsonDataBz3, &jsonMap)
+	suite.Require().NoError(err)
+	marshalJSONBz3, err := json.Marshal(jsonMap)
+	suite.Require().NoError(err)
+	fmt.Println(string(marshalJSONBz3))
+	dataHash3 := sha256.Sum256(marshalJSONBz3)
+	fmt.Println("3: ", hex.EncodeToString(dataHash3[:]))
 
 	req := &datadeal.ValidateDataRequest{
 		DealId:          1,

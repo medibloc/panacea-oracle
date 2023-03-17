@@ -3,6 +3,7 @@ package datadeal
 import (
 	"context"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 
 	"github.com/medibloc/vc-sdk/pkg/vdr"
@@ -81,8 +82,20 @@ func (s *dataDealServiceServer) ValidateData(ctx context.Context, req *datadeal.
 		return nil, fmt.Errorf("failed to decrypt data")
 	}
 
+	var jsonMap map[string]json.RawMessage
+
+	if err := json.Unmarshal(decryptedData, &jsonMap); err != nil {
+		return nil, err
+	}
+
+	decryptedDataBz, err := json.Marshal(jsonMap)
+	if err != nil {
+		return nil, err
+	}
+
 	// Validate data hash
-	dataHashBz := crypto.KDFSHA256(decryptedData)
+	dataHashBz := crypto.KDFSHA256(decryptedDataBz)
+
 	dataHash := hex.EncodeToString(dataHashBz)
 
 	if req.DataHash != dataHash {
