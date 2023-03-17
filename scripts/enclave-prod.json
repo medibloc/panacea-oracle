@@ -2,7 +2,7 @@
   "exe": "../build/oracled",
   "key": "private.pem",
   "debug": false,
-  "heapSize": 512,
+  "heapSize": 1024,
   "executableHeap": false,
   "productID": 1,
   "securityVersion": 1,
