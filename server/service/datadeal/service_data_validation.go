@@ -3,12 +3,12 @@ package datadeal
 import (
 	"context"
 	"encoding/hex"
-	"encoding/json"
 	"fmt"
 
 	"github.com/medibloc/vc-sdk/pkg/vdr"
 
 	"github.com/btcsuite/btcd/btcec"
+	"github.com/cyberphone/json-canonicalization/go/src/webpki.org/jsoncanonicalizer"
 	"github.com/gogo/protobuf/proto"
 	datadealtypes "github.com/medibloc/panacea-core/v2/x/datadeal/types"
 	"github.com/medibloc/panacea-oracle/crypto"
@@ -82,20 +82,14 @@ func (s *dataDealServiceServer) ValidateData(ctx context.Context, req *datadeal.
 		return nil, fmt.Errorf("failed to decrypt data")
 	}
 
-	var jsonMap map[string]json.RawMessage
-
-	if err := json.Unmarshal(decryptedData, &jsonMap); err != nil {
-		return nil, err
-	}
-
-	decryptedDataBz, err := json.Marshal(jsonMap)
+	decryptedDataBz, err := jsoncanonicalizer.Transform(decryptedData)
 	if err != nil {
-		return nil, err
+		log.Debugf("invalid JSON format: %s", err.Error())
+		return nil, fmt.Errorf("invalid JSON format")
 	}
 
 	// Validate data hash
 	dataHashBz := crypto.KDFSHA256(decryptedDataBz)
-
 	dataHash := hex.EncodeToString(dataHashBz)
 
 	if req.DataHash != dataHash {
