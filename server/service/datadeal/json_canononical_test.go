@@ -68,3 +68,55 @@ func TestCanonicalJSON(t *testing.T) {
 	require.Equal(t, dataHashOrder, dataHashSpace)
 	require.Equal(t, dataHash, dataHashBracket)
 }
+
+func TestCanonicalJSON_Failure(t *testing.T) {
+	jsonDataBz := []byte(
+		`
+		{
+			"invalid_key_name": "name",
+			"invalid_key_description": "description",
+			"invalid_key_body": [{ "type": "markdown", "attributes": { "value": "val1" } }]
+		}
+		`)
+
+	// WhiteSpace before "name"
+	jsonDataBzSpace := []byte(
+		`
+		{
+			"invalid_key_name":  "name",
+			"invalid_key_description": "description",
+			"invalid_key_body": [{ "type": "markdown", "attributes": { "value": "val1" } }]
+		}
+		`)
+
+	// WhiteSpace before "}" bracket
+	jsonDataBzBracket := []byte(
+		`
+		{
+			"invalid_key_name": "name",
+			"invalid_key_description": "description",
+			"invalid_key_body": [{ "type": "markdown", "attributes": { "value": "val1" } }]
+		 }
+		`)
+
+	jsonDataBzOrder := []byte(
+		`
+		{
+			"invalid_key_description": "description",
+			"invalid_key_name": "name",
+			"invalid_key_body": [{ "type": "markdown", "attributes": { "value": "val1" } }]
+		}
+		`)
+
+	jsonData, err := jsoncanonicalizer.Transform(jsonDataBz)
+	require.NoError(t, err)
+	dataHash := sha256.Sum256(jsonData)
+
+	dataHashSpace := sha256.Sum256(jsonDataBzSpace)
+	dataHashBracket := sha256.Sum256(jsonDataBzBracket)
+	dataHashOrder := sha256.Sum256(jsonDataBzOrder)
+
+	require.NotEqual(t, dataHash, dataHashSpace)
+	require.NotEqual(t, dataHash, dataHashBracket)
+	require.NotEqual(t, dataHash, dataHashOrder)
+}
