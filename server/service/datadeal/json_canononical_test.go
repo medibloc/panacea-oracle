@@ -69,7 +69,7 @@ func TestCanonicalJSON(t *testing.T) {
 	require.Equal(t, dataHash, dataHashBracket)
 }
 
-func TestCanonicalJSON_Failure(t *testing.T) {
+func TestCanonicalJSON_DataHash_Not_Equal(t *testing.T) {
 	jsonDataBz := []byte(
 		`
 		{
