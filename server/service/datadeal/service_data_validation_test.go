@@ -318,3 +318,64 @@ func (suite *dataDealServiceServerTestSuite) TestValidateDataInvalidJSONSchema()
 	suite.Require().Nil(res)
 	suite.Require().ErrorContains(err, "failed to validate data")
 }
+
+func (suite *dataDealServiceServerTestSuite) TestCanonicalJSON() {
+	jsonDataBz := []byte(
+		`
+		{
+			"invalid_key_name": "name",
+			"invalid_key_description": "description",
+			"invalid_key_body": [{ "type": "markdown", "attributes": { "value": "val1" } }]
+		}
+		`)
+
+	// WhiteSpace before "name"
+	jsonDataBzSpace := []byte(
+		`
+		{
+			"invalid_key_name":  "name",
+			"invalid_key_description": "description",
+			"invalid_key_body": [{ "type": "markdown", "attributes": { "value": "val1" } }]
+		}
+		`)
+
+	// WhiteSpace before "}" bracket
+	jsonDataBzBracket := []byte(
+		`
+		{
+			"invalid_key_name": "name",
+			"invalid_key_description": "description",
+			"invalid_key_body": [{ "type": "markdown", "attributes": { "value": "val1" } }]
+		 }
+		`)
+
+	jsonDataBzOrder := []byte(
+		`
+		{
+			"invalid_key_description": "description",
+			"invalid_key_name": "name",
+			"invalid_key_body": [{ "type": "markdown", "attributes": { "value": "val1" } }]
+		}
+		`)
+
+	jsonData, err := jsoncanonicalizer.Transform(jsonDataBz)
+	suite.Require().NoError(err)
+	dataHash := sha256.Sum256(jsonData)
+
+	jsonDataSpace, err := jsoncanonicalizer.Transform(jsonDataBzSpace)
+	suite.Require().NoError(err)
+	dataHashSpace := sha256.Sum256(jsonDataSpace)
+
+	jsonDataOrder, err := jsoncanonicalizer.Transform(jsonDataBzOrder)
+	suite.Require().NoError(err)
+	dataHashOrder := sha256.Sum256(jsonDataOrder)
+
+	jsonDataBracket, err := jsoncanonicalizer.Transform(jsonDataBzBracket)
+	suite.Require().NoError(err)
+	dataHashBracket := sha256.Sum256(jsonDataBracket)
+
+	suite.Require().Equal(dataHash, dataHashOrder)
+	suite.Require().Equal(dataHash, dataHashSpace)
+	suite.Require().Equal(dataHashOrder, dataHashSpace)
+	suite.Require().Equal(dataHash, dataHashBracket)
+}
