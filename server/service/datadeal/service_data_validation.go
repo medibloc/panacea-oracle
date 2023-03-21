@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
+	"github.com/google/uuid"
 
 	"github.com/medibloc/vc-sdk/pkg/vdr"
 
@@ -20,6 +21,8 @@ import (
 )
 
 func (s *dataDealServiceServer) ValidateData(ctx context.Context, req *datadeal.ValidateDataRequest) (*datadeal.ValidateDataResponse, error) {
+	uid := uuid.NewString()
+	log.Infof("(%s) validate data start", uid)
 	queryClient := s.QueryClient()
 	oraclePrivKey := s.OraclePrivKey()
 	dealID := req.DealId
@@ -40,11 +43,13 @@ func (s *dataDealServiceServer) ValidateData(ctx context.Context, req *datadeal.
 		return nil, fmt.Errorf("data provider and token issuer do not matched.  provider: %s, jwt issuer: %s", req.ProviderAddress, requesterAddress)
 	}
 
+	log.Infof("(%s) get deal start", uid)
 	deal, err := queryClient.GetDeal(ctx, dealID)
 	if err != nil {
 		log.Debugf("failed to get deal(%d): %s", dealID, err.Error())
 		return nil, fmt.Errorf("failed to get deal. %w", err)
 	}
+	log.Infof("(%s) get deal end", uid)
 
 	if deal.Status != datadealtypes.DEAL_STATUS_ACTIVE {
 		log.Debugf("cannot provide data to INACTIVE/COMPLETED deal")
@@ -90,13 +95,16 @@ func (s *dataDealServiceServer) ValidateData(ctx context.Context, req *datadeal.
 		return nil, fmt.Errorf("data hash mismatch")
 	}
 
+	log.Infof("(%s) validate schema start", uid)
 	if len(deal.DataSchema) > 0 {
 		if err := s.schema.ValidateJSONSchemata(decryptedData, deal.DataSchema); err != nil {
 			log.Debugf("failed to validate data: %s", err.Error())
 			return nil, fmt.Errorf("failed to validate data")
 		}
 	}
+	log.Infof("(%s) validate schema end", uid)
 
+	log.Infof("(%s) validate pd start", uid)
 	if deal.PresentationDefinition != nil {
 		panaceaVDR := vdr.NewPanaceaVDR(queryClient)
 		if err := validation.ValidateVP(panaceaVDR, decryptedData, deal.PresentationDefinition); err != nil {
@@ -104,6 +112,7 @@ func (s *dataDealServiceServer) ValidateData(ctx context.Context, req *datadeal.
 			return nil, fmt.Errorf("failed to validate VP")
 		}
 	}
+	log.Infof("(%s) validate pd end", uid)
 
 	// Re-encrypt data using a combined key
 	secretKey := key.GetSecretKey(oraclePrivKey.Serialize(), dealID, dataHashBz)
@@ -113,12 +122,14 @@ func (s *dataDealServiceServer) ValidateData(ctx context.Context, req *datadeal.
 		return nil, fmt.Errorf("failed to re-encrypt data with the combined key")
 	}
 
+	log.Infof("(%s) add consumer start", uid)
 	// Post reEncryptedData to consumer service
 	consumerService := s.ConsumerService()
 	if err := consumerService.Add(deal.ConsumerServiceEndpoint, req.DealId, req.DataHash, reEncryptedData); err != nil {
 		log.Errorf("failed to add data to consumer service: %s", err.Error())
 		return nil, fmt.Errorf("failed to add data to consumer service")
 	}
+	log.Infof("(%s) add consumer end", uid)
 
 	// Issue a certificate to the client
 	unsignedDataCert := &datadealtypes.UnsignedCertificate{
