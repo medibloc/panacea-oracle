@@ -25,3 +25,22 @@ You can check if your hardware supports SGX and it is enabled in the BIOS by fol
 
 - [Initialize and run the oracle](./docs/usage-init-run.md)
 
+
+## Recommended configurations
+
+Recommend appropriate settings based on your application
+* If the request body(receive message) is 500 KB or less in size
+    * max-connections: 100
+* If the request body(receive message) is between 500 KB and 1 MB in size
+    * max-connections: 50
+
+
+The default settings are as follows
+* enclave
+  * heap-size: 1024 MB
+* gRPC
+  * max-connections: 50
+  * max-rcv-msg-size: 1024 KB
+* API
+  * max-connections: 50
+  * max-request-body-size: 1024 KB

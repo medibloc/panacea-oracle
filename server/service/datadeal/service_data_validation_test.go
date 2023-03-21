@@ -11,6 +11,7 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/cyberphone/json-canonicalization/go/src/webpki.org/jsoncanonicalizer"
 	datadealtypes "github.com/medibloc/panacea-core/v2/x/datadeal/types"
 	"github.com/medibloc/panacea-oracle/crypto"
 	"github.com/medibloc/panacea-oracle/mocks"
@@ -77,7 +78,9 @@ func (suite *dataDealServiceServerTestSuite) TestValidateDataSuccess() {
 	encryptedData, err := crypto.Encrypt(sharedKey, nil, jsonDataBz)
 	suite.Require().NoError(err)
 
-	dataHash := sha256.Sum256(jsonDataBz)
+	jsonData, err := jsoncanonicalizer.Transform(jsonDataBz)
+	suite.Require().NoError(err)
+	dataHash := sha256.Sum256(jsonData)
 
 	req := &datadeal.ValidateDataRequest{
 		DealId:          1,
@@ -294,7 +297,9 @@ func (suite *dataDealServiceServerTestSuite) TestValidateDataInvalidJSONSchema()
 	encryptedData, err := crypto.Encrypt(sharedKey, nil, jsonDataBz)
 	suite.Require().NoError(err)
 
-	dataHash := sha256.Sum256(jsonDataBz)
+	jsonData, err := jsoncanonicalizer.Transform(jsonDataBz)
+	suite.Require().NoError(err)
+	dataHash := sha256.Sum256(jsonData)
 
 	req := &datadeal.ValidateDataRequest{
 		DealId:          1,

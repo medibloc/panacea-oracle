@@ -104,7 +104,7 @@ func DefaultConfig() *Config {
 			ConnectionTimeout:              time.Minute * 2,
 			MaxConnections:                 50,
 			MaxConcurrentStreams:           0,
-			MaxRecvMsgSize:                 4 << (10 * 2), // 4MB
+			MaxRecvMsgSize:                 1 << (10 * 2), // 1MB
 			KeepaliveMaxConnectionIdle:     0,
 			KeepaliveMaxConnectionAge:      0,
 			KeepaliveMaxConnectionAgeGrace: 0,
@@ -120,7 +120,10 @@ func DefaultConfig() *Config {
 			WriteTimeout:       time.Second * 60,
 			ReadTimeout:        time.Second * 15,
 			MaxConnections:     50,
-			MaxRequestBodySize: 4 << (10 * 2), // 4MB
+			MaxRequestBodySize: 1 << (10 * 2), // 1MB
+		},
+		Consumer: ConsumerConfig{
+			Timeout: time.Second * 5,
 		},
 		Consumer: ConsumerConfig{
 			Timeout: time.Second * 5,
