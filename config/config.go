@@ -125,9 +125,6 @@ func DefaultConfig() *Config {
 		Consumer: ConsumerConfig{
 			Timeout: time.Second * 5,
 		},
-		Consumer: ConsumerConfig{
-			Timeout: time.Second * 5,
-		},
 	}
 }
 
