@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
+
 	"github.com/google/uuid"
 
 	"github.com/medibloc/vc-sdk/pkg/vdr"
@@ -116,6 +117,7 @@ func (s *dataDealServiceServer) ValidateData(ctx context.Context, req *datadeal.
 		panaceaVDR := vdr.NewPanaceaVDR(queryClient)
 		if err := validation.ValidateVP(panaceaVDR, decryptedData, deal.PresentationDefinition); err != nil {
 			log.Errorf("failed to validate verifiable presentation: %s", err.Error())
+			log.Errorf("decrpytedData(%s), pd(%s)", string(decryptedData), string(deal.PresentationDefinition))
 			return nil, fmt.Errorf("failed to validate VP")
 		}
 	}
