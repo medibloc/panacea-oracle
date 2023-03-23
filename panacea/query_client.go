@@ -359,18 +359,25 @@ func (q *verifiedQueryClient) GetAccount(ctx context.Context, address string) (a
 	return account, nil
 }
 
+var didMap map[string]didtypes.DIDDocumentWithSeq
+
 func (q *verifiedQueryClient) GetDID(ctx context.Context, did string) (*didtypes.DIDDocumentWithSeq, error) {
+	didDoc, ok := didMap[did]
+	if ok {
+		return &didDoc, nil
+	}
+
 	key := append(didtypes.DIDKeyPrefix, []byte(did)...)
 	bz, err := q.GetStoreData(ctx, didtypes.StoreKey, key)
 	if err != nil {
 		return nil, err
 	}
 
-	var didDoc didtypes.DIDDocumentWithSeq
 	if err := q.cdc.UnmarshalLengthPrefixed(bz, &didDoc); err != nil {
 		return nil, err
 	}
 
+	didMap[did] = didDoc
 	return &didDoc, nil
 }
 
