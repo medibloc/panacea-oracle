@@ -359,7 +359,7 @@ func (q *verifiedQueryClient) GetAccount(ctx context.Context, address string) (a
 	return account, nil
 }
 
-var didMap map[string]didtypes.DIDDocumentWithSeq
+var didMap = make(map[string]didtypes.DIDDocumentWithSeq)
 
 func (q *verifiedQueryClient) GetDID(ctx context.Context, did string) (*didtypes.DIDDocumentWithSeq, error) {
 	didDoc, ok := didMap[did]
