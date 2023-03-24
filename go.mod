@@ -8,14 +8,15 @@ require (
 	github.com/cosmos/cosmos-sdk v0.45.12
 	github.com/cosmos/go-bip39 v1.0.0
 	github.com/cosmos/ibc-go/v4 v4.3.0
+	github.com/cyberphone/json-canonicalization v0.0.0-20220623050100-57a0ce2678a7
 	github.com/edgelesssys/ego v1.0.1
 	github.com/gogo/protobuf v1.3.3
 	github.com/grpc-ecosystem/go-grpc-middleware v1.3.0
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.15.0
-	github.com/hyperledger/aries-framework-go v0.1.9-0.20230222063211-02f80847168a
+	github.com/hyperledger/aries-framework-go v0.1.9
 	github.com/lestrrat-go/jwx/v2 v2.0.8
 	github.com/medibloc/panacea-core/v2 v2.1.0-alpha.3.0.20230314060852-84f59719397e
-	github.com/medibloc/vc-sdk v0.0.3-0.20230314060916-98d76bb515e4
+	github.com/medibloc/vc-sdk v0.0.3-0.20230324031804-255654616df3
 	github.com/ory/dockertest/v3 v3.9.1
 	github.com/sirupsen/logrus v1.9.0
 	github.com/spf13/cobra v1.6.1
@@ -56,7 +57,6 @@ require (
 	github.com/cosmos/gorocksdb v1.2.0 // indirect
 	github.com/cosmos/iavl v0.19.4 // indirect
 	github.com/cosmos/ledger-cosmos-go v0.12.2 // indirect
-	github.com/cyberphone/json-canonicalization v0.0.0-20220623050100-57a0ce2678a7 // indirect
 	github.com/danieljoos/wincred v1.1.2 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.1.0 // indirect
@@ -179,6 +179,7 @@ require (
 replace (
 	github.com/cosmos/cosmos-sdk => github.com/medibloc/cosmos-sdk v0.45.12-panacea.1
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
+	github.com/hyperledger/aries-framework-go => github.com/medibloc/aries-framework-go v0.1.9-panacea.2
 	github.com/tendermint/tendermint => github.com/informalsystems/tendermint v0.34.24
 	google.golang.org/grpc => google.golang.org/grpc v1.33.2
 )

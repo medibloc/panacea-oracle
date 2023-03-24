@@ -336,8 +336,6 @@ github.com/hashicorp/hcl v1.0.0/go.mod h1:E5yfLk+7swimpb2L/Alb/PJmXilQ/rhwaUYs4T
 github.com/hdevalence/ed25519consensus v0.0.0-20210204194344-59a8610d2b87 h1:uUjLpLt6bVvZ72SQc/B4dXcPBw4Vgd7soowdRl52qEM=
 github.com/hdevalence/ed25519consensus v0.0.0-20210204194344-59a8610d2b87/go.mod h1:XGsKKeXxeRr95aEOgipvluMPlgjr7dGlk9ZTWOjcUcg=
 github.com/hpcloud/tail v1.0.0/go.mod h1:ab1qPbhIpdTxEkNHXyeSf5vhxWSCs/tWer42PpOxQnU=
-github.com/hyperledger/aries-framework-go v0.1.9-0.20230222063211-02f80847168a h1:WL/pO7LGGbUWi6qq5hmfRUSCxsfsn8Gy8Wg6w8meNK4=
-github.com/hyperledger/aries-framework-go v0.1.9-0.20230222063211-02f80847168a/go.mod h1:qrOxEGVsu8M2RahaJgM8nz9AcAHjR/dKd1JIJ3ieJhY=
 github.com/hyperledger/aries-framework-go/component/storageutil v0.0.0-20220322085443-50e8f9bd208b h1:IoD7+sHQRLMouwHjhrOj5vhg+rPt/aKl4P+WiBZVHVk=
 github.com/hyperledger/aries-framework-go/component/storageutil v0.0.0-20220322085443-50e8f9bd208b/go.mod h1:yLgRpVlZ2heeeOpTgvEnG/yHL9q1keUu5ILQ6s2qpLU=
 github.com/hyperledger/aries-framework-go/spi v0.0.0-20221025204933-b807371b6f1e h1:SxbXlF39661T9w/L9PhVdtbJfJ51Pm4JYEEW6XfZHEQ=
@@ -415,12 +413,14 @@ github.com/mattn/go-isatty v0.0.16/go.mod h1:kYGgaQfpe5nmfYZH+SKPsOc2e4SrIfOl2e/
 github.com/matttproud/golang_protobuf_extensions v1.0.1/go.mod h1:D8He9yQNgCq6Z5Ld7szi9bcBfOoFv/3dc6xSMkL2PC0=
 github.com/matttproud/golang_protobuf_extensions v1.0.2-0.20181231171920-c182affec369 h1:I0XW9+e1XWDxdcEniV4rQAIOPUGDq67JSCiRCgGCZLI=
 github.com/matttproud/golang_protobuf_extensions v1.0.2-0.20181231171920-c182affec369/go.mod h1:BSXmuO+STAnVfrANrmjBb36TMTDstsz7MSK+HVaYKv4=
+github.com/medibloc/aries-framework-go v0.1.9-panacea.2 h1:EsYLVkUDi+JPKChZ826hq9UAxEmpOqaozYIUnQy/EsM=
+github.com/medibloc/aries-framework-go v0.1.9-panacea.2/go.mod h1:qrOxEGVsu8M2RahaJgM8nz9AcAHjR/dKd1JIJ3ieJhY=
 github.com/medibloc/cosmos-sdk v0.45.12-panacea.1 h1:6+rtbpT4vBhrFDaT4AWUet5oKRQOXrmoz8L0EjuqZOE=
 github.com/medibloc/cosmos-sdk v0.45.12-panacea.1/go.mod h1:ZAdIs09zttoA3aSwQCTK9gecOThUVNnzBSVj3DiS6UY=
 github.com/medibloc/panacea-core/v2 v2.1.0-alpha.3.0.20230314060852-84f59719397e h1:r90giZlU7LjPJ1mZDdchLOqe3vlQC+11PEkCXeYaKXg=
 github.com/medibloc/panacea-core/v2 v2.1.0-alpha.3.0.20230314060852-84f59719397e/go.mod h1:IBJjXwACVjuxv0OmdQE/IYPTC0M2x43886uhXF5ds4w=
-github.com/medibloc/vc-sdk v0.0.3-0.20230314060916-98d76bb515e4 h1:dAAXdo5H7xMftkqfzYLTnBzAoq3P17czeTXH/hbzZQg=
-github.com/medibloc/vc-sdk v0.0.3-0.20230314060916-98d76bb515e4/go.mod h1:cNC4BWm2PXHWI4Ux7RPhNgdzpL3NyWgqOuqc8QFycPA=
+github.com/medibloc/vc-sdk v0.0.3-0.20230324031804-255654616df3 h1:Oeei9sFMqa7gO34sqz0+s2FnVfvmcCWKU5+3LGtRwjc=
+github.com/medibloc/vc-sdk v0.0.3-0.20230324031804-255654616df3/go.mod h1:3tCt+Kap8BG6xIxhz9ch7KwSPAFvFoQTm/Ugh7L83SI=
 github.com/mimoo/StrobeGo v0.0.0-20181016162300-f8f6d4d2b643/go.mod h1:43+3pMjjKimDBf5Kr4ZFNGbLql1zKkbImw+fZbw3geM=
 github.com/mimoo/StrobeGo v0.0.0-20210601165009-122bf33a46e0 h1:QRUSJEgZn2Snx0EmT/QLXibWjSUDjKWvXIT19NBVp94=
 github.com/mimoo/StrobeGo v0.0.0-20210601165009-122bf33a46e0/go.mod h1:43+3pMjjKimDBf5Kr4ZFNGbLql1zKkbImw+fZbw3geM=
